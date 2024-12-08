@@ -1,32 +1,58 @@
 <template>
-    <svg ref="svg" :view-box="viewBox" :width="width" :height="height" enable-background="true" fill="white"
+    <svg ref="svg" :view-box="viewBox" :width="width" :height="height" enable-background="true" fill="none"
         xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <rect class="shadow" :x="rect.x + 4" :y="rect.y + 4" :rx="radius" :width="rect.width" :height="rect.height"
+            :style="{ fill: shadowColor }" v-if="collapsed" />
         <rect :x="rect.x" :y="rect.y" :rx="radius" :width="rect.width" :height="rect.height"
-            :fill="node.backgroundColor ?? 'none'" stroke="grey" />
-        <rect :width="width" :height="height" stroke="red" fill="none" />
-        <line :x1="sizes[0]?.name?.x ?? 0 + (sizes[0]?.name?.width ?? 0) / 2" :y1="paddingY"
+            :style="{ fill: node.backgroundColor ?? backgroundColor }" />
+        <!-- <rect :width="width" :height="height" stroke="red" fill="none" /> -->
+        <!-- <line :x1="sizes[0]?.name?.x ?? 0 + (sizes[0]?.name?.width ?? 0) / 2" :y1="paddingY"
             :x2="sizes.reduce((acc, cur) => acc + (cur?.bounding?.width ?? 0), 0) - (sizes[sizes.length - 1]?.bounding?.width ?? 0) + (sizes[sizes.length - 1]?.name?.x ?? 0) + (sizes[sizes.length - 1]?.name?.width ?? 0) / 2"
-            :y2="paddingY" stroke="green"></line>
-        <text :x="text.x" :y="text.y" font-family="Jetbrains Mono" font-size="14px"
-            style="user-select: none; line-height: normal;" :fill="node.color ?? 'black'"
-            @click="emit('click', event($event))" @contextmenu="emit('contextmenu', event($event))" cursor="pointer">{{
+            :y2="paddingY" stroke="green" /> -->
+        <text ref="name" :x="text.x" :y="text.y" font-family="Jetbrains Mono" font-size="14px"
+            :style="{ fill: node.color ?? textColor }" @click="emit('click', event($event))"
+            @contextmenu="emit('contextmenu', event($event))" cursor="pointer">{{
                 node.name
             }}</text>
         <!-- :x="rectWidth / 2 + indentX" :y="(1 + index) * (fontSize.height + paddingY * 2 + gapY * 2)" -->
-        <tree-node v-for="(value, index) of node.children" :node="value" :key="index" :ctx="ctx"
-            :x="relative[index]?.left" :y="relative[index]?.top" @update:size="updateSize(index, $event)"
-            @click="emit('click', $event)" @contextmenu="emit('contextmenu', $event)"></tree-node>
-        <path v-for="(_, index) of node.children" :key="index" fill="none" stroke="grey" :d="relative[index]?.link" />
+        <tree-node v-for="(value, index) of node.children" v-if="!collapsed" :node="value" :key="index" :ctx="ctx"
+            :options="options" v-bind:active="active" :x="relative[index]?.left" :y="relative[index]?.top"
+            :class="{ collapsed }" @update:size="updateSize(index, $event)" @click="emit('click', $event)"
+            @contextmenu="emit('contextmenu', $event)"></tree-node>
+        <path v-for="(_, index) of node.children" v-if="!collapsed" :key="index" fill="none" :stroke="borderColor"
+            :d="relative[index]?.link" />
     </svg>
 </template>
 <script setup lang="ts" generic="T extends Data<T>">
-import { computed, onMounted, reactive, ref, watch } from 'vue';
-import type { Data, Rectangle, TreeEvent, TreeNodeSize } from './TreeNode';
+import { computed, onMounted, reactive, Ref, ref, watch } from 'vue';
+import { type Data, type Options, type Rectangle, type TreeEvent, type TreeNodeSize } from './types';
 
-const props = defineProps<{ node: T, ctx: OffscreenCanvasRenderingContext2D }>();
+const props = defineProps<{ node: T, ctx: OffscreenCanvasRenderingContext2D, options: Options, active: { string: Ref<string | number | undefined> } }>();
+
+const {
+    indentX,
+    indentY,
+    marginY,
+    marginX,
+    paddingY,
+    paddingX,
+    radius,
+} = props.options.layout;
+
+const {
+    borderColor,
+    backgroundColor,
+    shadowColor,
+    textColor,
+    textWeight,
+    textHoverColor,
+    textHoverWeight,
+} = props.options.color;
+
 const svg = ref<SVGElement>();
+const name = ref<SVGTextElement>();
 const vertical = ref<boolean>(true);
-const collapsed = ref<boolean>(true);
+const collapsed = ref<boolean>(false);
 
 // Track the size of each node.
 
@@ -45,16 +71,6 @@ function updateSize(index: number, size: TreeNodeSize) {
 
 // Some constants or variables for size calculation.
 
-const indentX = 24;
-const indentY = 16;
-const marginY = 8;
-const marginX = 16;
-const paddingY = 6;
-const paddingX = 10;
-// const gapX = 16;
-// const gapY = 8;
-const radius = 4;
-
 const fontSize = computed(function () {
     const metrics = props.ctx.measureText(props.node.name);
     const width = metrics.width;
@@ -69,7 +85,10 @@ const rectWidth = computed(() => fontSize.value.width + paddingX * 2);
 const rectHeight = computed(() => fontSize.value.height + paddingY * 2);
 
 const width = computed(function () {
-    if (vertical.value) {
+    if (sizes.length === 0 || collapsed.value) {
+        return rectWidth.value + marginX * 2;
+    }
+    else if (vertical.value) {
         return sizes.reduce((acc, cur) => Math.max(acc, cur.bounding.width + rectWidth.value / 2 + indentX), rectWidth.value + marginX * 2);
     } else {
         return Math.max(sizes.reduce((acc, cur) => acc + cur.bounding.width, 0), rectWidth.value + marginX * 2);
@@ -77,7 +96,7 @@ const width = computed(function () {
 })
 
 const height = computed(function () {
-    if (sizes.length == 0) {
+    if (sizes.length === 0 || collapsed.value) {
         return rectHeight.value + marginY * 2;
     } else if (vertical.value) {
         return sizes.reduce((acc, cur) => acc + cur.bounding.height, rectHeight.value + marginY);
@@ -144,7 +163,7 @@ const relative = computed(function (): { left: number, top: number, right: numbe
 const viewBox = computed(() => `0 0 ${width.value} ${height.value}`)
 
 const rect = computed(function () {
-    if (sizes.length == 0) {
+    if (sizes.length === 0 || collapsed.value) {
         return {
             x: marginX,
             y: marginY,
@@ -181,21 +200,8 @@ const text = computed(function () {
 })
 
 const size = computed(function (): TreeNodeSize {
-    if (vertical.value) {
-        const name: Rectangle = {
-            width: rectWidth.value,
-            height: rectHeight.value,
-            x: marginX, y: marginY
-        }
-        return { bounding: { width: width.value, height: height.value }, name }
-    } else {
-        const name: Rectangle = {
-            width: rectWidth.value,
-            height: rectHeight.value,
-            x: width.value / 2 - rectWidth.value / 2, y: marginY
-        }
-        return { bounding: { width: width.value, height: height.value }, name }
-    }
+    const name: Rectangle = rect.value
+    return { bounding: { width: width.value, height: height.value }, name }
 })
 
 watch(size, (size) => {
@@ -213,4 +219,75 @@ function exportSVG(): string | undefined {
 
 defineExpose({ exportSVG });
 
+//
+watch(props.active.string, (active) => {
+    // console.log('active', active, props.node.path)
+    if (active && props.node.path === active) {
+        console.log('scroll', active, props.node.path)
+        console.log(name.value)
+        name.value?.scrollIntoView({ 'behavior': 'smooth', 'block': 'center', 'inline': 'center' })
+    }
+})
+
 </script>
+
+<style scoped>
+svg>text {
+    font-weight: 400;
+    user-select: none;
+}
+
+svg>text:hover {
+    font-weight: 700;
+}
+
+svg>* {
+    color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+
+    svg>rect,
+    svg>path {
+        stroke: lightgray;
+    }
+
+    svg>rect {
+        fill: darkgray;
+    }
+
+    svg>rect.shadow {
+        fill: black;
+    }
+
+    svg>text {
+        fill: white;
+    }
+
+    svg>text:hover {
+        fill: cyan;
+    }
+}
+
+
+svg>rect,
+svg>path {
+    stroke: gray;
+}
+
+svg>rect {
+    fill: white;
+}
+
+svg>rect.shadow {
+    fill: darkgray;
+}
+
+svg>text {
+    fill: black;
+}
+
+svg>text:hover {
+    fill: darkcyan;
+}
+</style>

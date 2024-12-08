@@ -4,14 +4,19 @@
   "description": "A Vue3 component for rendering tree in SVG",
   "version": "0.0.0",
   "type": "module",
-  "module": "dist/svg-tree-vue3.js",
-  "files": ["dist"],
+  "types": "./dist/TreeNode.d.ts",
+  "module": "./dist/TreeNode.js",
+  "main": "./dist/TreeNode.cjs",
+  "files": [
+    "./dist/**"
+  ],
   "exports": {
     ".": {
-      "import": "./dist/svg-tree-vue3.js",
-      "require": "./dist/svg-tree-vue3.cjs",
-      "types": "./dist/svg-tree-vue3.d.ts"
-    }
+      "types": "./dist/TreeNode.d.ts",
+      "import": "./dist/TreeNode.js",
+      "require": "./dist/TreeNode.cjs"
+    },
+    "./styles.css": "./dist/TreeNode.css"
   },
   "scripts": {
     "dev": "vite",
@@ -25,6 +30,7 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "typescript": "~5.6.2",
     "vite": "^6.0.1",
+    "vite-plugin-dts": "^4.3.0",
     "vue-tsc": "^2.1.10"
   }
 }
