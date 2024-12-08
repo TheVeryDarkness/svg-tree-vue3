@@ -15,8 +15,7 @@
       "types": "./dist/TreeNode.d.ts",
       "import": "./dist/TreeNode.js",
       "require": "./dist/TreeNode.cjs"
-    },
-    "./styles.css": "./dist/TreeNode.css"
+    }
   },
   "scripts": {
     "dev": "vite",

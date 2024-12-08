@@ -2,15 +2,16 @@
     <svg ref="svg" :view-box="viewBox" :width="width" :height="height" enable-background="true" fill="none"
         xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <rect class="shadow" :x="rect.x + 4" :y="rect.y + 4" :rx="radius" :width="rect.width" :height="rect.height"
-            :style="{ fill: shadowColor }" v-if="collapsed" />
+            :style="{ fill: shadowColor, stroke: borderColor }" v-if="collapsed" />
         <rect :x="rect.x" :y="rect.y" :rx="radius" :width="rect.width" :height="rect.height"
-            :style="{ fill: node.backgroundColor ?? backgroundColor }" />
+            :style="{ fill: node.backgroundColor ?? backgroundColor, stroke: borderColor }" />
         <!-- <rect :width="width" :height="height" stroke="red" fill="none" /> -->
         <!-- <line :x1="sizes[0]?.name?.x ?? 0 + (sizes[0]?.name?.width ?? 0) / 2" :y1="paddingY"
             :x2="sizes.reduce((acc, cur) => acc + (cur?.bounding?.width ?? 0), 0) - (sizes[sizes.length - 1]?.bounding?.width ?? 0) + (sizes[sizes.length - 1]?.name?.x ?? 0) + (sizes[sizes.length - 1]?.name?.width ?? 0) / 2"
             :y2="paddingY" stroke="green" /> -->
         <text ref="name" :x="text.x" :y="text.y" font-family="Jetbrains Mono" font-size="14px"
-            :style="{ fill: node.color ?? textColor }" @click="emit('click', event($event))"
+            :style="{ fill: node.color ?? (hover ? textHoverColor : textColor), userSelect: 'none', fontWeight: hover ? textHoverWeight : textWeight }"
+            @mouseenter="hover = true" @mouseleave="hover = false" @click="emit('click', event($event))"
             @contextmenu="emit('contextmenu', event($event))" cursor="pointer">{{
                 node.name
             }}</text>
@@ -19,17 +20,18 @@
             :options="options" v-bind:active="active" :x="relative[index]?.left" :y="relative[index]?.top"
             :class="{ collapsed }" @update:size="updateSize(index, $event)" @click="emit('click', $event)"
             @contextmenu="emit('contextmenu', $event)"></tree-node>
-        <path v-for="(_, index) of node.children" v-if="!collapsed" :key="index" fill="none" :stroke="borderColor"
-            :d="relative[index]?.link" />
+        <path v-for="(_, index) of node.children" v-if="!collapsed" :key="index" fill="none"
+            :style="{ stroke: borderColor }" :d="relative[index]?.link" />
     </svg>
 </template>
 <script setup lang="ts" generic="T extends Data<T>">
 import { computed, onMounted, reactive, Ref, ref, watch } from 'vue';
-import { type Data, type Options, type Rectangle, type TreeEvent, type TreeNodeSize } from './types';
+import type { Data, Options, Rectangle, TreeEvent, TreeNodeSize } from './types';
+import { defaultOptions } from './types';
 
-const props = defineProps<{ node: T, ctx: OffscreenCanvasRenderingContext2D, options: Options, active: { string: Ref<string | number | undefined> } }>();
+const props = defineProps<{ node: T, ctx: OffscreenCanvasRenderingContext2D, options: Options | undefined, active: { string: Ref<string | number | undefined> } }>();
 
-const {
+const { layout: {
     indentX,
     indentY,
     marginY,
@@ -37,9 +39,7 @@ const {
     paddingY,
     paddingX,
     radius,
-} = props.options.layout;
-
-const {
+}, color: {
     borderColor,
     backgroundColor,
     shadowColor,
@@ -47,12 +47,13 @@ const {
     textWeight,
     textHoverColor,
     textHoverWeight,
-} = props.options.color;
+} } = props.options ?? defaultOptions;
 
 const svg = ref<SVGElement>();
 const name = ref<SVGTextElement>();
 const vertical = ref<boolean>(true);
 const collapsed = ref<boolean>(false);
+const hover = ref<boolean>(false);
 
 // Track the size of each node.
 
@@ -134,10 +135,17 @@ const relative = computed(function (): { left: number, top: number, right: numbe
             // L ${marginX + rectWidth.value / 2} ${top + marginY * 2}
             // s 0 ${radius} ${radius} ${radius}
             // l ${indentX - radius - marginX + value.name.x} 0`
-            const link = `M ${marginX + rectWidth.value / 2} ${marginY + rectHeight.value}
-            L ${marginX + rectWidth.value / 2} ${top + value.name.y + value.name.height / 2 - radius}
-            s 0 ${radius} ${radius} ${radius}
-            l ${indentX - radius - marginX + value.name.x} 0`
+
+            const x1 = marginX + rectWidth.value / 2
+            const y1 = marginY + rectHeight.value
+            const x2 = x1
+            const y2 = top + value.name.y + value.name.height / 2
+            const dx3 = indentX - marginX + value.name.x
+            // Round angle:
+            // `M ${x1} ${y1} L ${x2} ${y2 - radius} s 0 ${radius} ${radius} ${radius} l ${dx3 - radius} 0`
+            // Straight angle:
+            // `M ${x1} ${y1} L ${x2} ${y2} l ${dx3} 0`
+            const link = `M ${x1} ${y1} L ${x2} ${y2 - radius} s 0 ${radius} ${radius} ${radius} l ${dx3 - radius} 0`
             cur.top = bottom;
             return { left, top, right, bottom, link }
         })
@@ -149,10 +157,18 @@ const relative = computed(function (): { left: number, top: number, right: numbe
             const top = cur.top;
             const right = left + value.bounding.width;
             const bottom = top + value.bounding.height;
-            const link = `M ${middle.value} ${marginY + rectHeight.value}
-            l 0 ${indentY / 2}
-            L ${cur.left + value.name.x + value.name.width / 2} ${cur.top - indentY / 2}
-            l 0 ${indentY / 2 + value.name.y}`
+            const x1 = middle.value
+            const y1 = marginY + rectHeight.value
+            const dy2 = indentY / 2
+            const x3 = cur.left + value.name.x + value.name.width / 2
+            // const dx3 = x3 - x1
+            const y3 = cur.top - indentY / 2
+            const dy4 = indentY / 2 + value.name.y
+            // Right:
+            // `M ${x1} ${y1} l 0 ${indentY / 2} L ${x3 - radius} ${y3} s ${radius} 0 ${radius} ${radius} l 0 ${dy4 - radius}`
+            // Left:
+            // `M ${x1} ${y1} l 0 ${indentY / 2} L ${x3} ${y3} s ${-radius} 0 ${-radius} ${radius} l 0 ${dy4 - radius}`
+            const link = `M ${x1} ${y1} l 0 ${dy2} L ${x3} ${y3} l 0 ${dy4}`
             cur.left = right;
             return { left, top, right, bottom, link }
         })
@@ -212,12 +228,7 @@ onMounted(() => {
     emit('update:size', size.value)
 })
 
-// Expose a method to export the SVG content.
-function exportSVG(): string | undefined {
-    return svg.value?.innerHTML
-}
-
-defineExpose({ exportSVG });
+defineExpose({});
 
 //
 watch(props.active.string, (active) => {
@@ -230,64 +241,3 @@ watch(props.active.string, (active) => {
 })
 
 </script>
-
-<style scoped>
-svg>text {
-    font-weight: 400;
-    user-select: none;
-}
-
-svg>text:hover {
-    font-weight: 700;
-}
-
-svg>* {
-    color-scheme: light dark;
-}
-
-@media (prefers-color-scheme: dark) {
-
-    svg>rect,
-    svg>path {
-        stroke: lightgray;
-    }
-
-    svg>rect {
-        fill: darkgray;
-    }
-
-    svg>rect.shadow {
-        fill: black;
-    }
-
-    svg>text {
-        fill: white;
-    }
-
-    svg>text:hover {
-        fill: cyan;
-    }
-}
-
-
-svg>rect,
-svg>path {
-    stroke: gray;
-}
-
-svg>rect {
-    fill: white;
-}
-
-svg>rect.shadow {
-    fill: darkgray;
-}
-
-svg>text {
-    fill: black;
-}
-
-svg>text:hover {
-    fill: darkcyan;
-}
-</style>

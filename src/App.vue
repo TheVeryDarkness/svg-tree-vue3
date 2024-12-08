@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import TreeNode from "./components/TreeNode.vue";
-import { Data, defaultOptions, TreeEvent } from "./components/types";
+import { Data, TreeEvent, defaultOptions } from "./components/types";
 const canvas = new OffscreenCanvas(100, 100);
 const ctx = canvas.getContext("2d")!;
 ctx.font = "14px Jetbrains Mono";

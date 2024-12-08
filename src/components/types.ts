@@ -65,13 +65,13 @@ export const defaultLightColorOptions: ColorOptions = {
   textHoverWeight: 700,
 };
 export const defaultDarkColorOptions: ColorOptions = {
-  borderColor: "lightgray",
-  backgroundColor: "darkgray",
-  shadowColor: "black",
-  textColor: "white",
-  textWeight: 400,
-  textHoverColor: "cyan",
-  textHoverWeight: 700,
+    borderColor: "lightgray",
+    backgroundColor: "darkgray",
+    shadowColor: "black",
+    textColor: "white",
+    textWeight: 400,
+    textHoverColor: "cyan",
+    textHoverWeight: 700,
 };
 export const defaultOptions: Options = {
   color: defaultLightColorOptions,
