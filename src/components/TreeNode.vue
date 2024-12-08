@@ -351,14 +351,14 @@ function scrollIntoView() {
     }));
 }
 
-defineExpose({});
+defineExpose({ scrollIntoView });
 
 //
 watch(props.state.active, (active) => {
     // console.log('active', active, props.node.path)
     if (active && props.node.path === active) {
-        console.log("scroll", active, props.node.path);
-        console.log(name.value);
+        // console.log("scroll", active, props.node.path);
+        // console.log(name.value);
         scrollIntoView();
     }
 });
