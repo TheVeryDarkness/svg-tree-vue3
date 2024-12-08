@@ -8,7 +8,13 @@ ctx.font = "14px Jetbrains Mono";
 ctx.textAlign = "center";
 ctx.textRendering = "optimizeLegibility";
 
-const data = {
+type T = {
+  name: string;
+  color?: string;
+  children: T[];
+  extensible?: boolean;
+};
+const data: T = {
   name: "123123123123",
   children: [
     {
@@ -24,32 +30,54 @@ const data = {
       color: "green",
       children: [{ name: "9999999", color: "cyan", children: [] }],
     },
-    { name: "7890", color: "red", children: [] },
+    { name: "7890", color: "red", children: [], extensible: true },
+    { name: "'", color: "green", children: [], extensible: true },
     {
       name: "abcdefgdwewok",
       color: "red",
       children: [{ name: "xdncsc", color: "green", children: [] }],
     },
     {
+      name: "328948923",
+      color: "red",
+      extensible: true,
+      children: [],
+    },
+    {
       name: "abcdefgdwewok",
       color: "red",
+      extensible: true,
       children: [
         { name: "——", color: "green", children: [] },
         { name: "x", color: "green", children: [] },
         { name: "_", color: "green", children: [] },
         { name: "y", color: "green", children: [] },
-      ],
+      ]
+    },
+    {
+      name: "abcdefgdwewoknjnjonomiodjewidjwoedeowno",
+      color: "red",
+      extensible: true,
+      children: [
+        { name: "——", color: "green", children: [] },
+        { name: "x", color: "green", children: [] },
+        { name: "_", color: "green", children: [] },
+        { name: "y", color: "green", children: [] },
+      ]
     },
   ],
 };
 let tree = ref();
-let active = { string: ref<string | number | undefined>(undefined) };
+let state = {
+  active: ref<string | number | undefined>(undefined),
+  hover: ref<string | number | undefined>(undefined)
+};
 
 function click<T extends Data<T>>($event: TreeEvent<T, MouseEvent>) {
   if ($event.event.shiftKey) {
     console.log($event);
-    console.log(active.string.value);
-    active.string.value = $event.node.path;
+    console.log(state.active.value);
+    state.active.value = $event.node.path;
   } else {
     console.log(($event.state.vertical.value = !$event.state.vertical.value));
   }
@@ -62,7 +90,7 @@ function contextmenu<T extends Data<T>>(event: TreeEvent<T, MouseEvent>) {
 </script>
 
 <template>
-  <TreeNode :node="data" :ctx="ctx" ref="tree" :active="active" :options="defaultOptions" @click="click"
+  <TreeNode :node="data" :ctx="ctx" ref="tree" :state="state" :options="defaultOptions" @click="click"
     @contextmenu="contextmenu" />
 </template>
 

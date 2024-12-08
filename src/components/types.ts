@@ -1,4 +1,4 @@
-import type { Ref } from "vue";
+import type { Ref, WatchSource } from "vue";
 
 export interface ColorOptions {
   /**
@@ -65,13 +65,13 @@ export const defaultLightColorOptions: ColorOptions = {
   textHoverWeight: 700,
 };
 export const defaultDarkColorOptions: ColorOptions = {
-    borderColor: "lightgray",
-    backgroundColor: "darkgray",
-    shadowColor: "black",
-    textColor: "white",
-    textWeight: 400,
-    textHoverColor: "cyan",
-    textHoverWeight: 700,
+  borderColor: "lightgray",
+  backgroundColor: "darkgray",
+  shadowColor: "black",
+  textColor: "white",
+  textWeight: 400,
+  textHoverColor: "cyan",
+  textHoverWeight: 700,
 };
 export const defaultOptions: Options = {
   color: defaultLightColorOptions,
@@ -84,6 +84,7 @@ export interface Data<Child extends Data<Child>> {
   color?: string;
   backgroundColor?: string;
   children: Child[];
+  extensible?: boolean;
 }
 export interface Rectangle {
   x: number;
@@ -99,8 +100,15 @@ export interface State {
   vertical: Ref<boolean>;
   collapsed: Ref<boolean>;
 }
+
 export interface TreeEvent<T extends Data<T>, E extends Event> {
   node: T;
   state: State;
   event: E;
+  scrollIntoView(): void;
+}
+
+export interface ExternalState {
+  active: WatchSource<number | string | undefined>;
+  hover: WatchSource<number | string | undefined>;
 }
