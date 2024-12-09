@@ -1,13 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import TreeNode from "./components/TreeNode.vue";
+import Tree from "./components/Tree.vue";
 import { Data, TreeEvent, defaultOptions } from "./components/types";
-const canvas = new OffscreenCanvas(100, 100);
-const ctx = canvas.getContext("2d")!;
-ctx.font = "14px Jetbrains Mono";
-ctx.textAlign = "center";
-ctx.textRendering = "optimizeLegibility";
-
 type T = {
   name: string;
   color?: string;
@@ -90,8 +84,7 @@ function contextmenu<T extends Data<T>>(event: TreeEvent<T, MouseEvent>) {
 </script>
 
 <template>
-  <TreeNode :node="data" :ctx="ctx" ref="tree" :state="state" :options="defaultOptions" @click="click"
-    @contextmenu="contextmenu" />
+  <Tree ref="tree" :data="data" :state="state" :options="defaultOptions" @click="click" @contextmenu="contextmenu" />
 </template>
 
 <style scoped>

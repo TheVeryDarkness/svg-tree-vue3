@@ -15,13 +15,14 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: "src/components/TreeNode.vue",
+      entry: [
+        "src/components/TreeNode.vue",
+        "src/components/Tree.vue",
+        "src/components/Forest.vue",
+      ],
       formats: ["es", "cjs"],
-      fileName: "TreeNode",
     },
-    minify: "esbuild",
     sourcemap: true,
-    cssCodeSplit: false,
     rollupOptions: {
       external: ["vue"],
       output: {

@@ -45,16 +45,27 @@ import type {
     TreeEvent,
     TreeNodeSize,
 } from "./types";
-import { defaultOptions } from "./types";
 
+// Props.
 const props = defineProps<{
     node: T;
     ctx: OffscreenCanvasRenderingContext2D;
-    options: Partial<Options> | undefined;
+    options: Options;
     state: ExternalState;
 }>();
 
-const { indentX, indentY, marginY, marginX, paddingY, paddingX, radius } = { ...defaultOptions.layout, ...props.options?.layout };
+// Emits.
+type Emits = {
+    "update:size": [TreeNodeSize];
+    click: [TreeEvent<T, MouseEvent>];
+    contextmenu: [TreeEvent<T, MouseEvent>];
+    mouseenter: [TreeEvent<T, MouseEvent>];
+    mouseleave: [TreeEvent<T, MouseEvent>];
+};
+const emit = defineEmits<Emits>();
+
+// Options.
+const { indentX, indentY, marginY, marginX, paddingY, paddingX, radius } = props.options.layout;
 const {
     borderColor,
     backgroundColor,
@@ -63,8 +74,8 @@ const {
     textWeight,
     textHoverColor,
     textHoverWeight,
-} = { ...defaultOptions.color, ...props.options?.color };
-const { fontFamily, fontSize } = { ...defaultOptions.font, ...props.options?.font };
+} = props.options.color;
+const { fontFamily, fontSize } = props.options.font;
 
 const svg = ref<SVGElement>();
 const name = ref<SVGTextElement>();
@@ -94,15 +105,6 @@ const shadowStyle = computed(function (): StyleValue {
 })
 
 // Track the size of each node.
-
-type Emits = {
-    "update:size": [TreeNodeSize];
-    click: [TreeEvent<T, MouseEvent>];
-    contextmenu: [TreeEvent<T, MouseEvent>];
-    mouseenter: [TreeEvent<T, MouseEvent>];
-    mouseleave: [TreeEvent<T, MouseEvent>];
-};
-const emit = defineEmits<Emits>();
 
 function event<E extends MouseEvent>(event: E) {
     return { event, node: props.node, state: { vertical, collapsed }, scrollIntoView };
@@ -371,7 +373,7 @@ function scrollIntoView() {
 
 defineExpose({ scrollIntoView });
 
-//
+// Watch external states.
 watch(props.state.active, (active) => {
     // console.log('active', active, props.node.path)
     if (active && props.node.path === active) {

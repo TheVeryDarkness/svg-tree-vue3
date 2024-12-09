@@ -43,7 +43,7 @@ export interface LayoutOptions {
 }
 export interface FontOptions {
   fontFamily: string;
-  fontSize: string | number;
+  fontSize: number;
 }
 export interface Options {
   color: ColorOptions;
@@ -80,13 +80,30 @@ export const defaultDarkColorOptions: ColorOptions = {
 };
 export const defaultFontOptions: FontOptions = {
   fontFamily: "JetBrains Mono",
-  fontSize: "14px",
+  fontSize: 14,
 };
 export const defaultOptions: Options = {
   color: defaultLightColorOptions,
   layout: defaultLayoutOptions,
   font: defaultFontOptions,
 };
+
+export function mergeOptions(options: Partial<Options> | undefined): Options {
+  return {
+    color: { ...defaultLightColorOptions, ...options?.color },
+    layout: { ...defaultLayoutOptions, ...options?.layout },
+    font: { ...defaultFontOptions, ...options?.font },
+  };
+}
+
+export function createContext(options: FontOptions) {
+  const canvas = new OffscreenCanvas(100, 100);
+  const ctx = canvas.getContext("2d")!;
+  ctx.font = `${options.fontSize}px ${options.fontFamily}`;
+  ctx.textAlign = "center";
+  ctx.textRendering = "optimizeLegibility";
+  return ctx;
+}
 
 export interface Data<Child extends Data<Child>> {
   path?: string | number | undefined;
