@@ -41,9 +41,14 @@ export interface LayoutOptions {
   paddingX: number;
   radius: number;
 }
+export interface FontOptions {
+  fontFamily: string;
+  fontSize: string | number;
+}
 export interface Options {
   color: ColorOptions;
   layout: LayoutOptions;
+  font: FontOptions;
 }
 
 export const defaultLayoutOptions: LayoutOptions = {
@@ -73,9 +78,14 @@ export const defaultDarkColorOptions: ColorOptions = {
   textHoverColor: "cyan",
   textHoverWeight: 700,
 };
+export const defaultFontOptions: FontOptions = {
+  fontFamily: "JetBrains Mono",
+  fontSize: "14px",
+};
 export const defaultOptions: Options = {
   color: defaultLightColorOptions,
   layout: defaultLayoutOptions,
+  font: defaultFontOptions,
 };
 
 export interface Data<Child extends Data<Child>> {

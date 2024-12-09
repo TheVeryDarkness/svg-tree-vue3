@@ -2,15 +2,14 @@
     <svg ref="svg" :view-box="viewBox" :width="width" :height="height" enable-background="true" fill="none"
         xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <rect class="shadow" :x="rect.x + 4" :y="rect.y + 4" :rx="radius" :width="rect.width" :height="rect.height"
-            :style="{ fill: shadowColor, stroke: borderColor }" v-if="collapsed" />
-        <rect :x="rect.x" :y="rect.y" :rx="radius" :width="rect.width" :height="rect.height" :style="{
-            fill: node.backgroundColor ?? backgroundColor,
-            stroke: borderColor,
-        }" />
-        <text ref="name" :x="text.x" :y="text.y" font-family="Jetbrains Mono" font-size="14px" :style="textStyle"
-            @mouseenter="hover = true; emit('mouseenter', event($event))"
-            @mouseleave="hover = false; emit('mouseleave', event($event))" @click="emit('click', event($event))"
-            @contextmenu="emit('contextmenu', event($event))" cursor="pointer">
+            :style="shadowStyle" v-if="collapsed" />
+        <rect :x="rect.x" :y="rect.y" :rx="radius" :width="rect.width" :height="rect.height" :style="rectStyle"
+            cursor="pointer" drag-scroller-disable @mouseenter="hover = true; mouseenter"
+            @mouseleave="hover = false; mouseleave" @click="emit('click', event($event))"
+            @contextmenu="emit('contextmenu', event($event))" />
+        <text ref="name" :x="text.x" :y="text.y" :style="textStyle" cursor="pointer" drag-scroller-disable
+            @mouseenter="hover = true; mouseenter" @mouseleave="hover = false; mouseleave"
+            @click="emit('click', event($event))" @contextmenu="emit('contextmenu', event($event))">
             {{ node.name }}
         </text>
         <!-- <rect :width="width" :height="height" stroke="red" fill="none" /> -->
@@ -26,13 +25,10 @@
         <path v-for="(_, index) of node.children" v-if="!collapsed" :key="index" fill="none"
             :style="{ stroke: borderColor }" :d="relative[index]?.link" />
         <rect v-if="!collapsed && node.extensible" :x="extendRect.x" :y="extendRect.y" :rx="radius"
-            :width="extendNodeSize.name.width" :height="extendNodeSize.name.height" :style="{
-                fill: node.backgroundColor ?? backgroundColor,
-                stroke: borderColor,
-            }" />
-        <text v-if="!collapsed && node.extensible" :x="extendText.x" :y="extendText.y" font-family="Jetbrains Mono"
-            font-size="14px" :style="textStyle" @mouseenter="hover = true" @mouseleave="hover = false"
-            cursor="pointer">{{
+            :width="extendNodeSize.name.width" :height="extendNodeSize.name.height" :style="rectStyle" cursor="pointer"
+            drag-scroller-disable @mouseenter="hover = true" @mouseleave="hover = false" />
+        <text v-if="!collapsed && node.extensible" :x="extendText.x" :y="extendText.y" :style="textStyle"
+            cursor="pointer" drag-scroller-disable @mouseenter="hover = true" @mouseleave="hover = false">{{
                 extendTextContent }}</text>
         <path v-if="!collapsed && node.extensible" fill="none" :style="{ stroke: borderColor }" :d="extend.link" />
         <!-- <rect v-if="!collapsed && node.extensible" :x="extend.left" :y="extend.top" :width="extendNodeSize.bounding.width"
@@ -58,18 +54,17 @@ const props = defineProps<{
     state: ExternalState;
 }>();
 
+const { indentX, indentY, marginY, marginX, paddingY, paddingX, radius } = { ...defaultOptions.layout, ...props.options?.layout };
 const {
-    layout: { indentX, indentY, marginY, marginX, paddingY, paddingX, radius },
-    color: {
-        borderColor,
-        backgroundColor,
-        shadowColor,
-        textColor,
-        textWeight,
-        textHoverColor,
-        textHoverWeight,
-    },
-} = { ...defaultOptions, ...props.options };
+    borderColor,
+    backgroundColor,
+    shadowColor,
+    textColor,
+    textWeight,
+    textHoverColor,
+    textHoverWeight,
+} = { ...defaultOptions.color, ...props.options?.color };
+const { fontFamily, fontSize } = { ...defaultOptions.font, ...props.options?.font };
 
 const svg = ref<SVGElement>();
 const name = ref<SVGTextElement>();
@@ -82,7 +77,20 @@ const textStyle = computed(function (): StyleValue {
         fill: props.node.color ?? (hover.value ? textHoverColor : textColor),
         userSelect: 'none',
         fontWeight: hover.value ? textHoverWeight : textWeight,
+        fontFamily,
+        fontSize,
     }
+})
+
+const rectStyle = computed(function (): StyleValue {
+    return {
+        fill: props.node.backgroundColor ?? backgroundColor,
+        stroke: borderColor,
+    }
+})
+
+const shadowStyle = computed(function (): StyleValue {
+    return { fill: shadowColor, stroke: borderColor }
 })
 
 // Track the size of each node.
@@ -98,6 +106,13 @@ const emit = defineEmits<Emits>();
 
 function event<E extends MouseEvent>(event: E) {
     return { event, node: props.node, state: { vertical, collapsed }, scrollIntoView };
+}
+
+function mouseenter($event: MouseEvent) {
+    emit("mouseenter", event($event));
+}
+function mouseleave($event: MouseEvent) {
+    emit("mouseleave", event($event));
 }
 
 const sizes = reactive<TreeNodeSize[]>([]);
@@ -130,7 +145,10 @@ const extendNodeSize = computed(function (): TreeNodeSize {
     }
 });
 
-const fontSize = computed(function () {
+/** 
+ * The size of the text area.
+ */
+const textSize = computed(function () {
     const metrics = props.ctx.measureText(props.node.name);
     const width = metrics.width;
     const height = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
@@ -138,8 +156,8 @@ const fontSize = computed(function () {
     return { width, height, baselineOffsetY };
 });
 
-const rectWidth = computed(() => fontSize.value.width + paddingX * 2);
-const rectHeight = computed(() => fontSize.value.height + paddingY * 2);
+const rectWidth = computed(() => textSize.value.width + paddingX * 2);
+const rectHeight = computed(() => textSize.value.height + paddingY * 2);
 
 const width = computed(function () {
     const extendNodeWidth = props.node.extensible ? extendNodeSize.value.bounding.width : 0
@@ -321,12 +339,12 @@ const text = computed(function () {
     if (vertical.value)
         return {
             x: marginX + paddingX,
-            y: marginY + fontSize.value.baselineOffsetY + paddingY,
+            y: marginY + textSize.value.baselineOffsetY + paddingY,
         };
     else
         return {
             x: rect.value.x + paddingX,
-            y: marginY + fontSize.value.baselineOffsetY + paddingY,
+            y: marginY + textSize.value.baselineOffsetY + paddingY,
         };
 });
 
