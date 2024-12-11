@@ -1,7 +1,12 @@
 {
   "name": "svg-tree-vue3",
   "private": false,
-  "description": "A Vue3 component for rendering tree in SVG",
+  "description": "A Vue3 component for rendering tree in SVG.",
+  "keywords": [
+    "vue3",
+    "svg",
+    "tree"
+  ],
   "version": "0.0.0",
   "type": "module",
   "types": "./dist/Tree.d.ts",
