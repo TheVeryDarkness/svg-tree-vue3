@@ -83,11 +83,17 @@ const vertical = ref<boolean>(true);
 const collapsed = ref<boolean>(false);
 const hover = ref<boolean>(false);
 
+const fontWeight = computed(function (): number {
+    return hover.value ? textHoverWeight : textWeight;
+});
+
+const ctxFont = computed(() => `${fontWeight.value} ${fontSize}px ${fontFamily}`);
+
 const textStyle = computed(function (): StyleValue {
     return {
         fill: props.node.color ?? (hover.value ? textHoverColor : textColor),
         userSelect: 'none',
-        fontWeight: hover.value ? textHoverWeight : textWeight,
+        fontWeight: fontWeight.value,
         fontFamily,
         fontSize,
     }
@@ -128,6 +134,7 @@ function updateSize(index: number, size: TreeNodeSize) {
 const extendTextContent = '+';
 
 const extendTextSize = computed(function () {
+    props.ctx.font = ctxFont.value;
     const metrics = props.ctx.measureText(extendTextContent);
     const width = metrics.width;
     const height = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
@@ -151,6 +158,7 @@ const extendNodeSize = computed(function (): TreeNodeSize {
  * The size of the text area.
  */
 const textSize = computed(function () {
+    props.ctx.font = ctxFont.value;
     const metrics = props.ctx.measureText(props.node.name);
     const width = metrics.width;
     const height = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
@@ -209,7 +217,7 @@ const childrenWidth = computed(function () {
 
 const middle = computed(function () {
     const first = sizes[0] ?? extendNodeSize.value;
-    const last = sizes[sizes.length - 1] ?? extendNodeSize.value;
+    const last = props.node.extensible ? extendNodeSize.value : sizes[sizes.length - 1] ?? extendNodeSize.value;
     const leftFirst = Math.max(0, width.value - childrenWidth.value) / 2;
     const firstMiddleX = first.name.x + first.name.width / 2;
     const lastMiddleX =
