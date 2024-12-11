@@ -51,6 +51,12 @@ export interface Options {
   font: FontOptions;
 }
 
+type DeepPartial<T> = {
+  [P in keyof T]?: DeepPartial<T[P]>;
+};
+
+export type PartialOptions = DeepPartial<Options> | undefined;
+
 export const defaultLayoutOptions: LayoutOptions = {
   indentX: 24,
   indentY: 16,
@@ -88,7 +94,7 @@ export const defaultOptions: Options = {
   font: defaultFontOptions,
 };
 
-export function mergeOptions(options: Partial<Options> | undefined): Options {
+export function mergeOptions(options: PartialOptions | undefined): Options {
   return {
     color: { ...defaultLightColorOptions, ...options?.color },
     layout: { ...defaultLayoutOptions, ...options?.layout },
@@ -96,10 +102,8 @@ export function mergeOptions(options: Partial<Options> | undefined): Options {
   };
 }
 
-export function createContext(options: FontOptions) {
-  const canvas = new OffscreenCanvas(100, 100);
+export function createContext(canvas: OffscreenCanvas) {
   const ctx = canvas.getContext("2d")!;
-  ctx.font = `${options.fontSize}px ${options.fontFamily}`;
   ctx.textAlign = "center";
   ctx.textRendering = "optimizeLegibility";
   return ctx;

@@ -5,18 +5,20 @@
 </template>
 
 <script setup lang="ts" generic="T extends Data<T>">
+import { computed } from 'vue';
 import TreeNode from './TreeNode.vue';
-import { createContext, Data, ExternalState, mergeOptions, Options, TreeEvent } from './types';
+import { createContext, Data, ExternalState, mergeOptions, Options, PartialOptions, TreeEvent } from './types';
 
 // Props.
 const props = defineProps<{
     data: T;
-    options: Partial<Options> | undefined;
+    options: PartialOptions;
     state: ExternalState;
 }>();
 
-const options: Options = mergeOptions(props.options);
-const ctx = createContext(options.font);
+const options = computed<Options>(() => mergeOptions(props.options));
+const canvas = new OffscreenCanvas(100, 100);
+const ctx = createContext(canvas);
 
 // Emits.
 type Emits = {

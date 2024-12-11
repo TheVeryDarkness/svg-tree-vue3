@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import Tree from "./components/Tree.vue";
-import { Data, TreeEvent, defaultOptions } from "./components/types";
+import { Data, TreeEvent } from "./components/types";
 type T = {
   name: string;
   color?: string;
@@ -26,6 +26,7 @@ const data: T = {
     },
     { name: "7890", color: "red", children: [], extensible: true },
     { name: "'", color: "green", children: [], extensible: true },
+    { name: "~~~~", color: "green", children: [{ name: "????", color: "blue", children: [] }], extensible: true },
     {
       name: "abcdefgdwewok",
       color: "red",
@@ -84,22 +85,5 @@ function contextmenu<T extends Data<T>>(event: TreeEvent<T, MouseEvent>) {
 </script>
 
 <template>
-  <Tree ref="tree" :data="data" :state="state" :options="defaultOptions" @click="click" @contextmenu="contextmenu" />
+  <Tree ref="tree" :data="data" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
 </template>
-
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
