@@ -30,8 +30,8 @@
             cursor="pointer" drag-scroller-disable @mouseenter="hover = true" @mouseleave="hover = false">{{
                 extendTextContent }}</text>
         <path v-if="!collapsed && node.extensible" fill="none" :style="{ stroke: borderColor }" :d="extend.link" />
-        <rect v-if="!collapsed && node.extensible" :x="extend.left" :y="extend.top"
-            :width="extendNodeSize.bounding.width" :height="extendNodeSize.bounding.height" stroke="red" fill="none" />
+        <!--<rect v-if="!collapsed && node.extensible" :x="extend.left" :y="extend.top"
+            :width="extendNodeSize.bounding.width" :height="extendNodeSize.bounding.height" stroke="red" fill="none" />-->
     </svg>
 </template>
 <script setup lang="ts" generic="T extends Data<T>">
