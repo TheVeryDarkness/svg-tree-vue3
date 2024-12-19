@@ -89,6 +89,7 @@ function contextmenu<T extends Data<T>>(event: TreeEvent<T, MouseEvent>) {
 </script>
 
 <template>
+  <label>Active:</label>
   <input type="text" v-model="state.active.value" />
   <Tree ref="tree" :data="data" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
 </template>
