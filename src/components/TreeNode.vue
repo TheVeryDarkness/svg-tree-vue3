@@ -17,11 +17,10 @@
             :x2="sizes.reduce((acc, cur) => acc + (cur?.bounding?.width ?? 0), 0) - (sizes[sizes.length - 1]?.bounding?.width ?? 0) + (sizes[sizes.length - 1]?.name?.x ?? 0) + (sizes[sizes.length - 1]?.name?.width ?? 0) / 2"
             :y2="paddingY" stroke="green" /> -->
         <!-- :x="rectWidth / 2 + indentX" :y="(1 + index) * (fontSize.height + paddingY * 2 + gapY * 2)" -->
-        <tree-node v-for="(value, index) of node.children" v-if="!collapsed" :node="value" :key="index" :ctx="ctx"
-            :options="options" v-bind:state="state" :x="relative[index]?.left" :y="relative[index]?.top"
-            :class="{ collapsed }" @update:size="updateSize(index, $event)" @click="emit('click', $event)"
-            @contextmenu="emit('contextmenu', $event)" @mouseenter="emit('mouseenter', $event)"
-            @mouseleave="emit('mouseleave', $event)"></tree-node>
+        <tree-node v-for="(value, index) of node.children" v-if="!collapsed" ref="children" :node="value" :key="index"
+            :ctx="ctx" :options="options" v-bind:state="state" :x="relative[index]?.left" :y="relative[index]?.top"
+            :class="{ collapsed }" @click="emit('click', $event)" @contextmenu="emit('contextmenu', $event)"
+            @mouseenter="emit('mouseenter', $event)" @mouseleave="emit('mouseleave', $event)"></tree-node>
         <path v-for="(_, index) of node.children" v-if="!collapsed" :key="index" fill="none"
             :style="{ stroke: borderColor }" :d="relative[index]?.link" />
         <rect v-if="!collapsed && node.extensible" :x="extendRect.x" :y="extendRect.y" :rx="radius"
@@ -31,12 +30,12 @@
             cursor="pointer" drag-scroller-disable @mouseenter="hover = true" @mouseleave="hover = false">{{
                 extendTextContent }}</text>
         <path v-if="!collapsed && node.extensible" fill="none" :style="{ stroke: borderColor }" :d="extend.link" />
-        <!-- <rect v-if="!collapsed && node.extensible" :x="extend.left" :y="extend.top" :width="extendNodeSize.bounding.width"
-            :height="extendNodeSize.bounding.height" stroke="red" fill="none" /> -->
+        <rect v-if="!collapsed && node.extensible" :x="extend.left" :y="extend.top"
+            :width="extendNodeSize.bounding.width" :height="extendNodeSize.bounding.height" stroke="red" fill="none" />
     </svg>
 </template>
 <script setup lang="ts" generic="T extends Data<T>">
-import { computed, onMounted, reactive, ref, StyleValue, watch } from "vue";
+import { computed, ref, StyleValue, watch } from "vue";
 import type {
     Data,
     ExternalState,
@@ -56,7 +55,6 @@ const props = defineProps<{
 
 // Emits.
 type Emits = {
-    "update:size": [TreeNodeSize];
     click: [TreeEvent<T, MouseEvent>];
     contextmenu: [TreeEvent<T, MouseEvent>];
     mouseenter: [TreeEvent<T, MouseEvent>];
@@ -82,6 +80,7 @@ const name = ref<SVGTextElement>();
 const vertical = ref<boolean>(true);
 const collapsed = ref<boolean>(false);
 const hover = ref<boolean>(false);
+const children = ref<{ size: TreeNodeSize }[]>([]);
 
 const fontWeight = computed(function (): number {
     return hover.value ? textHoverWeight : textWeight;
@@ -113,6 +112,7 @@ const shadowStyle = computed(function (): StyleValue {
 // Track the size of each node.
 
 function event<E extends MouseEvent>(event: E) {
+    console.log(width.value, height.value, sizes.value);
     return { event, node: props.node, state: { vertical, collapsed }, scrollIntoView };
 }
 
@@ -123,11 +123,9 @@ function mouseleave($event: MouseEvent) {
     emit("mouseleave", event($event));
 }
 
-const sizes = reactive<TreeNodeSize[]>([]);
-
-function updateSize(index: number, size: TreeNodeSize) {
-    sizes[index] = size;
-}
+const sizes = computed(function (): TreeNodeSize[] {
+    return children.value.map((child) => child.size);
+});
 
 // Some constants or variables for size calculation.
 
@@ -171,17 +169,17 @@ const rectHeight = computed(() => textSize.value.height + paddingY * 2);
 
 const width = computed(function () {
     const extendNodeWidth = props.node.extensible ? extendNodeSize.value.bounding.width : 0
-    if (sizes.length === 0 && !props.node.extensible || collapsed.value) {
+    if (sizes.value.length === 0 && !props.node.extensible || collapsed.value) {
         return rectWidth.value + marginX * 2;
     } else if (vertical.value) {
-        return Math.max(sizes.reduce(
+        return Math.max(sizes.value.reduce(
             (acc, cur) =>
                 Math.max(acc, cur.bounding.width + rectWidth.value / 2 + indentX),
             rectWidth.value + marginX * 2
         ), extendNodeWidth + rectWidth.value / 2 + indentX);
     } else {
         return Math.max(
-            sizes.reduce((acc, cur) => acc + cur.bounding.width, extendNodeWidth),
+            sizes.value.reduce((acc, cur) => acc + cur.bounding.width, extendNodeWidth),
             rectWidth.value + marginX * 2
         );
     }
@@ -189,10 +187,10 @@ const width = computed(function () {
 
 const height = computed(function () {
     const extendNodeHeight = props.node.extensible ? extendNodeSize.value.bounding.height : 0
-    if (sizes.length === 0 && !props.node.extensible || collapsed.value) {
+    if (sizes.value.length === 0 && !props.node.extensible || collapsed.value) {
         return rectHeight.value + marginY * 2;
     } else if (vertical.value) {
-        return sizes.reduce(
+        return sizes.value.reduce(
             (acc, cur) => acc + cur.bounding.height,
             rectHeight.value + marginY + extendNodeHeight
         );
@@ -201,23 +199,23 @@ const height = computed(function () {
             rectHeight.value +
             marginY +
             indentY +
-            sizes.reduce((acc, cur) => Math.max(acc, cur.bounding.height), extendNodeHeight)
+            sizes.value.reduce((acc, cur) => Math.max(acc, cur.bounding.height), extendNodeHeight)
         );
     }
 });
 
 const childrenWidth = computed(function () {
-    if (sizes.length === 0 && !props.node.extensible || vertical.value) {
+    if (sizes.value.length === 0 && !props.node.extensible || vertical.value) {
         return 0;
     } else {
         const extendNodeWidth = props.node.extensible ? extendNodeSize.value.bounding.width : 0
-        return sizes.reduce((acc, cur) => acc + cur.bounding.width, extendNodeWidth);
+        return sizes.value.reduce((acc, cur) => acc + cur.bounding.width, extendNodeWidth);
     }
 });
 
 const middle = computed(function () {
-    const first = sizes[0] ?? extendNodeSize.value;
-    const last = props.node.extensible ? extendNodeSize.value : sizes[sizes.length - 1] ?? extendNodeSize.value;
+    const first = sizes.value.length > 0 ? sizes.value[0] : extendNodeSize.value;
+    const last = props.node.extensible ? extendNodeSize.value : sizes.value[sizes.value.length - 1] ?? extendNodeSize.value;
     const leftFirst = Math.max(0, width.value - childrenWidth.value) / 2;
     const firstMiddleX = first.name.x + first.name.width / 2;
     const lastMiddleX =
@@ -265,7 +263,7 @@ const relatives = computed(function (): [Relative[], Relative] {
             cur.top = bottom;
             return { left, top, right, bottom, link };
         }
-        const results = sizes.map(next);
+        const results = sizes.value.map(next);
         const e = next(extendNodeSize.value);
         return [results, e];
     } else {
@@ -293,7 +291,7 @@ const relatives = computed(function (): [Relative[], Relative] {
             cur.left = right;
             return { left, top, right, bottom, link };
         }
-        const results = sizes.map(next);
+        const results = sizes.value.map(next);
         const e = next(extendNodeSize.value);
         return [results, e];
     }
@@ -321,7 +319,7 @@ const extendRect = computed(function () {
 const viewBox = computed(() => `0 0 ${width.value} ${height.value}`);
 
 const rect = computed(function () {
-    if (sizes.length === 0 && !props.node.extensible || collapsed.value) {
+    if (sizes.value.length === 0 && !props.node.extensible || collapsed.value) {
         return {
             x: marginX,
             y: marginY,
@@ -363,14 +361,6 @@ const size = computed(function (): TreeNodeSize {
     return { bounding: { width: width.value, height: height.value }, name };
 });
 
-watch(size, (size) => {
-    emit("update:size", size);
-});
-
-onMounted(() => {
-    emit("update:size", size.value);
-});
-
 function scrollIntoView() {
     setTimeout(() => name.value?.scrollIntoView({
         behavior: "smooth",
@@ -379,7 +369,7 @@ function scrollIntoView() {
     }));
 }
 
-defineExpose({ scrollIntoView });
+defineExpose({ scrollIntoView, size });
 
 // Watch external states.
 watch(props.state.active, (active) => {

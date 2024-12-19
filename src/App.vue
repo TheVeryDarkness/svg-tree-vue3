@@ -4,15 +4,18 @@ import Tree from "./components/Tree.vue";
 import { Data, TreeEvent } from "./components/types";
 type T = {
   name: string;
+  path?: string;
   color?: string;
   children: T[];
   extensible?: boolean;
 };
 const data: T = {
   name: "123123123123",
+  path: "123123123123",
   children: [
     {
       name: "445",
+      path: "445",
       color: "red",
       children: [
         { name: "123132", color: "cyan", children: [] },
@@ -86,5 +89,6 @@ function contextmenu<T extends Data<T>>(event: TreeEvent<T, MouseEvent>) {
 </script>
 
 <template>
+  <input type="text" v-model="state.active.value" />
   <Tree ref="tree" :data="data" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
 </template>
