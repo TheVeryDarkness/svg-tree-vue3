@@ -8,4 +8,4 @@ The [demo page](https://theverydarkness.github.io/svg-tree-vue3/), which is also
 
 [Here](./src/App.vue) is an example of how to use the component.
 
-Currently, almost all the props are not reactive, so you may need to use `key` to force the component to re-render.
+Currently, some parts of the prop `options` are not reactive (it could be, but I'm worrying the overhead), so you may need to use `key` to force the component to re-render if you need to change them.
