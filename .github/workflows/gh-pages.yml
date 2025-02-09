@@ -18,6 +18,9 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "^6.10.0"
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
