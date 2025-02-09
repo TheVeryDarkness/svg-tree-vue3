@@ -5,8 +5,8 @@ on:
     branches:
       - main # Set a branch name to trigger deployment
     paths-ignore:
-      - 'README.md'
-      - '.gitignore'
+      - "README.md"
+      - ".gitignore"
   pull_request:
 
 jobs:
@@ -22,8 +22,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "npm"
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+      - name: Build
+        run: npm run build
       - name: Build demo
         run: npm run build-demo
       - name: Deploy to GitHub Pages
