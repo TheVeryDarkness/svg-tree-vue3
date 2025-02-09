@@ -19,6 +19,7 @@ export default defineConfig({
         "src/components/TreeNode.vue",
         "src/components/Tree.vue",
         "src/components/Forest.vue",
+        "src/components/ref.ts",
       ],
       formats: ["es", "cjs"],
     },

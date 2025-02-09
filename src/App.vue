@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import Tree from "./components/Tree.vue";
 import { Data, TreeEvent } from "./components/types";
+import { SubscribedRef } from "./components/ref";
 type T = {
   name: string;
   path?: string;
@@ -68,8 +69,8 @@ const data: T = {
 };
 let tree = ref();
 let state = {
-  active: ref<string | number | undefined>(undefined),
-  hover: ref<string | number | undefined>(undefined)
+  active: new SubscribedRef<string | number | undefined>(undefined),
+  hover: new SubscribedRef<string | number | undefined>(undefined)
 };
 
 function click<T extends Data<T>>($event: TreeEvent<T, MouseEvent>) {

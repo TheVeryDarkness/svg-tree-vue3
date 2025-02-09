@@ -1,4 +1,5 @@
-import type { Ref, WatchSource } from "vue";
+import type { Ref } from "vue";
+import { SubscribedRef } from "./ref";
 
 export interface ColorOptions {
   /**
@@ -152,6 +153,6 @@ export interface TreeEvent<T extends Data<T>, E extends Event> {
 }
 
 export interface ExternalState {
-  active: WatchSource<number | string | undefined>;
-  hover: WatchSource<number | string | undefined>;
+  active: SubscribedRef<number | string | undefined>;
+  hover: SubscribedRef<number | string | undefined>;
 }

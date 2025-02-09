@@ -35,7 +35,7 @@
     </svg>
 </template>
 <script setup lang="ts" generic="T extends Data<T>">
-import { computed, ref, StyleValue, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, StyleValue } from "vue";
 import type {
     Data,
     ExternalState,
@@ -375,15 +375,25 @@ function scrollIntoView() {
 defineExpose({ scrollIntoView, size });
 
 // Watch external states.
-watch(props.state.active, (active) => {
+function watchActive(_active: string | number | undefined) {
     // console.log('active', active, props.node.path)
     if (active.value = (!!_active && props.node.path === _active)) {
         // console.log("scroll", active, props.node.path);
         // console.log(name.value);
         scrollIntoView();
     }
-});
-watch(props.state.hover, (_hover) => {
+}
+
+function watchHover(_hover: string | number | undefined) {
     hover.value = props.node.path === _hover;
-});
+}
+
+onMounted(() => {
+    props.state.active.subscribe(watchActive);
+    props.state.hover.subscribe(watchHover);
+})
+onUnmounted(() => {
+    props.state.active.unsubscribe(watchActive);
+    props.state.hover.unsubscribe(watchHover);
+})
 </script>
