@@ -31,6 +31,14 @@ export interface ColorOptions {
    * Font weight of texts when hovering.
    */
   textHoverWeight: number;
+  /**
+   * Fill color of texts when active.
+   */
+  textActiveColor: string;
+  /**
+   * Font weight of texts when active.
+   */
+  textActiveWeight: number;
 }
 export interface LayoutOptions {
   indentX: number;
@@ -74,6 +82,8 @@ export const defaultLightColorOptions: ColorOptions = {
   textWeight: 400,
   textHoverColor: "darkcyan",
   textHoverWeight: 700,
+  textActiveColor: "darkcyan",
+  textActiveWeight: 1000,
 };
 export const defaultDarkColorOptions: ColorOptions = {
   borderColor: "lightgray",
@@ -83,6 +93,8 @@ export const defaultDarkColorOptions: ColorOptions = {
   textWeight: 400,
   textHoverColor: "cyan",
   textHoverWeight: 700,
+  textActiveColor: "cyan",
+  textActiveWeight: 1000,
 };
 export const defaultFontOptions: FontOptions = {
   fontFamily: "JetBrains Mono",

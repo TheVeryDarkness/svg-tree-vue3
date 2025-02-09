@@ -72,6 +72,8 @@ const {
     textWeight,
     textHoverColor,
     textHoverWeight,
+    textActiveColor,
+    textActiveWeight,
 } = props.options.color;
 const { fontFamily, fontSize } = props.options.font;
 
@@ -79,18 +81,19 @@ const svg = ref<SVGElement>();
 const name = ref<SVGTextElement>();
 const vertical = ref<boolean>(true);
 const collapsed = ref<boolean>(false);
+const active = ref<boolean>(false);
 const hover = ref<boolean>(false);
 const children = ref<{ size: TreeNodeSize }[]>([]);
 
 const fontWeight = computed(function (): number {
-    return hover.value ? textHoverWeight : textWeight;
+    return active.value ? textActiveWeight : hover.value ? textHoverWeight : textWeight;
 });
 
 const ctxFont = computed(() => `${fontWeight.value} ${fontSize}px ${fontFamily}`);
 
 const textStyle = computed(function (): StyleValue {
     return {
-        fill: props.node.color ?? (hover.value ? textHoverColor : textColor),
+        fill: props.node.color ?? (active.value ? textActiveColor : hover.value ? textHoverColor : textColor),
         userSelect: 'none',
         fontWeight: fontWeight.value,
         fontFamily,
@@ -374,7 +377,7 @@ defineExpose({ scrollIntoView, size });
 // Watch external states.
 watch(props.state.active, (active) => {
     // console.log('active', active, props.node.path)
-    if (active && props.node.path === active) {
+    if (active.value = (!!_active && props.node.path === _active)) {
         // console.log("scroll", active, props.node.path);
         // console.log(name.value);
         scrollIntoView();
