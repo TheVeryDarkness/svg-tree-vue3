@@ -2,6 +2,8 @@
 
 This is some simple SVG tree components for Vue3.
 
+The [demo page](https://theverydarkness.github.io/svg-tree-vue3/), which is also used for testing, is available.
+
 ## Usage
 
 [Here](./src/App.vue) is an example of how to use the component.
