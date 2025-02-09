@@ -8,4 +8,8 @@ The [demo page](https://theverydarkness.github.io/svg-tree-vue3/), which is also
 
 [Here](./src/App.vue) is an example of how to use the component.
 
-Currently, some parts of the prop `options` are not reactive (it could be, but I'm worrying the overhead), so you may need to use `key` to force the component to re-render if you need to change them.
+### Noted
+
+Currently, some parts of the prop `options`, such as `options.font.fontFamily`, are not reactive (they could be, but I'm worrying the overhead, and I haven't tested which parts are not reactive), so you may need to use `key` to force the component to re-render if you need to change them.
+
+Pleaas open an issue if you *actually* need this feature.
