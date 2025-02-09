@@ -45,7 +45,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview",
+    "dev-demo": "vite dev -c vite.demo.config.ts",
+    "preview-demo": "vite preview -c vite.demo.config.ts",
     "build-demo": "vite build -c vite.demo.config.ts",
     "prepublishOnly": "vue-tsc -b && vite build"
   },
