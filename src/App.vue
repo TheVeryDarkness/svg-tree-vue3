@@ -74,12 +74,13 @@ let state = {
 };
 
 function click<T extends Data<T>>($event: TreeEvent<T, MouseEvent>) {
+  $event.event.stopPropagation();
   if ($event.event.shiftKey) {
+    console.log(($event.state.vertical.value = !$event.state.vertical.value));
+  } else {
     console.log($event);
     console.log(state.active.value);
     state.active.value = $event.node.path;
-  } else {
-    console.log(($event.state.vertical.value = !$event.state.vertical.value));
   }
 }
 
@@ -87,9 +88,16 @@ function contextmenu<T extends Data<T>>(event: TreeEvent<T, MouseEvent>) {
   event.event.preventDefault();
   event.state.collapsed.value = !event.state.collapsed.value;
 }
+
+window.addEventListener("click", () => {
+  state.active.value = undefined;
+});
 </script>
 
 <template>
+  <p>Left Click = Set as active node</p>
+  <p>Shift + Left Click = Switch direction</p>
+  <p>Right Click = Collapse or expand</p>
   <label>Active:</label>
   <input type="text" v-model="state.active.value" />
   <Tree ref="tree" :data="data" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
