@@ -1,9 +1,9 @@
 <template>
     <svg ref="svg" :view-box="viewBox" :width="width" :height="height"
-        :class="{ active, inactive: hasActive && !active, normal: !hasActive }" enable-background="true" fill="none"
-        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        :class="{ hover, active, inactive: hasActive && !active, normal: !hasActive }" enable-background="true"
+        fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <rect class="shadow" :x="rect.x + 4" :y="rect.y + 4" :rx="radius" :width="rect.width" :height="rect.height"
-            :style="shadowStyle" v-if="collapsed" />
+            v-if="collapsed" />
         <rect class="node" :x="rect.x" :y="rect.y" :rx="radius" :width="rect.width" :height="rect.height"
             :style="rectStyle" cursor="pointer" drag-scroller-disable @mouseenter="hover = true; mouseenter"
             @mouseleave="hover = false; mouseleave" @click="emit('click', event($event))"
@@ -23,7 +23,7 @@
             :class="{ collapsed }" @click="emit('click', $event)" @contextmenu="emit('contextmenu', $event)"
             @mouseenter="emit('mouseenter', $event)" @mouseleave="emit('mouseleave', $event)"></tree-node>
         <path v-for="(_, index) of node.children" v-if="!collapsed" :key="index" fill="none" class="link"
-            :style="{ stroke: borderColor }" :d="relative[index]?.link" />
+            :d="relative[index]?.link" />
         <rect v-if="!collapsed && node.extensible" :x="extendRect.x" :y="extendRect.y" :rx="radius"
             :width="extendNodeSize.name.width" :height="extendNodeSize.name.height" :style="rectStyle"
             class="node extend" cursor="pointer" drag-scroller-disable @mouseenter="hover = true"
@@ -32,8 +32,7 @@
             class="node extend" cursor="pointer" drag-scroller-disable @mouseenter="hover = true"
             @mouseleave="hover = false">{{
                 extendTextContent }}</text>
-        <path v-if="!collapsed && node.extensible" fill="none" class="link extend" :style="{ stroke: borderColor }"
-            :d="extend.link" />
+        <path v-if="!collapsed && node.extensible" fill="none" class="link extend" :d="extend.link" />
         <!--<rect v-if="!collapsed && node.extensible" :x="extend.left" :y="extend.top"
             :width="extendNodeSize.bounding.width" :height="extendNodeSize.bounding.height" stroke="red" fill="none" />-->
     </svg>
@@ -69,14 +68,8 @@ const emit = defineEmits<Emits>();
 // Options.
 const { indentX, indentY, marginY, marginX, paddingY, paddingX, radius } = props.options.layout;
 const {
-    borderColor,
-    backgroundColor,
-    shadowColor,
-    textColor,
     textWeight,
-    textHoverColor,
     textHoverWeight,
-    textActiveColor,
     textActiveWeight,
 } = props.options.color;
 const { fontFamily, fontSize } = props.options.font;
@@ -99,7 +92,7 @@ const ctxFont = computed(() => `${fontWeight.value} ${fontSize}px ${fontFamily}`
 
 const textStyle = computed(function (): StyleValue {
     return {
-        fill: props.node.color ?? (active.value ? textActiveColor : hover.value ? textHoverColor : textColor),
+        fill: props.node.color ?? undefined,
         userSelect: 'none',
         fontWeight: fontWeight.value,
         fontFamily,
@@ -109,13 +102,8 @@ const textStyle = computed(function (): StyleValue {
 
 const rectStyle = computed(function (): StyleValue {
     return {
-        fill: props.node.backgroundColor ?? backgroundColor,
-        stroke: borderColor,
+        fill: props.node.backgroundColor ?? undefined,
     }
-})
-
-const shadowStyle = computed(function (): StyleValue {
-    return { fill: shadowColor, stroke: borderColor }
 })
 
 // Track the size of each node.

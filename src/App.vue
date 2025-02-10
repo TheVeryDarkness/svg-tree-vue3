@@ -3,6 +3,7 @@ import { ref } from "vue";
 import Tree from "./components/Tree.vue";
 import { Data, TreeEvent } from "./components/types";
 import { SubscribedRef } from "./components/ref";
+import "./auto.css";
 type T = {
   name: string;
   path?: string;
@@ -104,13 +105,9 @@ window.addEventListener("click", () => {
 </template>
 
 <style>
-svg.inactive>.node,
-svg.inactive>.link {
-  filter: brightness(0.6);
-}
-
-svg>.node,
-svg>.link {
-  filter: brightness(1);
+svg.active>rect.node,
+svg.active>.link {
+  stroke: red;
+  stroke-width: 2px;
 }
 </style>

@@ -40,7 +40,10 @@
       "types": "./dist/ref.d.ts",
       "import": "./dist/ref.js",
       "require": "./dist/ref.cjs"
-    }
+    },
+    "./auto.css": "./dist/auto.css",
+    "./dark.css": "./dist/dark.css",
+    "./light.css": "./dist/light.css"
   },
   "scripts": {
     "dev": "vite",

@@ -20,9 +20,13 @@ export default defineConfig({
         "src/components/Tree.vue",
         "src/components/Forest.vue",
         "src/components/ref.ts",
+        "src/auto.css",
+        "src/dark.css",
+        "src/light.css",
       ],
       formats: ["es", "cjs"],
     },
+    cssCodeSplit: true,
     sourcemap: true,
     rollupOptions: {
       external: ["vue"],

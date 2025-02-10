@@ -3,39 +3,13 @@ import { SubscribedRef } from "./ref";
 
 export interface ColorOptions {
   /**
-   * Stroke color of node borders and links.
-   */
-  borderColor: string;
-  /**
-   * Fill color of nodes.
-   */
-  backgroundColor: string;
-  /**
-   * Fill color of node shadows.
-   */
-  shadowColor: string;
-  /**
-   * Fill color of texts.
-   *
-   * May be overriden by {@link Data}.
-   */
-  textColor: string;
-  /**
    * Font weight of texts.
    */
   textWeight: number;
   /**
-   * Fill color of texts when hovering.
-   */
-  textHoverColor: string;
-  /**
    * Font weight of texts when hovering.
    */
   textHoverWeight: number;
-  /**
-   * Fill color of texts when active.
-   */
-  textActiveColor: string;
   /**
    * Font weight of texts when active.
    */
@@ -76,25 +50,13 @@ export const defaultLayoutOptions: LayoutOptions = {
   radius: 4,
 };
 export const defaultLightColorOptions: ColorOptions = {
-  borderColor: "gray",
-  backgroundColor: "white",
-  shadowColor: "darkgray",
-  textColor: "black",
   textWeight: 400,
-  textHoverColor: "darkcyan",
   textHoverWeight: 700,
-  textActiveColor: "darkcyan",
   textActiveWeight: 1000,
 };
 export const defaultDarkColorOptions: ColorOptions = {
-  borderColor: "lightgray",
-  backgroundColor: "darkgray",
-  shadowColor: "black",
-  textColor: "white",
   textWeight: 400,
-  textHoverColor: "cyan",
   textHoverWeight: 700,
-  textActiveColor: "cyan",
   textActiveWeight: 1000,
 };
 export const defaultFontOptions: FontOptions = {

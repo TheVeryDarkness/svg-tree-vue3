@@ -1,0 +1,19 @@
+svg > rect,
+svg > path {
+  stroke: lightgray;
+}
+svg > rect.node {
+  fill: darkgray;
+}
+svg > rect.shadow {
+  fill: black;
+}
+svg > text {
+  fill: white;
+}
+svg.hover > text {
+  fill: cyan;
+}
+svg.active > text {
+  fill: cyan;
+}
