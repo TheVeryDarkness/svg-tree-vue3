@@ -94,3 +94,15 @@ function contextmenu<T extends Data<T>>(event: TreeEvent<T, MouseEvent>) {
   <input type="text" v-model="state.active.value" />
   <Tree ref="tree" :data="data" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
 </template>
+
+<style>
+svg>.node,
+svg>.link {
+  filter: brightness(0.6);
+}
+
+svg.active>.node,
+svg.active>.link {
+  filter: brightness(1);
+}
+</style>

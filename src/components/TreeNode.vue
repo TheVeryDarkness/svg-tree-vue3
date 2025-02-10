@@ -1,13 +1,13 @@
 <template>
-    <svg ref="svg" :view-box="viewBox" :width="width" :height="height" enable-background="true" fill="none"
-        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <svg ref="svg" :view-box="viewBox" :width="width" :height="height" :class="{ active }" enable-background="true"
+        fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <rect class="shadow" :x="rect.x + 4" :y="rect.y + 4" :rx="radius" :width="rect.width" :height="rect.height"
             :style="shadowStyle" v-if="collapsed" />
-        <rect :x="rect.x" :y="rect.y" :rx="radius" :width="rect.width" :height="rect.height" :style="rectStyle"
-            cursor="pointer" drag-scroller-disable @mouseenter="hover = true; mouseenter"
+        <rect class="node" :x="rect.x" :y="rect.y" :rx="radius" :width="rect.width" :height="rect.height"
+            :style="rectStyle" cursor="pointer" drag-scroller-disable @mouseenter="hover = true; mouseenter"
             @mouseleave="hover = false; mouseleave" @click="emit('click', event($event))"
             @contextmenu="emit('contextmenu', event($event))" />
-        <text ref="name" :x="text.x" :y="text.y" :style="textStyle" cursor="pointer" drag-scroller-disable
+        <text ref="name" class="node" :x="text.x" :y="text.y" :style="textStyle" cursor="pointer" drag-scroller-disable
             @mouseenter="hover = true; mouseenter" @mouseleave="hover = false; mouseleave"
             @click="emit('click', event($event))" @contextmenu="emit('contextmenu', event($event))">
             {{ node.name }}
@@ -21,15 +21,18 @@
             :ctx="ctx" :options="options" v-bind:state="state" :x="relative[index]?.left" :y="relative[index]?.top"
             :class="{ collapsed }" @click="emit('click', $event)" @contextmenu="emit('contextmenu', $event)"
             @mouseenter="emit('mouseenter', $event)" @mouseleave="emit('mouseleave', $event)"></tree-node>
-        <path v-for="(_, index) of node.children" v-if="!collapsed" :key="index" fill="none"
+        <path v-for="(_, index) of node.children" v-if="!collapsed" :key="index" fill="none" class="link"
             :style="{ stroke: borderColor }" :d="relative[index]?.link" />
         <rect v-if="!collapsed && node.extensible" :x="extendRect.x" :y="extendRect.y" :rx="radius"
-            :width="extendNodeSize.name.width" :height="extendNodeSize.name.height" :style="rectStyle" cursor="pointer"
-            drag-scroller-disable @mouseenter="hover = true" @mouseleave="hover = false" />
+            :width="extendNodeSize.name.width" :height="extendNodeSize.name.height" :style="rectStyle"
+            class="node extend" cursor="pointer" drag-scroller-disable @mouseenter="hover = true"
+            @mouseleave="hover = false" />
         <text v-if="!collapsed && node.extensible" :x="extendText.x" :y="extendText.y" :style="textStyle"
-            cursor="pointer" drag-scroller-disable @mouseenter="hover = true" @mouseleave="hover = false">{{
+            class="node extend" cursor="pointer" drag-scroller-disable @mouseenter="hover = true"
+            @mouseleave="hover = false">{{
                 extendTextContent }}</text>
-        <path v-if="!collapsed && node.extensible" fill="none" :style="{ stroke: borderColor }" :d="extend.link" />
+        <path v-if="!collapsed && node.extensible" fill="none" class="link extend" :style="{ stroke: borderColor }"
+            :d="extend.link" />
         <!--<rect v-if="!collapsed && node.extensible" :x="extend.left" :y="extend.top"
             :width="extendNodeSize.bounding.width" :height="extendNodeSize.bounding.height" stroke="red" fill="none" />-->
     </svg>
