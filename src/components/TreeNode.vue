@@ -1,6 +1,7 @@
 <template>
-    <svg ref="svg" :view-box="viewBox" :width="width" :height="height" :class="{ active }" enable-background="true"
-        fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <svg ref="svg" :view-box="viewBox" :width="width" :height="height"
+        :class="{ active, inactive: hasActive && !active, normal: !hasActive }" enable-background="true" fill="none"
+        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <rect class="shadow" :x="rect.x + 4" :y="rect.y + 4" :rx="radius" :width="rect.width" :height="rect.height"
             :style="shadowStyle" v-if="collapsed" />
         <rect class="node" :x="rect.x" :y="rect.y" :rx="radius" :width="rect.width" :height="rect.height"
@@ -87,6 +88,8 @@ const collapsed = ref<boolean>(false);
 const active = ref<boolean>(false);
 const hover = ref<boolean>(false);
 const children = ref<{ size: TreeNodeSize }[]>([]);
+
+const hasActive = ref(false);
 
 const fontWeight = computed(function (): number {
     return active.value ? textActiveWeight : hover.value ? textHoverWeight : textWeight;
@@ -379,6 +382,7 @@ defineExpose({ scrollIntoView, size });
 
 // Watch external states.
 function watchActive(_active: string | number | undefined) {
+    hasActive.value = _active !== undefined;
     // console.log('active', active, props.node.path)
     if (active.value = (!!_active && props.node.path === _active)) {
         // console.log("scroll", active, props.node.path);

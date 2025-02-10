@@ -96,13 +96,13 @@ function contextmenu<T extends Data<T>>(event: TreeEvent<T, MouseEvent>) {
 </template>
 
 <style>
-svg>.node,
-svg>.link {
+svg.inactive>.node,
+svg.inactive>.link {
   filter: brightness(0.6);
 }
 
-svg.active>.node,
-svg.active>.link {
+svg>.node,
+svg>.link {
   filter: brightness(1);
 }
 </style>
