@@ -47,7 +47,10 @@ const data: T = {
     {
       name: "abcdefghijklmnopqrstuvwxyz",
       color: "red",
-      children: [{ name: "a", color: "green", children: [] }, { name: "abcdefghijklmnopqrstuvwxyz", color: "green", children: [] }],
+      children: [
+        { name: "a", color: "green", children: [] },
+        { name: "abcdefghijklmnopqrstuvwxyz", color: "green", children: [] },
+      ],
     },
     {
       name: "328948923",
@@ -64,7 +67,7 @@ const data: T = {
         { name: "x", color: "green", children: [] },
         { name: "_", color: "green", children: [] },
         { name: "y", color: "green", children: [] },
-      ]
+      ],
     },
     {
       name: "abcdefgdwewoknjnjonomiodjewidjwoedeowno",
@@ -75,14 +78,14 @@ const data: T = {
         { name: "x", color: "green", children: [] },
         { name: "_", color: "green", children: [] },
         { name: "y", color: "green", children: [] },
-      ]
+      ],
     },
   ],
 };
 let tree = ref();
 let state = {
   active: new SubscribedRef<string | number | undefined>(undefined),
-  hover: new SubscribedRef<string | number | undefined>(undefined)
+  hover: new SubscribedRef<string | number | undefined>(undefined),
 };
 
 function click<T extends Data<T>>($event: TreeEvent<T, MouseEvent>) {
@@ -116,8 +119,8 @@ window.addEventListener("click", () => {
 </template>
 
 <style>
-svg.active>rect.node,
-svg.active>.link {
+svg.active > rect.node,
+svg.active > .link {
   stroke: red;
   stroke-width: 2px;
 }
