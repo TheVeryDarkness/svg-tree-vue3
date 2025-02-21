@@ -32,6 +32,8 @@ jobs:
         run: pnpm run build
       - name: Build demo
         run: pnpm run build-demo
+      - name: Check code formatting
+        run: pnpm run format:check
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         if: github.ref == 'refs/heads/main'
