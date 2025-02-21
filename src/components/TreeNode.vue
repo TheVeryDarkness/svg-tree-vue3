@@ -33,8 +33,8 @@
             @mouseleave="hover = false">{{
                 extendTextContent }}</text>
         <path v-if="!collapsed && node.extensible" fill="none" class="link extend" :d="extend.link" />
-        <!--<rect v-if="!collapsed && node.extensible" :x="extend.left" :y="extend.top"
-            :width="extendNodeSize.bounding.width" :height="extendNodeSize.bounding.height" stroke="red" fill="none" />-->
+        <!-- <rect v-if="!collapsed && node.extensible" :x="extend.left" :y="extend.top"
+            :width="extendNodeSize.bounding.width" :height="extendNodeSize.bounding.height" stroke="red" fill="none" /> -->
     </svg>
 </template>
 <script setup lang="ts" generic="T extends Data<T>">
@@ -166,9 +166,7 @@ const rectHeight = computed(() => textSize.value.height + paddingY * 2);
 
 const width = computed(function () {
     const extendNodeWidth = props.node.extensible ? extendNodeSize.value.bounding.width : 0
-    if (sizes.value.length === 0 && !props.node.extensible || collapsed.value) {
-        return rectWidth.value + marginX * 2;
-    } else if (vertical.value) {
+    if (vertical.value) {
         return Math.max(sizes.value.reduce(
             (acc, cur) =>
                 Math.max(acc, cur.bounding.width + rectWidth.value / 2 + indentX),
@@ -212,7 +210,7 @@ const childrenWidth = computed(function () {
 
 const middle = computed(function () {
     const first = sizes.value.length > 0 ? sizes.value[0] : extendNodeSize.value;
-    const last = props.node.extensible ? extendNodeSize.value : sizes.value[sizes.value.length - 1] ?? extendNodeSize.value;
+    const last = props.node.extensible ? extendNodeSize.value : (sizes.value.length > 0 ? sizes.value[sizes.value.length - 1] : extendNodeSize.value);
     const leftFirst = Math.max(0, width.value - childrenWidth.value) / 2;
     const firstMiddleX = first.name.x + first.name.width / 2;
     const lastMiddleX =
@@ -220,7 +218,8 @@ const middle = computed(function () {
         last.bounding.width +
         last.name.x +
         last.name.width / 2;
-    return leftFirst + (lastMiddleX + firstMiddleX) / 2;
+    const middle = leftFirst + (lastMiddleX + firstMiddleX) / 2;
+    return Math.max(Math.min(middle, width.value - (rectWidth.value / 2 + marginX)), (rectWidth.value / 2 + marginX));
 });
 
 type Relative = {
