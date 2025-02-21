@@ -5,12 +5,11 @@
         <rect class="shadow" :x="rect.x + 4" :y="rect.y + 4" :rx="radius" :width="rect.width" :height="rect.height"
             v-if="collapsed" />
         <rect class="node" :x="rect.x" :y="rect.y" :rx="radius" :width="rect.width" :height="rect.height"
-            :style="rectStyle" cursor="pointer" drag-scroller-disable @mouseenter="hover = true; mouseenter"
-            @mouseleave="hover = false; mouseleave" @click="emit('click', event($event))"
-            @contextmenu="emit('contextmenu', event($event))" />
+            :style="rectStyle" cursor="pointer" drag-scroller-disable @mouseenter="mouseenter" @mouseleave="mouseleave"
+            @click="emit('click', event($event))" @contextmenu="emit('contextmenu', event($event))" />
         <text ref="name" class="node" :x="text.x" :y="text.y" :style="textStyle" cursor="pointer" drag-scroller-disable
-            @mouseenter="hover = true; mouseenter" @mouseleave="hover = false; mouseleave"
-            @click="emit('click', event($event))" @contextmenu="emit('contextmenu', event($event))">
+            @mouseenter="mouseenter" @mouseleave="mouseleave" @click="emit('click', event($event))"
+            @contextmenu="emit('contextmenu', event($event))">
             {{ node.name }}
         </text>
         <!-- <rect :width="width" :height="height" stroke="red" fill="none" /> -->
@@ -114,9 +113,11 @@ function event<E extends MouseEvent>(event: E) {
 }
 
 function mouseenter($event: MouseEvent) {
+    hover.value = true;
     emit("mouseenter", event($event));
 }
 function mouseleave($event: MouseEvent) {
+    hover.value = false;
     emit("mouseleave", event($event));
 }
 
