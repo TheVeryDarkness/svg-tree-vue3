@@ -107,18 +107,40 @@ function contextmenu<T extends Data<T>>(event: TreeEvent<T, MouseEvent>) {
 window.addEventListener("click", () => {
   state.active.value = undefined;
 });
+
+const active = state.active.toRef();
 </script>
 
 <template>
   <p>Left Click = Set as active node</p>
   <p>Shift + Left Click = Switch direction</p>
   <p>Right Click = Collapse or expand</p>
-  <label>Active:</label>
-  <input type="text" v-model="state.active.value" />
-  <Tree ref="tree" :data="data" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
+  <label for="active-node">Active:</label>
+  <input type="text" id="active-node" title="Active Node" v-model="active" />
+  <br />
+  <div class="container">
+    <Tree ref="tree" :data="data" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
+  </div>
+  <br />
+  <div class="container">
+    <textarea id="tree-data" title="Tree Data">{{ JSON.stringify(data, null, 2) }}</textarea>
+  </div>
 </template>
 
 <style>
+.container {
+  width: 99%;
+  display: flex;
+  align-content: center;
+  align-items: center;
+  justify-content: center;
+}
+
+textarea {
+  width: 98%;
+  height: 20em;
+}
+
 svg.active > rect.node,
 svg.active > .link {
   stroke: red;
