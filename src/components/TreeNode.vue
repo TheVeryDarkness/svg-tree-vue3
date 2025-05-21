@@ -157,7 +157,7 @@ const rectStyle = computed(function (): StyleValue {
 // Track the size of each node.
 
 function event<E extends MouseEvent>(event: E) {
-  console.log(width.value, height.value, sizes.value);
+  // console.log(width.value, height.value, sizes.value);
   return { event, node: props.node, state: { vertical, collapsed }, scrollIntoView };
 }
 
