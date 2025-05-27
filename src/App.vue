@@ -117,6 +117,8 @@ window.addEventListener("click", () => {
   <p>Right Click = Collapse or expand</p>
   <label for="active-node">Active:</label>
   <input type="text" id="active-node" title="Active Node" v-model="state.active.value" />
+  <label for="hover-node">Hover:</label>
+  <input type="text" id="hover-node" title="Hover Node" v-model="state.hover.value" />
   <br />
   <div class="container">
     <Tree ref="tree" :data="_data" :label-key="'id'" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
