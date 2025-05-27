@@ -6,18 +6,18 @@ import { SubscribedRef } from "./components/ref";
 import "./auto.css";
 type T = {
   name: string;
-  id?: string;
+  id?: number | string;
   color?: string;
   children: T[];
   extensible?: boolean;
 };
 const data: T = {
   name: "123123123123",
-  id: "123123123123",
+  id: 123123123123,
   children: [
     {
       name: "445",
-      id: "445",
+      id: 445,
       color: "red",
       children: [
         { name: "123132", color: "cyan", children: [] },
@@ -26,7 +26,7 @@ const data: T = {
     },
     {
       name: "445",
-      id: "789",
+      id: "445",
       color: "green",
       children: [{ name: "9999999", color: "cyan", children: [] }],
     },
