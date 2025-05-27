@@ -3,6 +3,7 @@
     :node="data"
     :ctx="ctx"
     :options="options"
+    :label-key="labelKey"
     :state="state"
     @click="emit('click', $event)"
     @contextmenu="emit('contextmenu', $event)"
@@ -11,7 +12,7 @@
   />
 </template>
 
-<script setup lang="ts" generic="T extends Data<T>">
+<script setup lang="ts" generic="T extends Data<T, Key>, Key extends string | number | symbol = 'path'">
 import { computed } from "vue";
 import TreeNode from "./TreeNode.vue";
 import { createContext, Data, ExternalState, mergeOptions, Options, PartialOptions, TreeEvent } from "./types";
@@ -21,6 +22,7 @@ const props = defineProps<{
   data: T;
   options: PartialOptions;
   state: ExternalState;
+  labelKey: Key;
 }>();
 
 const options = computed<Options>(() => mergeOptions(props.options));

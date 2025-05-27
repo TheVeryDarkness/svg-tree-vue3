@@ -84,14 +84,15 @@ export function createContext(canvas: OffscreenCanvas) {
   return ctx;
 }
 
-export interface Data<Child extends Data<Child>> {
-  path?: string | number | undefined;
+export type Data<Child extends Data<Child, Key>, Key extends string | number | symbol = "path"> = {
   name: string;
   color?: string;
   backgroundColor?: string;
   children: Child[];
   extensible?: boolean;
-}
+} & {
+  [key in Key]?: string | number | undefined;
+};
 export interface Rectangle {
   x: number;
   y: number;

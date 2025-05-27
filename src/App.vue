@@ -6,18 +6,18 @@ import { SubscribedRef } from "./components/ref";
 import "./auto.css";
 type T = {
   name: string;
-  path?: string;
+  id?: string;
   color?: string;
   children: T[];
   extensible?: boolean;
 };
 const data: T = {
   name: "123123123123",
-  path: "123123123123",
+  id: "123123123123",
   children: [
     {
       name: "445",
-      path: "445",
+      id: "445",
       color: "red",
       children: [
         { name: "123132", color: "cyan", children: [] },
@@ -26,6 +26,7 @@ const data: T = {
     },
     {
       name: "445",
+      id: "789",
       color: "green",
       children: [{ name: "9999999", color: "cyan", children: [] }],
     },
@@ -35,6 +36,7 @@ const data: T = {
     { name: "~~~~~~~~~~~~~~~~~~~~~~~~~", color: "green", children: [{ name: "????????", color: "blue", children: [] }], extensible: true },
     {
       name: "abcdefgdwewok",
+      id: "kkkk",
       color: "red",
       children: [{ name: "xdncsc", color: "green", children: [] }],
     },
@@ -82,20 +84,21 @@ const data: T = {
     },
   ],
 };
+const _data: Data<T, "id"> = data;
 let tree = ref();
 let state = {
   active: new SubscribedRef<string | number | undefined>(undefined),
   hover: new SubscribedRef<string | number | undefined>(undefined),
 };
 
-function click<T extends Data<T>>($event: TreeEvent<T, MouseEvent>) {
+function click<T extends Data<T, "id">>($event: TreeEvent<T, MouseEvent>) {
   $event.event.stopPropagation();
   if ($event.event.shiftKey) {
     console.log(($event.state.vertical.value = !$event.state.vertical.value));
   } else {
     console.log($event);
     console.log(state.active.value);
-    state.active.value = $event.node.path;
+    state.active.value = $event.node.id;
   }
 }
 
@@ -119,7 +122,8 @@ const active = state.active.toRef();
   <input type="text" id="active-node" title="Active Node" v-model="active" />
   <br />
   <div class="container">
-    <Tree ref="tree" :data="data" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
+    <Tree ref="tree" :data="_data" :label-key="'id'" :state="state" :options="undefined" @click="click"
+      @contextmenu="contextmenu" />
   </div>
   <br />
   <div class="container">
@@ -141,8 +145,8 @@ textarea {
   height: 20em;
 }
 
-svg.active > rect.node,
-svg.active > .link {
+svg.active>rect.node,
+svg.active>.link {
   stroke: red;
   stroke-width: 2px;
 }

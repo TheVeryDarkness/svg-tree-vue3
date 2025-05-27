@@ -54,6 +54,7 @@
       :key="index"
       :ctx="ctx"
       :options="options"
+      :label-key="props.labelKey"
       v-bind:state="state"
       :x="relative[index]?.left"
       :y="relative[index]?.top"
@@ -96,7 +97,7 @@
             :width="extendNodeSize.bounding.width" :height="extendNodeSize.bounding.height" stroke="red" fill="none" /> -->
   </svg>
 </template>
-<script setup lang="ts" generic="T extends Data<T>">
+<script setup lang="ts" generic="T extends Data<T, Key>, Key extends string | number | symbol = 'path'">
 import { computed, onMounted, onUnmounted, ref, StyleValue } from "vue";
 import type { Data, ExternalState, Options, Rectangle, TreeEvent, TreeNodeSize } from "./types";
 
@@ -106,6 +107,7 @@ const props = defineProps<{
   ctx: OffscreenCanvasRenderingContext2D;
   options: Options;
   state: ExternalState;
+  labelKey: Key;
 }>();
 
 // Emits.
@@ -408,7 +410,7 @@ defineExpose({ scrollIntoView, size });
 function watchActive(_active: string | number | undefined) {
   hasActive.value = _active !== undefined;
   // console.log('active', active, props.node.path)
-  if ((active.value = !!_active && props.node.path === _active)) {
+  if ((active.value = !!_active && props.node[props.labelKey] === _active)) {
     // console.log("scroll", active, props.node.path);
     // console.log(name.value);
     scrollIntoView();
@@ -416,7 +418,7 @@ function watchActive(_active: string | number | undefined) {
 }
 
 function watchHover(_hover: string | number | undefined) {
-  hover.value = props.node.path === _hover;
+  hover.value = props.node[props.labelKey] === _hover;
 }
 
 onMounted(() => {
