@@ -170,7 +170,7 @@ function mouseenter($event: MouseEvent) {
   emit("mouseenter", event($event));
 }
 function mouseleave($event: MouseEvent) {
-  props.state.hover.value = key.value;
+  props.state.hover.value = undefined;
   hover.value = false;
   emit("mouseleave", event($event));
 }
