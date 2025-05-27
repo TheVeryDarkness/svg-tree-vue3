@@ -76,8 +76,8 @@
       class="node extend"
       cursor="pointer"
       drag-scroller-disable
-      @mouseenter="hover = true"
-      @mouseleave="hover = false"
+      @mouseenter="mouseenter"
+      @mouseleave="mouseleave"
     />
     <text
       v-if="!collapsed && node.extensible"
@@ -87,8 +87,8 @@
       class="node extend"
       cursor="pointer"
       drag-scroller-disable
-      @mouseenter="hover = true"
-      @mouseleave="hover = false"
+      @mouseenter="mouseenter"
+      @mouseleave="mouseleave"
     >
       {{ extendTextContent }}
     </text>
@@ -109,6 +109,9 @@ const props = defineProps<{
   state: ExternalState;
   labelKey: Key;
 }>();
+
+// The key of the node, used for identification.
+const key = computed(() => props.node[props.labelKey]);
 
 // Emits.
 type Emits = {
@@ -164,10 +167,12 @@ function event<E extends MouseEvent>(event: E) {
 }
 
 function mouseenter($event: MouseEvent) {
+  props.state.hover.value = key.value;
   hover.value = true;
   emit("mouseenter", event($event));
 }
 function mouseleave($event: MouseEvent) {
+  props.state.hover.value = key.value;
   hover.value = false;
   emit("mouseleave", event($event));
 }
@@ -410,7 +415,7 @@ defineExpose({ scrollIntoView, size });
 function watchActive(_active: string | number | undefined) {
   hasActive.value = _active !== undefined;
   // console.log('active', active, props.node.path)
-  if ((active.value = !!_active && props.node[props.labelKey] === _active)) {
+  if ((active.value = !!_active && key.value === _active)) {
     // console.log("scroll", active, props.node.path);
     // console.log(name.value);
     scrollIntoView();
@@ -418,8 +423,8 @@ function watchActive(_active: string | number | undefined) {
 }
 
 function watchHover(_hover: string | number | undefined) {
-  console.log("hover", _hover, props.node[props.labelKey]);
-  hover.value = (props.node[props.labelKey] === _hover);
+  console.log("hover", _hover, key.value);
+  hover.value = key.value === _hover;
 }
 
 onMounted(() => {

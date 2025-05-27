@@ -17,7 +17,7 @@ import { ref, Ref, watch } from "vue";
  */
 export class SubscribedRef<T> {
   private _value: T;
-  private _subscribers: Set<(payload: T) => void> = new Set();
+  private _subscribers: Map<(payload: T) => void, number> = new Map();
   private _ref: Ref<T> | null = null;
   constructor(value: T) {
     this._value = value;
@@ -49,12 +49,26 @@ export class SubscribedRef<T> {
     return this._ref;
   }
   private dispatchEvent(payload: T) {
-    this._subscribers.forEach((subscriber) => subscriber(payload));
+    for (const subscriber of this._subscribers.keys()) {
+      subscriber(payload);
+    }
   }
   subscribe(subscriber: (payload: T) => void) {
-    this._subscribers.add(subscriber);
+    const count = this._subscribers.get(subscriber);
+    if (count) {
+      this._subscribers.set(subscriber, count + 1);
+    } else {
+      this._subscribers.set(subscriber, 1);
+    }
   }
   unsubscribe(subscriber: (payload: T) => void) {
-    this._subscribers.delete(subscriber);
+    if (this._subscribers.has(subscriber)) {
+      const count = this._subscribers.get(subscriber)!;
+      if (count > 1) {
+        this._subscribers.set(subscriber, count - 1);
+      } else {
+        this._subscribers.delete(subscriber);
+      }
+    }
   }
 }
