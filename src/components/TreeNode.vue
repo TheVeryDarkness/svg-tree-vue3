@@ -61,8 +61,6 @@
       :class="{ collapsed }"
       @click="emit('click', $event)"
       @contextmenu="emit('contextmenu', $event)"
-      @mouseenter="emit('mouseenter', $event)"
-      @mouseleave="emit('mouseleave', $event)"
     ></tree-node>
     <path v-for="(_, index) of node.children" v-if="!collapsed" :key="index" fill="none" class="link" :d="relative[index]?.link" />
     <rect
