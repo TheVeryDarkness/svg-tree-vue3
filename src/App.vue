@@ -122,8 +122,7 @@ const active = state.active.toRef();
   <input type="text" id="active-node" title="Active Node" v-model="active" />
   <br />
   <div class="container">
-    <Tree ref="tree" :data="_data" :label-key="'id'" :state="state" :options="undefined" @click="click"
-      @contextmenu="contextmenu" />
+    <Tree ref="tree" :data="_data" :label-key="'id'" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
   </div>
   <br />
   <div class="container">
@@ -145,8 +144,8 @@ textarea {
   height: 20em;
 }
 
-svg.active>rect.node,
-svg.active>.link {
+svg.active > rect.node,
+svg.active > .link {
   stroke: red;
   stroke-width: 2px;
 }
