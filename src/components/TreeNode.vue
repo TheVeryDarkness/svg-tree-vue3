@@ -421,7 +421,7 @@ function watchActive(_active: string | number | undefined) {
 }
 
 function watchHover(_hover: string | number | undefined) {
-  console.log("hover", _hover, key.value);
+  console.log("hover", _hover, key.value, props.node, props.labelKey);
   hover.value = _hover !== undefined && key.value === _hover;
 }
 
