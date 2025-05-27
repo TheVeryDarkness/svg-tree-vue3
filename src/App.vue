@@ -2,7 +2,6 @@
 import { ref } from "vue";
 import Tree from "./components/Tree.vue";
 import { Data, TreeEvent } from "./components/types";
-import { SubscribedRef } from "./components/ref";
 import "./auto.css";
 type T = {
   name: string;
@@ -87,8 +86,8 @@ const data: T = {
 const _data: Data<T, "id"> = data;
 let tree = ref();
 let state = {
-  active: new SubscribedRef<string | number | undefined>(undefined),
-  hover: new SubscribedRef<string | number | undefined>(undefined),
+  active: ref<string | number | undefined>(undefined),
+  hover: ref<string | number | undefined>(undefined),
 };
 
 function click<T extends Data<T, "id">>($event: TreeEvent<T, MouseEvent>) {
@@ -110,8 +109,6 @@ function contextmenu<T extends Data<T>>(event: TreeEvent<T, MouseEvent>) {
 window.addEventListener("click", () => {
   state.active.value = undefined;
 });
-
-const active = state.active.toRef();
 </script>
 
 <template>
@@ -119,7 +116,7 @@ const active = state.active.toRef();
   <p>Shift + Left Click = Switch direction</p>
   <p>Right Click = Collapse or expand</p>
   <label for="active-node">Active:</label>
-  <input type="text" id="active-node" title="Active Node" v-model="active" />
+  <input type="text" id="active-node" title="Active Node" v-model="state.active.value" />
   <br />
   <div class="container">
     <Tree ref="tree" :data="_data" :label-key="'id'" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />

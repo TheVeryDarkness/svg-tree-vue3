@@ -1,6 +1,7 @@
 import { ref, Ref, watch } from "vue";
 
 /**
+ * @deprecated This class is deprecated and will be removed in the future.
  * @abstract An event target that dispatches an event when the value is set,
  * no matter whether the value is changed or not.
  * Note that this not works in `watch` and `computed`, please use `toRef` instead.

@@ -98,7 +98,7 @@
   </svg>
 </template>
 <script setup lang="ts" generic="T extends Data<T, Key>, Key extends string | number | symbol = 'path'">
-import { computed, onMounted, onUnmounted, ref, StyleValue } from "vue";
+import { computed, ref, StyleValue, watch } from "vue";
 import type { Data, ExternalState, Options, Rectangle, TreeEvent, TreeNodeSize } from "./types";
 
 // Props.
@@ -424,15 +424,9 @@ function watchActive(_active: string | number | undefined) {
 
 function watchHover(_hover: string | number | undefined) {
   console.log("hover", _hover, key.value);
-  hover.value = key.value === _hover;
+  hover.value = _hover !== undefined && key.value === _hover;
 }
 
-onMounted(() => {
-  props.state.active.subscribe(watchActive);
-  props.state.hover.subscribe(watchHover);
-});
-onUnmounted(() => {
-  props.state.active.unsubscribe(watchActive);
-  props.state.hover.unsubscribe(watchHover);
-});
+watch(props.state.active, watchActive);
+watch(props.state.hover, watchHover);
 </script>
