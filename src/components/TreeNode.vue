@@ -418,7 +418,8 @@ function watchActive(_active: string | number | undefined) {
 }
 
 function watchHover(_hover: string | number | undefined) {
-  hover.value = props.node[props.labelKey] === _hover;
+  console.log("hover", _hover, props.node[props.labelKey]);
+  hover.value = (props.node[props.labelKey] === _hover);
 }
 
 onMounted(() => {
