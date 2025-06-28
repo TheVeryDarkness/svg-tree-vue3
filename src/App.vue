@@ -18,7 +18,6 @@ const data: T = {
   name: "123123123123",
   id: 123123123123,
   outSelfShape: "diamond",
-  outSelfFill: "currentColor",
   dashArray: "4 2",
   children: [
     {

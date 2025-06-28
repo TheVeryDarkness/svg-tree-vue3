@@ -283,8 +283,8 @@ const out = computed(function (): [string, number] | undefined {
       const shapeSize = 5;
       return [
         `M ${x1 - shapeSize / 2} ${y1 + shapeSize}
-L ${x1} ${y1}
-L ${x1 + shapeSize / 2} ${y1 + shapeSize}
+l ${shapeSize / 2} ${-shapeSize}
+l ${shapeSize / 2} ${shapeSize}
 `,
         0,
       ];
@@ -293,21 +293,22 @@ L ${x1 + shapeSize / 2} ${y1 + shapeSize}
       const shapeSize = 5;
       return [
         `M ${x1} ${y1}
-A ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 ${x1} ${y1 + shapeSize}
-A ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 ${x1} ${y1}
+a ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 0 ${shapeSize}
+a ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 0 ${-shapeSize}
 `,
         shapeSize,
       ];
     }
     case "diamond": {
-      const shapeSize = 8;
+      const shapeSize = 6;
+      const width = shapeSize * 0.4;
+      const length = shapeSize / 2;
       return [
         `M ${x1} ${y1}
-L ${x1 - shapeSize / 3} ${y1 + shapeSize / 2}
-L ${x1} ${y1 + shapeSize}
-L ${x1 + shapeSize / 3} ${y1 + shapeSize / 2}
-Z
-`,
+l ${width} ${length}
+l ${-width} ${length}
+l ${-width} ${-length}
+Z`,
         shapeSize,
       ];
     }
@@ -315,8 +316,8 @@ Z
       const shapeSize = 5;
       return [
         `M ${x1} ${y1}
-L ${x1 - shapeSize / 2} ${y1 + shapeSize}
-L ${x1 + shapeSize / 2} ${y1 + shapeSize}
+l ${shapeSize / 2} ${shapeSize}
+l ${-shapeSize} 0
 Z
 `,
         shapeSize,
@@ -376,13 +377,14 @@ Z`,
             ];
           }
           case "diamond": {
-            const shapeSize = 8;
+            const shapeSize = 6;
+            const width = shapeSize * 0.4;
+            const length = shapeSize / 2;
             return [
               `M ${x2 + dx3 - shapeSize} ${y2}
-l ${shapeSize / 2} ${-shapeSize / 3}
-l ${shapeSize / 2} ${shapeSize / 3}
-l ${-shapeSize / 2} ${shapeSize / 3}
-l ${-shapeSize / 2} ${-shapeSize / 3}
+l ${length} ${-width}
+l ${length} ${width}
+l ${-length} ${width}
 Z`,
               shapeSize,
             ];
@@ -451,13 +453,14 @@ Z`,
             ];
           }
           case "diamond": {
-            const shapeSize = 8;
+            const shapeSize = 6;
+            const width = shapeSize * 0.4;
+            const length = shapeSize / 2;
             return [
               `M ${x3} ${y3 + dy4 - shapeSize}
-l ${shapeSize / 3} ${shapeSize / 2}
-l ${-shapeSize / 3} ${shapeSize / 2}
-l ${-shapeSize / 3} ${-shapeSize / 2}
-l ${shapeSize / 3} ${-shapeSize / 2}
+l ${width} ${length}
+l ${-width} ${length}
+l ${-width} ${-length}
 Z`,
               shapeSize,
             ];
