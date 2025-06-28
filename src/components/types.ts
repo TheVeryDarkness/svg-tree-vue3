@@ -83,11 +83,22 @@ export function createContext(canvas: OffscreenCanvas) {
   return ctx;
 }
 
+export type Shape = "arrow" | "circle" | "diamond" | "triangle";
+
 export type Data<Child extends Data<Child, Key>, Key extends string | number | symbol = "path"> = {
   name: string;
   color?: string;
   backgroundColor?: string;
   children: Child[];
+  dashArray?: string | number;
+  outSelfShape?: Shape;
+  /**
+   * @description The fill color of the outSelfShape. If not provided, it will be 'none'.
+   * You can also use 'currentColor' to use the current stroke color.
+   */
+  outSelfFill?: string;
+  inChildrenShape?: (Shape | undefined)[];
+  inChildrenFill?: (string | undefined)[];
   extensible?: boolean;
 } & {
   [key in Key]?: string | number | undefined;

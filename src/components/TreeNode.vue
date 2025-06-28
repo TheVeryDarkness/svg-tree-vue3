@@ -46,6 +46,7 @@
             :x2="sizes.reduce((acc, cur) => acc + (cur?.bounding?.width ?? 0), 0) - (sizes[sizes.length - 1]?.bounding?.width ?? 0) + (sizes[sizes.length - 1]?.name?.x ?? 0) + (sizes[sizes.length - 1]?.name?.width ?? 0) / 2"
             :y2="paddingY" stroke="green" /> -->
     <!-- :x="rectWidth / 2 + indentX" :y="(1 + index) * (fontSize.height + paddingY * 2 + gapY * 2)" -->
+    <path v-if="!collapsed" :fill="props.node.outSelfFill ?? 'none'" class="link" stroke-linejoin="round" :d="out?.[0]" />
     <tree-node
       v-for="(value, index) of node.children"
       v-if="!collapsed"
@@ -62,7 +63,16 @@
       @click="emit('click', $event)"
       @contextmenu="emit('contextmenu', $event)"
     ></tree-node>
-    <path v-for="(_, index) of node.children" v-if="!collapsed" :key="index" fill="none" class="link" :d="relative[index]?.link" />
+    <path v-for="(_, index) of node.children" v-if="!collapsed" :key="index" fill="none" class="link" :d="relative[index]?.link" :stroke-dasharray="node.dashArray" />
+    <path
+      v-for="(_, index) of node.children"
+      v-if="!collapsed"
+      :key="index"
+      :fill="props.node.inChildrenFill?.[index] ?? 'none'"
+      class="link"
+      stroke-linejoin="round"
+      :d="relative[index]?.in"
+    />
     <rect
       v-if="!collapsed && node.extensible"
       :x="extendRect.x"
@@ -97,7 +107,7 @@
 </template>
 <script setup lang="ts" generic="T extends Data<T, Key>, Key extends string | number | symbol = 'path'">
 import { computed, ref, StyleValue, watch } from "vue";
-import type { Data, ExternalState, Options, Rectangle, TreeEvent, TreeNodeSize } from "./types";
+import type { Data, ExternalState, Options, Rectangle, Shape, TreeEvent, TreeNodeSize } from "./types";
 
 // Props.
 const props = defineProps<{
@@ -264,12 +274,64 @@ const middle = computed(function () {
   return Math.max(Math.min(middle, width.value - (rectWidth.value / 2 + marginX)), rectWidth.value / 2 + marginX);
 });
 
+const out = computed(function (): [string, number] | undefined {
+  const [x1, y1] = vertical.value ? [marginX + rectWidth.value / 2, marginY + rectHeight.value] : [middle.value, marginY + rectHeight.value];
+  const shape = props.node.outSelfShape;
+
+  switch (shape) {
+    case "arrow": {
+      const shapeSize = 5;
+      return [
+        `M ${x1 - shapeSize / 2} ${y1 + shapeSize}
+L ${x1} ${y1}
+L ${x1 + shapeSize / 2} ${y1 + shapeSize}
+`,
+        0,
+      ];
+    }
+    case "circle": {
+      const shapeSize = 5;
+      return [
+        `M ${x1} ${y1}
+A ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 ${x1} ${y1 + shapeSize}
+A ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 ${x1} ${y1}
+`,
+        shapeSize,
+      ];
+    }
+    case "diamond": {
+      const shapeSize = 8;
+      return [
+        `M ${x1} ${y1}
+L ${x1 - shapeSize / 3} ${y1 + shapeSize / 2}
+L ${x1} ${y1 + shapeSize}
+L ${x1 + shapeSize / 3} ${y1 + shapeSize / 2}
+Z
+`,
+        shapeSize,
+      ];
+    }
+    case "triangle": {
+      const shapeSize = 5;
+      return [
+        `M ${x1} ${y1}
+L ${x1 - shapeSize / 2} ${y1 + shapeSize}
+L ${x1 + shapeSize / 2} ${y1 + shapeSize}
+Z
+`,
+        shapeSize,
+      ];
+    }
+  }
+});
+
 type Relative = {
   left: number;
   top: number;
   right: number;
   bottom: number;
   link: string;
+  in?: string;
 };
 const relatives = computed(function (): [Relative[], Relative] {
   if (vertical.value) {
@@ -277,7 +339,7 @@ const relatives = computed(function (): [Relative[], Relative] {
       left: marginX + rectWidth.value / 2 + indentX - marginX,
       top: marginY + rectHeight.value,
     };
-    function next(value: TreeNodeSize): Relative {
+    function next(value: TreeNodeSize, shape?: Shape): Relative {
       const left = cur.left;
       const top = cur.top;
       const right = left + value.bounding.width;
@@ -288,19 +350,66 @@ const relatives = computed(function (): [Relative[], Relative] {
       // l ${indentX - radius - marginX + value.name.x} 0`
 
       const x1 = marginX + rectWidth.value / 2;
-      const y1 = marginY + rectHeight.value;
+      const y1 = marginY + rectHeight.value + (out.value === undefined ? 0 : out.value[1]);
       const x2 = x1;
       const y2 = top + value.name.y + value.name.height / 2;
       const dx3 = indentX - marginX + value.name.x;
+      function inShapes(shape?: Shape): [string, number] | undefined {
+        switch (shape) {
+          case "arrow": {
+            const shapeSize = 5;
+            return [
+              `M ${x2 + dx3 - shapeSize} ${y2 - shapeSize / 2}
+l ${shapeSize} ${shapeSize / 2}
+l ${-shapeSize} ${shapeSize / 2}`,
+              0,
+            ];
+          }
+          case "circle": {
+            const shapeSize = 5;
+            return [
+              `M ${x2 + dx3 - shapeSize} ${y2}
+a ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 ${shapeSize} 0
+a ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 ${-shapeSize} 0
+Z`,
+              shapeSize,
+            ];
+          }
+          case "diamond": {
+            const shapeSize = 8;
+            return [
+              `M ${x2 + dx3 - shapeSize} ${y2}
+l ${shapeSize / 2} ${-shapeSize / 3}
+l ${shapeSize / 2} ${shapeSize / 3}
+l ${-shapeSize / 2} ${shapeSize / 3}
+l ${-shapeSize / 2} ${-shapeSize / 3}
+Z`,
+              shapeSize,
+            ];
+          }
+          case "triangle": {
+            const shapeSize = 5;
+            return [
+              `M ${x2 + dx3 - shapeSize} ${y2 - shapeSize / 2}
+l ${shapeSize} ${shapeSize / 2}
+l ${-shapeSize} ${shapeSize / 2}
+l ${0} ${-shapeSize}
+Z`,
+              shapeSize,
+            ];
+          }
+        }
+      }
+      const inShape = inShapes(shape);
       // Round angle:
       // `M ${x1} ${y1} L ${x2} ${y2 - radius} s 0 ${radius} ${radius} ${radius} l ${dx3 - radius} 0`
       // Straight angle:
       // `M ${x1} ${y1} L ${x2} ${y2} l ${dx3} 0`
-      const link = `M ${x1} ${y1} L ${x2} ${y2 - radius} s 0 ${radius} ${radius} ${radius} l ${dx3 - radius} 0`;
+      const link = `M ${x1} ${y1} L ${x2} ${y2 - radius} s 0 ${radius} ${radius} ${radius} l ${dx3 - radius - (inShape?.[1] ?? 0)} 0`;
       cur.top = bottom;
-      return { left, top, right, bottom, link };
+      return { left, top, right, bottom, link, in: inShape?.[0] };
     }
-    const results = sizes.value.map(next);
+    const results = sizes.value.map((value, i) => next(value, props.node.inChildrenShape?.[i]));
     const e = next(extendNodeSize.value);
     return [results, e];
   } else {
@@ -308,27 +417,73 @@ const relatives = computed(function (): [Relative[], Relative] {
       left: Math.max(0, width.value - childrenWidth.value) / 2,
       top: marginY + rectHeight.value + indentY,
     };
-    function next(value: TreeNodeSize): Relative {
+    function next(value: TreeNodeSize, shape?: Shape): Relative {
       const left = cur.left;
       const top = cur.top;
       const right = left + value.bounding.width;
       const bottom = top + value.bounding.height;
       const x1 = middle.value;
-      const y1 = marginY + rectHeight.value;
-      const dy2 = indentY / 2;
+      const y1 = marginY + rectHeight.value + (out.value?.[1] ?? 0);
+      const dy2 = indentY / 2 - (out.value?.[1] ?? 0);
       const x3 = cur.left + value.name.x + value.name.width / 2;
       // const dx3 = x3 - x1
       const y3 = cur.top - indentY / 2;
       const dy4 = indentY / 2 + value.name.y;
+      function inShapes(shape?: Shape): [string, number] | undefined {
+        switch (shape) {
+          case "arrow": {
+            const shapeSize = 5;
+            return [
+              `M ${x3 + shapeSize / 2} ${y3 + dy4 - shapeSize}
+l ${-shapeSize / 2} ${shapeSize}
+l ${-shapeSize / 2} ${-shapeSize}`,
+              0,
+            ];
+          }
+          case "circle": {
+            const shapeSize = 5;
+            return [
+              `M ${x3} ${y3 + dy4 - shapeSize}
+a ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 0 ${shapeSize}
+a ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 0 ${-shapeSize}
+Z`,
+              shapeSize,
+            ];
+          }
+          case "diamond": {
+            const shapeSize = 8;
+            return [
+              `M ${x3} ${y3 + dy4 - shapeSize}
+l ${shapeSize / 3} ${shapeSize / 2}
+l ${-shapeSize / 3} ${shapeSize / 2}
+l ${-shapeSize / 3} ${-shapeSize / 2}
+l ${shapeSize / 3} ${-shapeSize / 2}
+Z`,
+              shapeSize,
+            ];
+          }
+          case "triangle": {
+            const shapeSize = 5;
+            return [
+              `M ${x3 + shapeSize / 2} ${y3 + dy4 - shapeSize}
+l ${-shapeSize / 2} ${shapeSize}
+l ${-shapeSize / 2} ${-shapeSize}
+Z`,
+              shapeSize,
+            ];
+          }
+        }
+      }
+      const inShape = inShapes(shape);
       // Right:
       // `M ${x1} ${y1} l 0 ${indentY / 2} L ${x3 - radius} ${y3} s ${radius} 0 ${radius} ${radius} l 0 ${dy4 - radius}`
       // Left:
       // `M ${x1} ${y1} l 0 ${indentY / 2} L ${x3} ${y3} s ${-radius} 0 ${-radius} ${radius} l 0 ${dy4 - radius}`
-      const link = `M ${x1} ${y1} l 0 ${dy2} L ${x3} ${y3} l 0 ${dy4}`;
+      const link = `M ${x1} ${y1} l 0 ${dy2} L ${x3} ${y3} l 0 ${dy4 - (inShape?.[1] ?? 0)}`;
       cur.left = right;
-      return { left, top, right, bottom, link };
+      return { left, top, right, bottom, link, in: inShape?.[0] };
     }
-    const results = sizes.value.map(next);
+    const results = sizes.value.map((value, i) => next(value, props.node.inChildrenShape?.[i]));
     const e = next(extendNodeSize.value);
     return [results, e];
   }

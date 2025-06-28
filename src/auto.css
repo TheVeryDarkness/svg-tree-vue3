@@ -9,7 +9,8 @@
   }
   svg > rect,
   svg > path {
-    stroke: gray;
+    color: gray;
+    stroke: currentColor;
   }
   svg > rect.node {
     fill: white;
@@ -35,7 +36,8 @@
   }
   svg > rect,
   svg > path {
-    stroke: lightgray;
+    color: lightgray;
+    stroke: currentColor;
   }
   svg > rect.node {
     fill: darkgray;

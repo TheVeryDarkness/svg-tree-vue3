@@ -1,6 +1,7 @@
 svg > rect,
 svg > path {
-  stroke: gray;
+  color: gray;
+  stroke: currentColor;
 }
 svg > rect.node {
   fill: white;
