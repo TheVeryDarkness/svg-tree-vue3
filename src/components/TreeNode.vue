@@ -132,7 +132,7 @@ const emit = defineEmits<Emits>();
 
 // Options.
 const { indentX, indentY, marginY, marginX, paddingY, paddingX, radius } = props.options.layout;
-const { textWeight, textHoverWeight, textActiveWeight } = props.options.color;
+const { textWeight, textHoverWeight, textActiveWeight } = props.options.text;
 const { fontFamily, fontSize } = props.options.font;
 
 const svg = ref<SVGElement>();
@@ -278,49 +278,49 @@ const out = computed(function (): [string, number] | undefined {
   const [x1, y1] = vertical.value ? [marginX + rectWidth.value / 2, marginY + rectHeight.value] : [middle.value, marginY + rectHeight.value];
   const shape = props.node.outSelfShape;
 
+  const offset = 1;
+
   switch (shape) {
     case "arrow": {
-      const shapeSize = 5;
+      const { width, length } = props.options.shape.arrow;
       return [
-        `M ${x1 - shapeSize / 2} ${y1 + shapeSize}
-l ${shapeSize / 2} ${-shapeSize}
-l ${shapeSize / 2} ${shapeSize}
+        `M ${x1 - width / 2} ${y1 + length + offset}
+l ${width / 2} ${-length}
+l ${width / 2} ${length}
 `,
-        0,
+        offset,
       ];
     }
     case "circle": {
-      const shapeSize = 5;
+      const { width, length } = props.options.shape.circle;
       return [
-        `M ${x1} ${y1}
-a ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 0 ${shapeSize}
-a ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 0 ${-shapeSize}
+        `M ${x1} ${y1 + offset}
+a ${width / 2} ${length / 2} 0.5 1 1 0 ${length}
+a ${width / 2} ${length / 2} 0.5 1 1 0 ${-length}
 `,
-        shapeSize,
+        length + offset,
       ];
     }
     case "diamond": {
-      const shapeSize = 6;
-      const width = shapeSize * 0.4;
-      const length = shapeSize / 2;
+      const { width, length } = props.options.shape.diamond;
       return [
-        `M ${x1} ${y1}
-l ${width} ${length}
-l ${-width} ${length}
-l ${-width} ${-length}
+        `M ${x1} ${y1 + offset}
+l ${width / 2} ${length / 2}
+l ${-width / 2} ${length / 2}
+l ${-width / 2} ${-length / 2}
 Z`,
-        shapeSize,
+        length + offset,
       ];
     }
     case "triangle": {
-      const shapeSize = 5;
+      const { width, length } = props.options.shape.triangle;
       return [
-        `M ${x1} ${y1}
-l ${shapeSize / 2} ${shapeSize}
-l ${-shapeSize} 0
+        `M ${x1} ${y1 + offset}
+l ${width / 2} ${length}
+l ${-width} 0
 Z
 `,
-        shapeSize,
+        length + offset,
       ];
     }
   }
@@ -335,6 +335,7 @@ type Relative = {
   in?: string;
 };
 const relatives = computed(function (): [Relative[], Relative] {
+  const offset = 1;
   if (vertical.value) {
     const cur = {
       left: marginX + rectWidth.value / 2 + indentX - marginX,
@@ -358,46 +359,44 @@ const relatives = computed(function (): [Relative[], Relative] {
       function inShapes(shape?: Shape): [string, number] | undefined {
         switch (shape) {
           case "arrow": {
-            const shapeSize = 5;
+            const { width, length } = props.options.shape.arrow;
             return [
-              `M ${x2 + dx3 - shapeSize} ${y2 - shapeSize / 2}
-l ${shapeSize} ${shapeSize / 2}
-l ${-shapeSize} ${shapeSize / 2}`,
-              0,
+              `M ${x2 + dx3 - length - offset} ${y2 - width / 2}
+l ${length} ${width / 2}
+l ${-length} ${width / 2}`,
+              offset,
             ];
           }
           case "circle": {
-            const shapeSize = 5;
+            const { width, length } = props.options.shape.circle;
             return [
-              `M ${x2 + dx3 - shapeSize} ${y2}
-a ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 ${shapeSize} 0
-a ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 ${-shapeSize} 0
+              `M ${x2 + dx3 - length - offset} ${y2}
+a ${length / 2} ${width / 2} 0.5 1 1 ${length} 0
+a ${length / 2} ${width / 2} 0.5 1 1 ${-length} 0
 Z`,
-              shapeSize,
+              length + offset,
             ];
           }
           case "diamond": {
-            const shapeSize = 6;
-            const width = shapeSize * 0.4;
-            const length = shapeSize / 2;
+            const { width, length } = props.options.shape.diamond;
             return [
-              `M ${x2 + dx3 - shapeSize} ${y2}
-l ${length} ${-width}
-l ${length} ${width}
-l ${-length} ${width}
+              `M ${x2 + dx3 - length - offset} ${y2}
+l ${length / 2} ${-width / 2}
+l ${length / 2} ${width / 2}
+l ${-length / 2} ${width / 2}
 Z`,
-              shapeSize,
+              length + offset,
             ];
           }
           case "triangle": {
-            const shapeSize = 5;
+            const { width, length } = props.options.shape.triangle;
             return [
-              `M ${x2 + dx3 - shapeSize} ${y2 - shapeSize / 2}
-l ${shapeSize} ${shapeSize / 2}
-l ${-shapeSize} ${shapeSize / 2}
-l ${0} ${-shapeSize}
+              `M ${x2 + dx3 - length - offset} ${y2 - width / 2}
+l ${length} ${width / 2}
+l ${-length} ${width / 2}
+l ${0} ${-width}
 Z`,
-              shapeSize,
+              length + offset,
             ];
           }
         }
@@ -434,45 +433,43 @@ Z`,
       function inShapes(shape?: Shape): [string, number] | undefined {
         switch (shape) {
           case "arrow": {
-            const shapeSize = 5;
+            const { width, length } = props.options.shape.arrow;
             return [
-              `M ${x3 + shapeSize / 2} ${y3 + dy4 - shapeSize}
-l ${-shapeSize / 2} ${shapeSize}
-l ${-shapeSize / 2} ${-shapeSize}`,
-              0,
+              `M ${x3 + width / 2} ${y3 + dy4 - length - offset}
+l ${-width / 2} ${length}
+l ${-width / 2} ${-length}`,
+              offset,
             ];
           }
           case "circle": {
-            const shapeSize = 5;
+            const { width, length } = props.options.shape.arrow;
             return [
-              `M ${x3} ${y3 + dy4 - shapeSize}
-a ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 0 ${shapeSize}
-a ${shapeSize / 2} ${shapeSize / 2} 0.5 1 1 0 ${-shapeSize}
+              `M ${x3} ${y3 + dy4 - length - offset}
+a ${width / 2} ${length / 2} 0.5 1 1 0 ${length}
+a ${width / 2} ${length / 2} 0.5 1 1 0 ${-length}
 Z`,
-              shapeSize,
+              length + offset,
             ];
           }
           case "diamond": {
-            const shapeSize = 6;
-            const width = shapeSize * 0.4;
-            const length = shapeSize / 2;
+            const { width, length } = props.options.shape.diamond;
             return [
-              `M ${x3} ${y3 + dy4 - shapeSize}
-l ${width} ${length}
-l ${-width} ${length}
-l ${-width} ${-length}
+              `M ${x3} ${y3 + dy4 - length - offset}
+l ${width / 2} ${length / 2}
+l ${-width / 2} ${length / 2}
+l ${-width / 2} ${-length / 2}
 Z`,
-              shapeSize,
+              length + offset,
             ];
           }
           case "triangle": {
-            const shapeSize = 5;
+            const { width, length } = props.options.shape.triangle;
             return [
-              `M ${x3 + shapeSize / 2} ${y3 + dy4 - shapeSize}
-l ${-shapeSize / 2} ${shapeSize}
-l ${-shapeSize / 2} ${-shapeSize}
+              `M ${x3 + width / 2} ${y3 + dy4 - length - offset}
+l ${-width / 2} ${length}
+l ${-width / 2} ${-length}
 Z`,
-              shapeSize,
+              length + offset,
             ];
           }
         }

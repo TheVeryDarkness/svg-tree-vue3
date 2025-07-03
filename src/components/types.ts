@@ -1,6 +1,6 @@
 import type { Ref } from "vue";
 
-export interface ColorOptions {
+export interface TextOptions {
   /**
    * Font weight of texts.
    */
@@ -27,10 +27,29 @@ export interface FontOptions {
   fontFamily: string;
   fontSize: number;
 }
+export interface ShapeOptions {
+  arrow: {
+    width: number;
+    length: number;
+  };
+  circle: {
+    width: number;
+    length: number;
+  };
+  diamond: {
+    width: number;
+    length: number;
+  };
+  triangle: {
+    width: number;
+    length: number;
+  };
+}
 export interface Options {
-  color: ColorOptions;
+  text: TextOptions;
   layout: LayoutOptions;
   font: FontOptions;
+  shape: ShapeOptions;
 }
 
 type DeepPartial<T> = {
@@ -48,12 +67,7 @@ export const defaultLayoutOptions: LayoutOptions = {
   paddingX: 10,
   radius: 4,
 };
-export const defaultLightColorOptions: ColorOptions = {
-  textWeight: 400,
-  textHoverWeight: 700,
-  textActiveWeight: 1000,
-};
-export const defaultDarkColorOptions: ColorOptions = {
+export const defaultTextOptions: TextOptions = {
   textWeight: 400,
   textHoverWeight: 700,
   textActiveWeight: 1000,
@@ -62,17 +76,42 @@ export const defaultFontOptions: FontOptions = {
   fontFamily: "JetBrains Mono",
   fontSize: 14,
 };
+export const defaultShapeOptions: ShapeOptions = {
+  arrow: {
+    width: 5,
+    length: 5,
+  },
+  circle: {
+    width: 5,
+    length: 5,
+  },
+  diamond: {
+    width: 4.8,
+    length: 6,
+  },
+  triangle: {
+    width: 5,
+    length: 5,
+  },
+};
 export const defaultOptions: Options = {
-  color: defaultLightColorOptions,
+  text: defaultTextOptions,
   layout: defaultLayoutOptions,
   font: defaultFontOptions,
+  shape: defaultShapeOptions,
 };
 
 export function mergeOptions(options: PartialOptions | undefined): Options {
   return {
-    color: { ...defaultLightColorOptions, ...options?.color },
+    text: { ...defaultTextOptions, ...options?.text },
     layout: { ...defaultLayoutOptions, ...options?.layout },
     font: { ...defaultFontOptions, ...options?.font },
+    shape: {
+      arrow: { ...defaultShapeOptions.arrow, ...options?.shape?.arrow },
+      circle: { ...defaultShapeOptions.circle, ...options?.shape?.circle },
+      diamond: { ...defaultShapeOptions.diamond, ...options?.shape?.diamond },
+      triangle: { ...defaultShapeOptions.triangle, ...options?.shape?.triangle },
+    },
   };
 }
 
