@@ -101,6 +101,11 @@ export const defaultOptions: Options = {
   shape: defaultShapeOptions,
 };
 
+/**
+ * Merges the default options with the provided options.
+ * @param options Partial options to merge with the default options.
+ * @returns The merged options.
+ */
 export function mergeOptions(options: PartialOptions | undefined): Options {
   return {
     text: { ...defaultTextOptions, ...options?.text },
