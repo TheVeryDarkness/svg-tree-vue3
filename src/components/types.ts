@@ -78,20 +78,20 @@ export const defaultFontOptions: FontOptions = {
 };
 export const defaultShapeOptions: ShapeOptions = {
   arrow: {
-    width: 5,
-    length: 5,
+    width: 8,
+    length: 8,
   },
   circle: {
-    width: 5,
-    length: 5,
+    width: 8,
+    length: 8,
   },
   diamond: {
-    width: 4.8,
-    length: 6,
+    width: 8,
+    length: 10,
   },
   triangle: {
-    width: 5,
-    length: 5,
+    width: 8,
+    length: 8,
   },
 };
 export const defaultOptions: Options = {
