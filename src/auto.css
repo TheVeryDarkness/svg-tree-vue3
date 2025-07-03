@@ -3,55 +3,47 @@
 }
 
 @media (prefers-color-scheme: light) {
-  html {
-    background-color: white;
-    color: black;
-  }
-  svg > rect,
-  svg > path {
+  svg.svg-tree-node > rect,
+  svg.svg-tree-node > path {
     color: gray;
     stroke: currentColor;
   }
-  svg > rect.node {
+  svg.svg-tree-node > rect.node {
     fill: white;
   }
-  svg > rect.shadow {
+  svg.svg-tree-node > rect.shadow {
     fill: darkgray;
   }
-  svg > text {
+  svg.svg-tree-node > text {
     fill: black;
   }
-  svg.hover > text {
+  svg.svg-tree-node.hover > text {
     fill: black;
   }
-  svg.active > text {
+  svg.svg-tree-node.active > text {
     fill: black;
   }
 }
 
 @media (prefers-color-scheme: dark) {
-  html {
-    background-color: black;
-    color: white;
-  }
-  svg > rect,
-  svg > path {
+  svg.svg-tree-node > rect,
+  svg.svg-tree-node > path {
     color: lightgray;
     stroke: currentColor;
   }
-  svg > rect.node {
+  svg.svg-tree-node > rect.node {
     fill: darkgray;
   }
-  svg > rect.shadow {
+  svg.svg-tree-node > rect.shadow {
     fill: black;
   }
-  svg > text {
+  svg.svg-tree-node > text {
     fill: white;
   }
-  svg.hover > text {
+  svg.svg-tree-node.hover > text {
     fill: cyan;
   }
-  svg.active > text {
+  svg.svg-tree-node.active > text {
     fill: cyan;
   }
 }

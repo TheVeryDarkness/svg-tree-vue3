@@ -183,4 +183,18 @@ svg.active > .link {
   stroke: currentColor;
   stroke-width: 2px;
 }
+
+@media (prefers-color-scheme: light) {
+  html {
+    background-color: white;
+    color: black;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    background-color: black;
+    color: white;
+  }
+}
 </style>

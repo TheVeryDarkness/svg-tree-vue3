@@ -1,20 +1,20 @@
-svg > rect,
-svg > path {
+svg.svg-tree-node > rect,
+svg.svg-tree-node > path {
   color: lightgray;
   stroke: currentColor;
 }
-svg > rect.node {
+svg.svg-tree-node > rect.node {
   fill: darkgray;
 }
-svg > rect.shadow {
+svg.svg-tree-node > rect.shadow {
   fill: black;
 }
-svg > text {
+svg.svg-tree-node > text {
   fill: white;
 }
-svg.hover > text {
+svg.svg-tree-node.hover > text {
   fill: cyan;
 }
-svg.active > text {
+svg.svg-tree-node.active > text {
   fill: cyan;
 }

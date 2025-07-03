@@ -4,6 +4,7 @@
     :view-box="viewBox"
     :width="width"
     :height="height"
+    class="svg-tree-node"
     :class="{ hover, active, inactive: hasActive && !active, normal: !hasActive }"
     enable-background="true"
     fill="none"
