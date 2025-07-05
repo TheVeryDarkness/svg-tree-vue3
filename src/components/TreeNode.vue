@@ -43,10 +43,6 @@
       {{ node.name }}
     </text>
     <!-- <rect :width="width" :height="height" stroke="red" fill="none" /> -->
-    <!-- <line :x1="sizes[0]?.name?.x ?? 0 + (sizes[0]?.name?.width ?? 0) / 2" :y1="paddingY"
-            :x2="sizes.reduce((acc, cur) => acc + (cur?.bounding?.width ?? 0), 0) - (sizes[sizes.length - 1]?.bounding?.width ?? 0) + (sizes[sizes.length - 1]?.name?.x ?? 0) + (sizes[sizes.length - 1]?.name?.width ?? 0) / 2"
-            :y2="paddingY" stroke="green" /> -->
-    <!-- :x="rectWidth / 2 + indentX" :y="(1 + index) * (fontSize.height + paddingY * 2 + gapY * 2)" -->
     <path v-if="!collapsed" :fill="props.node.outSelfFill ?? 'none'" class="link" stroke-linejoin="round" :d="out?.[0]" />
     <tree-node
       v-for="(value, index) of node.children"
@@ -102,8 +98,15 @@
       {{ extendTextContent }}
     </text>
     <path v-if="!collapsed && node.extensible" fill="none" class="link extend" :d="extend.link" />
-    <!-- <rect v-if="!collapsed && node.extensible" :x="extend.left" :y="extend.top"
-            :width="extendNodeSize.bounding.width" :height="extendNodeSize.bounding.height" stroke="red" fill="none" /> -->
+    <!-- <rect
+      v-if="!collapsed && node.extensible"
+      :x="extend.left"
+      :y="extend.top"
+      :width="extendNodeSize.bounding.width"
+      :height="extendNodeSize.bounding.height"
+      stroke="red"
+      fill="none"
+    /> -->
   </svg>
 </template>
 <script setup lang="ts" generic="T extends Data<T, Key>, Key extends string | number | symbol = 'path'">
@@ -138,6 +141,12 @@ const { fontFamily, fontSize } = props.options.font;
 
 const svg = ref<SVGElement>();
 const name = ref<SVGTextElement>();
+/**
+ * @description Indicates whether the node is vertical.
+ *
+ * - If true, the node is displayed vertically, And the children are arranged below it.
+ * - If false, the node is displayed horizontally, And the children are arranged to the right of it.
+ */
 const vertical = ref<boolean>(true);
 const collapsed = ref<boolean>(false);
 const active = ref<boolean>(false);
@@ -230,38 +239,44 @@ const textSize = computed(function () {
 const rectWidth = computed(() => textSize.value.width + paddingX * 2);
 const rectHeight = computed(() => textSize.value.height + paddingY * 2);
 
+const widths = computed(() => {
+  const widths = sizes.value.map((size) => size.bounding.width);
+  if (props.node.extensible) widths.push(extendNodeSize.value.bounding.width);
+  return widths;
+});
+
+const heights = computed(() => {
+  const heights = sizes.value.map((size) => size.bounding.height);
+  if (props.node.extensible) heights.push(extendNodeSize.value.bounding.height);
+  return heights;
+});
+
 const width = computed(function () {
-  const extendNodeWidth = props.node.extensible ? extendNodeSize.value.bounding.width : 0;
+  if (collapsed.value) return rectWidth.value + marginX * 2;
   if (vertical.value) {
     return Math.max(
-      sizes.value.reduce((acc, cur) => Math.max(acc, cur.bounding.width + rectWidth.value / 2 + indentX), rectWidth.value + marginX * 2),
-      extendNodeWidth + rectWidth.value / 2 + indentX,
-    );
-  } else {
-    return Math.max(
-      sizes.value.reduce((acc, cur) => acc + cur.bounding.width, extendNodeWidth),
+      widths.value.reduce((acc, cur) => Math.max(acc, cur + rectWidth.value / 2 + indentX + marginX), rectWidth.value + marginX * 2),
       rectWidth.value + marginX * 2,
     );
+  } else {
+    return Math.max(widths.value.reduce((acc, cur) => acc + cur, 0) - Math.max(0, widths.value.length - 1) * marginX, rectWidth.value + marginX * 2);
   }
 });
 
 const height = computed(function () {
-  const extendNodeHeight = props.node.extensible ? extendNodeSize.value.bounding.height : 0;
-  if ((sizes.value.length === 0 && !props.node.extensible) || collapsed.value) {
-    return rectHeight.value + marginY * 2;
-  } else if (vertical.value) {
-    return sizes.value.reduce((acc, cur) => acc + cur.bounding.height, rectHeight.value + marginY + extendNodeHeight);
+  if (collapsed.value) return rectHeight.value + marginY * 2;
+  if (vertical.value) {
+    return marginY + rectHeight.value + heights.value.reduce((acc, cur) => acc + cur, 0) + (heights.value.length === 0 ? marginY : -(heights.value.length - 1) * marginY);
   } else {
-    return rectHeight.value + marginY + indentY + sizes.value.reduce((acc, cur) => Math.max(acc, cur.bounding.height), extendNodeHeight);
+    return marginY + rectHeight.value + indentY + heights.value.reduce((acc, cur) => Math.max(acc, cur), 0);
   }
 });
 
 const childrenWidth = computed(function () {
-  if ((sizes.value.length === 0 && !props.node.extensible) || vertical.value) {
+  if (vertical.value) {
     return 0;
   } else {
-    const extendNodeWidth = props.node.extensible ? extendNodeSize.value.bounding.width : 0;
-    return sizes.value.reduce((acc, cur) => acc + cur.bounding.width, extendNodeWidth);
+    return widths.value.reduce((acc, cur) => acc + cur, 0) - Math.max(0, sizes.value.length - 1) * marginX;
   }
 });
 
@@ -339,7 +354,7 @@ const relatives = computed(function (): [Relative[], Relative] {
   const offset = 1;
   if (vertical.value) {
     const cur = {
-      left: marginX + rectWidth.value / 2 + indentX - marginX,
+      left: marginX + rectWidth.value / 2 + indentX,
       top: marginY + rectHeight.value,
     };
     function next(value: TreeNodeSize, shape?: Shape): Relative {
@@ -347,16 +362,12 @@ const relatives = computed(function (): [Relative[], Relative] {
       const top = cur.top;
       const right = left + value.bounding.width;
       const bottom = top + value.bounding.height;
-      // const link = `M ${marginX + rectWidth.value / 2} ${marginY + rectHeight.value}
-      // L ${marginX + rectWidth.value / 2} ${top + marginY * 2}
-      // s 0 ${radius} ${radius} ${radius}
-      // l ${indentX - radius - marginX + value.name.x} 0`
 
       const x1 = marginX + rectWidth.value / 2;
       const y1 = marginY + rectHeight.value + (out.value === undefined ? 0 : out.value[1]);
       const x2 = x1;
       const y2 = top + value.name.y + value.name.height / 2;
-      const dx3 = indentX - marginX + value.name.x;
+      const dx3 = indentX + value.name.x;
       function inShapes(shape?: Shape): [string, number] | undefined {
         switch (shape) {
           case "arrow": {
@@ -408,7 +419,7 @@ Z`,
       // Straight angle:
       // `M ${x1} ${y1} L ${x2} ${y2} l ${dx3} 0`
       const link = `M ${x1} ${y1} L ${x2} ${y2 - radius} s 0 ${radius} ${radius} ${radius} l ${dx3 - radius - (inShape?.[1] ?? 0)} 0`;
-      cur.top = bottom;
+      cur.top = bottom - marginY;
       return { left, top, right, bottom, link, in: inShape?.[0] };
     }
     const results = sizes.value.map((value, i) => next(value, props.node.inChildrenShape?.[i]));
@@ -426,11 +437,11 @@ Z`,
       const bottom = top + value.bounding.height;
       const x1 = middle.value;
       const y1 = marginY + rectHeight.value + (out.value?.[1] ?? 0);
-      const dy2 = indentY / 2 - (out.value?.[1] ?? 0);
+      const dy2 = indentY - (out.value?.[1] ?? 0);
       const x3 = cur.left + value.name.x + value.name.width / 2;
       // const dx3 = x3 - x1
-      const y3 = cur.top - indentY / 2;
-      const dy4 = indentY / 2 + value.name.y;
+      const y3 = cur.top;
+      const dy4 = value.name.y;
       function inShapes(shape?: Shape): [string, number] | undefined {
         switch (shape) {
           case "arrow": {
@@ -481,7 +492,7 @@ Z`,
       // Left:
       // `M ${x1} ${y1} l 0 ${indentY / 2} L ${x3} ${y3} s ${-radius} 0 ${-radius} ${radius} l 0 ${dy4 - radius}`
       const link = `M ${x1} ${y1} l 0 ${dy2} L ${x3} ${y3} l 0 ${dy4 - (inShape?.[1] ?? 0)}`;
-      cur.left = right;
+      cur.left = right - marginX;
       return { left, top, right, bottom, link, in: inShape?.[0] };
     }
     const results = sizes.value.map((value, i) => next(value, props.node.inChildrenShape?.[i]));

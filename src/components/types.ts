@@ -14,6 +14,17 @@ export interface TextOptions {
    */
   textActiveWeight: number;
 }
+/**
+ * Layout options for the tree.
+ *
+ * @member indentX - Horizontal indentation between parent and child nodes.
+ * @member indentY - Vertical indentation between nodes.
+ * @member marginY - Vertical margin around the tree.
+ * @member marginX - Horizontal margin around the tree.
+ * @member paddingY - Vertical padding between node text and its bounding box.
+ * @member paddingX - Horizontal padding between node text and its bounding box.
+ * @member radius - Corner radius of the node's bounding box.
+ */
 export interface LayoutOptions {
   indentX: number;
   indentY: number;
@@ -59,12 +70,12 @@ type DeepPartial<T> = {
 export type PartialOptions = DeepPartial<Options> | undefined;
 
 export const defaultLayoutOptions: LayoutOptions = {
-  indentX: 24,
+  indentX: 8,
   indentY: 16,
-  marginY: 8,
-  marginX: 16,
-  paddingY: 6,
-  paddingX: 10,
+  marginX: 20,
+  marginY: 15,
+  paddingX: 12,
+  paddingY: 8,
   radius: 4,
 };
 export const defaultTextOptions: TextOptions = {
