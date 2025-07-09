@@ -134,7 +134,7 @@ function click<T extends Data<T, "id">>($event: TreeEvent<T, MouseEvent>) {
   }
 }
 
-function contextmenu<T extends Data<T>>(event: TreeEvent<T, MouseEvent>) {
+function contextmenu<T extends Data<T, "id">>(event: TreeEvent<T, MouseEvent>) {
   event.event.preventDefault();
   event.state.collapsed.value = !event.state.collapsed.value;
 }

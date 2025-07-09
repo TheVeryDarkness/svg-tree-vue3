@@ -128,6 +128,7 @@ const key = computed(() => props.node[props.labelKey]);
 // Emits.
 type Emits = {
   click: [TreeEvent<T, MouseEvent>];
+  active: [TreeEvent<T, string | number | undefined>];
   contextmenu: [TreeEvent<T, MouseEvent>];
   mouseenter: [TreeEvent<T, MouseEvent>];
   mouseleave: [TreeEvent<T, MouseEvent>];
@@ -583,7 +584,12 @@ function watchActive(_active: string | number | undefined) {
   if ((active.value = !!_active && key.value === _active)) {
     // console.log("scroll", active, props.node.path);
     // console.log(name.value);
-    scrollIntoView();
+    emit("active", {
+      event: _active,
+      node: props.node,
+      state: { vertical, collapsed },
+      scrollIntoView,
+    });
   }
 }
 
