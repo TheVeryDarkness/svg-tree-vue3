@@ -38,6 +38,7 @@
       drag-scroller-disable
       @mouseenter="mouseenter"
       @mouseleave="mouseleave"
+      @click="emit('click', event($event))"
       @dblclick="emit('dblclick', event($event))"
       @contextmenu="emit('contextmenu', event($event))"
     >
