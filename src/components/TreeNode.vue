@@ -25,6 +25,7 @@
       @mouseenter="mouseenter"
       @mouseleave="mouseleave"
       @click="emit('click', event($event))"
+      @dblclick="emit('dblclick', event($event))"
       @contextmenu="emit('contextmenu', event($event))"
     />
     <text
@@ -37,7 +38,7 @@
       drag-scroller-disable
       @mouseenter="mouseenter"
       @mouseleave="mouseleave"
-      @click="emit('click', event($event))"
+      @dblclick="emit('dblclick', event($event))"
       @contextmenu="emit('contextmenu', event($event))"
     >
       {{ node.name }}
@@ -58,6 +59,8 @@
       :y="relative[index]?.top"
       :class="{ collapsed }"
       @click="emit('click', $event)"
+      @dblclick="emit('dblclick', $event)"
+      @active="emit('active', $event)"
       @contextmenu="emit('contextmenu', $event)"
     ></tree-node>
     <path v-for="(_, index) of node.children" v-if="!collapsed" :key="index" fill="none" class="link" :d="relative[index]?.link" :stroke-dasharray="node.dashArray" />
@@ -128,6 +131,7 @@ const key = computed(() => props.node[props.labelKey]);
 // Emits.
 type Emits = {
   click: [TreeEvent<T, MouseEvent>];
+  dblclick: [TreeEvent<T, MouseEvent>];
   active: [TreeEvent<T, string | number | undefined>];
   contextmenu: [TreeEvent<T, MouseEvent>];
   mouseenter: [TreeEvent<T, MouseEvent>];
@@ -600,4 +604,34 @@ function watchHover(_hover: string | number | undefined) {
 
 watch(props.state.active, watchActive);
 watch(props.state.hover, watchHover);
+
+// // Click event handler.
+// let lastClick: TreeEvent<T, MouseEvent> | undefined = undefined;
+
+// function click($event: TreeEvent<T, MouseEvent>) {
+//   $event.event.stopPropagation();
+//   function noModifierKeys(event: MouseEvent) {
+//     return !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey;
+//   }
+//   function onlyPrimaryButton(event: MouseEvent) {
+//     return event.button === 0; // Left mouse button.
+//   }
+//   if (props.options.control.dblclick > 0 && noModifierKeys($event.event) && onlyPrimaryButton($event.event)) {
+//     if (lastClick) {
+//       if (Date.now() - lastClick.event.timeStamp < props.options.control.dblclick) {
+//         // Double click.
+//         lastClick = undefined;
+//         return emit("dblclick", $event);
+//       } else {
+//         // Single click.
+//         emit("click", $event);
+//       }
+//     } else {
+//       // Single click.
+//       lastClick = $event;
+//     }
+//   } else {
+//     return emit("click", $event);
+//   }
+// }
 </script>

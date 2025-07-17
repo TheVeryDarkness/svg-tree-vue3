@@ -155,7 +155,7 @@ window.addEventListener("click", () => {
   <input type="text" id="hover-node" title="Hover Node" v-model="state.hover.value" />
   <br />
   <div class="container">
-    <Tree ref="tree" :data="_data" :label-key="'id'" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
+    <Tree ref="tree" :data="_data" :label-key="'id'" :state="state" :options="undefined" @click="click" @dblclick="console.log('dblclick', $event)" @contextmenu="contextmenu" />
   </div>
   <br />
   <div class="container">

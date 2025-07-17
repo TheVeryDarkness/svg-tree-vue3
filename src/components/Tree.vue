@@ -6,6 +6,8 @@
     :label-key="labelKey"
     :state="state"
     @click="emit('click', $event)"
+    @dblclick="emit('dblclick', $event)"
+    @active="emit('active', $event)"
     @contextmenu="emit('contextmenu', $event)"
     @mouseenter="emit('mouseenter', $event)"
     @mouseleave="emit('mouseleave', $event)"
@@ -32,6 +34,8 @@ const ctx = createContext(canvas);
 // Emits.
 type Emits = {
   click: [TreeEvent<T, MouseEvent>];
+  dblclick: [TreeEvent<T, MouseEvent>];
+  active: [TreeEvent<T, string | number | undefined>];
   contextmenu: [TreeEvent<T, MouseEvent>];
   mouseenter: [TreeEvent<T, MouseEvent>];
   mouseleave: [TreeEvent<T, MouseEvent>];

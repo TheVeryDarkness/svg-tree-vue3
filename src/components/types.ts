@@ -56,11 +56,15 @@ export interface ShapeOptions {
     length: number;
   };
 }
+// export interface ControlOptions {
+//   dblclick: number;
+// }
 export interface Options {
   text: TextOptions;
   layout: LayoutOptions;
   font: FontOptions;
   shape: ShapeOptions;
+  // control: ControlOptions;
 }
 
 type DeepPartial<T> = {
@@ -105,11 +109,15 @@ export const defaultShapeOptions: ShapeOptions = {
     length: 8,
   },
 };
+// export const defaultControlOptions: ControlOptions = {
+//   dblclick: 300,
+// };
 export const defaultOptions: Options = {
   text: defaultTextOptions,
   layout: defaultLayoutOptions,
   font: defaultFontOptions,
   shape: defaultShapeOptions,
+  // control: defaultControlOptions,
 };
 
 /**
@@ -128,6 +136,7 @@ export function mergeOptions(options: PartialOptions | undefined): Options {
       diamond: { ...defaultShapeOptions.diamond, ...options?.shape?.diamond },
       triangle: { ...defaultShapeOptions.triangle, ...options?.shape?.triangle },
     },
+    // control: { ...defaultControlOptions, ...options?.control },
   };
 }
 
