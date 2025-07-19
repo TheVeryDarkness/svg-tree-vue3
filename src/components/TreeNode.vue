@@ -154,10 +154,20 @@ const name = ref<SVGTextElement>();
  * - If false, the node is displayed horizontally, And the children are arranged to the right of it.
  */
 const vertical = ref<boolean>(true);
-const collapsed = ref<boolean>(false);
+const collapsed = ref<boolean>(typeof props.node.children === "function");
 const active = ref<boolean>(false);
 const hover = ref<boolean>(false);
 const children = ref<{ size: TreeNodeSize }[]>([]);
+
+watch(
+  collapsed,
+  (newVal) => {
+    if (newVal && typeof props.node.children === "function") {
+      props.node.children = props.node.children(props.node);
+    }
+  },
+  { immediate: true },
+);
 
 const hasActive = ref(false);
 

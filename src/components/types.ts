@@ -153,7 +153,7 @@ export type Data<Child extends Data<Child, Key>, Key extends string | number | s
   name: string;
   color?: string;
   backgroundColor?: string;
-  children: Child[];
+  children: Child[] | ((_: Data<Child, Key>) => Child[]);
   dashArray?: string | number;
   outSelfShape?: Shape;
   /**

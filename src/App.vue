@@ -10,7 +10,7 @@ type T = {
   outSelfShape?: Shape;
   outSelfFill?: string;
   dashArray?: string | number;
-  children: T[];
+  children: T[] | ((_: T) => T[]);
   inChildrenShape?: (Shape | undefined)[];
   extensible?: boolean;
 };
@@ -44,6 +44,7 @@ const data: T = {
     },
     { name: "7890", color: "red", children: [], extensible: true },
     { name: "'", color: "green", children: [], extensible: true },
+    { name: "?", color: "green", children: () => [{ name: new Date().toString(), color: "blue", children: [] }], extensible: true },
     { name: "~~~~", color: "green", outSelfShape: "arrow", children: [{ name: "????", color: "blue", children: [] }], extensible: true },
     { name: "~~~~~~~~~~~~~~~~~~~~~~~~~", color: "green", children: [{ name: "????????", color: "blue", children: [] }], extensible: true },
     {
