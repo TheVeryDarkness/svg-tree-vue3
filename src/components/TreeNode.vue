@@ -170,7 +170,7 @@ watch(
 watch(
   collapsed,
   (newVal) => {
-    if (newVal && typeof props.node.children === "function") {
+    if (!newVal && typeof props.node.children === "function") {
       props.node.children = props.node.children(props.node);
     }
   },
