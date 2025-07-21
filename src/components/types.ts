@@ -182,7 +182,7 @@ export interface State {
   collapsed: Ref<boolean>;
 }
 
-export interface TreeEvent<T extends Data<T>, E> {
+export interface TreeEvent<T, E> {
   node: T;
   state: State;
   event: E;
