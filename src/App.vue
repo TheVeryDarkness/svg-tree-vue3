@@ -166,7 +166,7 @@ const _data = computed(function (): Data<T, "id"> {
   return datas[treeData.value];
 });
 const treeData = ref(0);
-let tree = useTemplateRef<ComponentExposed<typeof Tree>>("tree");
+let tree = useTemplateRef<ComponentExposed<typeof Tree>>("_tree");
 let state = {
   active: ref<string | number | undefined>(undefined),
   hover: ref<string | number | undefined>(undefined),
@@ -217,7 +217,7 @@ function saveSvg() {
   <input type="text" id="hover-node" title="Hover Node" v-model="state.hover.value" />
   <br />
   <div class="container">
-    <Tree ref="tree" :data="_data" :label-key="'id'" :state="state" :options="undefined" @click="click" @dblclick="console.log('dblclick', $event)" @contextmenu="contextmenu" />
+    <Tree ref="_tree" :data="_data" :label-key="'id'" :state="state" :options="undefined" @click="click" @dblclick="console.log('dblclick', $event)" @contextmenu="contextmenu" />
   </div>
   <br />
   <div class="container">
