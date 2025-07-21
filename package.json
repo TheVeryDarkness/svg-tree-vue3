@@ -17,22 +17,22 @@
   ],
   "exports": {
     "./TreeNode.vue": {
-      "types": "./dist/TreeNode.d.ts",
+      "types": "./dist/TreeNode.vue.d.ts",
       "import": "./dist/TreeNode.js",
       "require": "./dist/TreeNode.cjs"
     },
     ".": {
-      "types": "./dist/Tree.d.ts",
+      "types": "./dist/Tree.vue.d.ts",
       "import": "./dist/Tree.js",
       "require": "./dist/Tree.cjs"
     },
     "./Tree.vue": {
-      "types": "./dist/Tree.d.ts",
+      "types": "./dist/Tree.vue.d.ts",
       "import": "./dist/Tree.js",
       "require": "./dist/Tree.cjs"
     },
     "./Forest.vue": {
-      "types": "./dist/Forest.d.ts",
+      "types": "./dist/Forest.vue.d.ts",
       "import": "./dist/Forest.js",
       "require": "./dist/Forest.cjs"
     },
