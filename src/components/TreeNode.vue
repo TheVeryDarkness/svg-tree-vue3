@@ -160,9 +160,9 @@ const hover = ref<boolean>(false);
 const children = ref<{ size: TreeNodeSize }[]>([]);
 
 watch(
-  () => props.node.children,
-  (newChildren) => {
-    if (typeof newChildren === "function") {
+  () => props.node,
+  (newNode) => {
+    if (typeof newNode.children === "function") {
       collapsed.value = true;
     }
   },
