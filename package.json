@@ -36,11 +36,6 @@
       "import": "./dist/Forest.js",
       "require": "./dist/Forest.cjs"
     },
-    "./ref": {
-      "types": "./dist/ref.d.ts",
-      "import": "./dist/ref.js",
-      "require": "./dist/ref.cjs"
-    },
     "./types": {
       "types": "./dist/types.d.ts",
       "import": "./dist/types.js",
