@@ -159,6 +159,11 @@ const active = ref<boolean>(false);
 const hover = ref<boolean>(false);
 const children = ref<{ size: TreeNodeSize }[]>([]);
 
+watch(props.node.children, (newChildren) => {
+  if (typeof newChildren === "function") {
+    collapsed.value = true;
+  }
+});
 watch(
   collapsed,
   (newVal) => {
