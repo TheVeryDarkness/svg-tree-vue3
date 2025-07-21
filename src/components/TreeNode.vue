@@ -114,7 +114,7 @@
   </svg>
 </template>
 <script setup lang="ts" generic="T extends Data<T, Key>, Key extends string | number | symbol = 'path'">
-import { computed, ref, StyleValue, watch } from "vue";
+import { computed, ref, StyleValue, useTemplateRef, watch } from "vue";
 import type { Data, ExternalState, Options, Rectangle, Shape, TreeEvent, TreeNodeSize } from "./types";
 
 // Props.
@@ -145,8 +145,8 @@ const { indentX, indentY, marginY, marginX, paddingY, paddingX, radius } = props
 const { textWeight, textHoverWeight, textActiveWeight } = props.options.text;
 const { fontFamily, fontSize } = props.options.font;
 
-const svg = ref<SVGElement>();
-const name = ref<SVGTextElement>();
+const svg = useTemplateRef<SVGElement>("svg");
+const name = useTemplateRef<SVGTextElement>("name");
 /**
  * @description Indicates whether the node is vertical.
  *
@@ -198,6 +198,7 @@ const textStyle = computed(function (): StyleValue {
 const rectStyle = computed(function (): StyleValue {
   return {
     fill: props.node.backgroundColor ?? undefined,
+    boxSizing: "border-box",
   };
 });
 
@@ -598,7 +599,12 @@ function scrollIntoView() {
   );
 }
 
-defineExpose({ scrollIntoView, size });
+defineExpose({
+  getBoundingClientRect: svg.value?.getBoundingClientRect,
+  scrollIntoView,
+  size,
+  svg,
+});
 
 // Watch external states.
 function watchActive(_active: string | number | undefined) {

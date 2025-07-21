@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
 import Tree from "./components/Tree.vue";
 import { Data, Shape, TreeEvent } from "./components/types";
 import "./auto.css";
+import type { ComponentExposed } from "vue-component-type-helpers";
 type T = {
   name: string;
   id?: number | string;
@@ -165,7 +166,7 @@ const _data = computed(function (): Data<T, "id"> {
   return datas[treeData.value];
 });
 const treeData = ref(0);
-let tree = ref();
+let tree = useTemplateRef<ComponentExposed<typeof Tree>>("tree");
 let state = {
   active: ref<string | number | undefined>(undefined),
   hover: ref<string | number | undefined>(undefined),
@@ -190,6 +191,10 @@ function contextmenu<T extends Data<T, "id">>(event: TreeEvent<T, MouseEvent>) {
 window.addEventListener("click", () => {
   state.active.value = undefined;
 });
+
+function saveSvg() {
+  console.log(tree.value?.svg);
+}
 </script>
 
 <template>
@@ -197,6 +202,8 @@ window.addEventListener("click", () => {
   <p>Shift + Left Click = Switch direction</p>
   <p>Ctrl + Left Click = Scroll into view</p>
   <p>Right Click = Collapse or expand</p>
+  <label for="save-svg">Save SVG: </label>
+  <button id="save-svg" @click="saveSvg">Save</button>
   <label for="tree-data">Tree Data: </label>
   <select id="tree-data" title="Tree Data" v-model="treeData">
     <option value="0">Arbitrary</option>

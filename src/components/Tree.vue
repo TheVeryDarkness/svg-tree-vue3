@@ -1,5 +1,6 @@
 <template>
   <TreeNode
+    ref="root"
     :node="data"
     :ctx="ctx"
     :options="options"
@@ -15,9 +16,10 @@
 </template>
 
 <script setup lang="ts" generic="T extends Data<T, Key>, Key extends string | number | symbol = 'path'">
-import { computed } from "vue";
+import { computed, useTemplateRef } from "vue";
 import TreeNode from "./TreeNode.vue";
 import { createContext, Data, ExternalState, mergeOptions, Options, PartialOptions, TreeEvent } from "./types";
+import type { ComponentExposed } from "vue-component-type-helpers";
 
 // Props.
 const props = defineProps<{
@@ -30,6 +32,10 @@ const props = defineProps<{
 const options = computed<Options>(() => mergeOptions(props.options));
 const canvas = new OffscreenCanvas(100, 100);
 const ctx = createContext(canvas);
+
+// Expose
+const root = useTemplateRef<ComponentExposed<typeof TreeNode>>("root");
+defineExpose({ svg: computed(() => root.value?.svg ?? null) });
 
 // Emits.
 type Emits = {
