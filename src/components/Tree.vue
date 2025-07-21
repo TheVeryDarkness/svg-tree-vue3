@@ -1,6 +1,6 @@
 <template>
   <TreeNode
-    ref="root"
+    ref="_root"
     :node="data"
     :ctx="ctx"
     :options="options"
@@ -34,7 +34,7 @@ const canvas = new OffscreenCanvas(100, 100);
 const ctx = createContext(canvas);
 
 // Expose
-const root = useTemplateRef<ComponentExposed<typeof TreeNode>>("root");
+const root = useTemplateRef<ComponentExposed<typeof TreeNode>>("_root");
 defineExpose({ svg: computed(() => root.value?.svg ?? null) });
 
 // Emits.

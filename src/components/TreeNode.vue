@@ -1,6 +1,6 @@
 <template>
   <svg
-    ref="svg"
+    ref="_svg"
     :view-box="viewBox"
     :width="width"
     :height="height"
@@ -29,7 +29,7 @@
       @contextmenu="emit('contextmenu', event($event))"
     />
     <text
-      ref="name"
+      ref="_name"
       class="node"
       :x="text.x"
       :y="text.y"
@@ -145,8 +145,8 @@ const { indentX, indentY, marginY, marginX, paddingY, paddingX, radius } = props
 const { textWeight, textHoverWeight, textActiveWeight } = props.options.text;
 const { fontFamily, fontSize } = props.options.font;
 
-const svg = useTemplateRef<SVGElement>("svg");
-const name = useTemplateRef<SVGTextElement>("name");
+const svg = useTemplateRef<SVGElement>("_svg");
+const name = useTemplateRef<SVGTextElement>("_name");
 /**
  * @description Indicates whether the node is vertical.
  *
