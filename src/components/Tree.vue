@@ -35,7 +35,7 @@ const ctx = createContext(canvas);
 
 // Expose
 const root = useTemplateRef<ComponentExposed<typeof TreeNode>>("_root");
-defineExpose({ svg: computed(() => root.value?.svg ?? null) });
+defineExpose({ root, svg: computed(() => root.value?.svg ?? null) });
 
 // Emits.
 type Emits = {
