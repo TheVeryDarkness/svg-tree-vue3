@@ -21,7 +21,6 @@
       :height="rect.height"
       :style="rectStyle"
       cursor="pointer"
-      drag-scroller-disable
       @mouseenter="mouseenter"
       @mouseleave="mouseleave"
       @click="emit('click', event($event))"
@@ -35,7 +34,6 @@
       :y="text.y"
       :style="textStyle"
       cursor="pointer"
-      drag-scroller-disable
       @mouseenter="mouseenter"
       @mouseleave="mouseleave"
       @click="emit('click', event($event))"
@@ -84,7 +82,6 @@
       :style="rectStyle"
       class="node extend"
       cursor="pointer"
-      drag-scroller-disable
       @mouseenter="mouseenter"
       @mouseleave="mouseleave"
     />
@@ -95,7 +92,6 @@
       :style="textStyle"
       class="node extend"
       cursor="pointer"
-      drag-scroller-disable
       @mouseenter="mouseenter"
       @mouseleave="mouseleave"
     >
