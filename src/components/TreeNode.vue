@@ -163,15 +163,6 @@ watch(
     }
   },
 );
-watch(
-  collapsed,
-  (newVal) => {
-    if (!newVal && typeof props.node.children === "function") {
-      props.node.children = props.node.children(props.node);
-    }
-  },
-  { immediate: true },
-);
 
 const hasActive = ref(false);
 
@@ -602,7 +593,18 @@ function getVertical() {
   return vertical.value;
 }
 function setCollapsed(collapsed_?: boolean) {
-  collapsed.value = collapsed_ ?? !collapsed.value;
+  const newCollapsed = collapsed_ ?? !collapsed.value;
+  if (newCollapsed === collapsed.value) return;
+  if (newCollapsed) {
+    if (props.node.children instanceof Array && props.node.children.length === 0) {
+      return; // Do not collapse if there are no children.
+    }
+  } else {
+    if (typeof props.node.children === "function") {
+      props.node.children = props.node.children(props.node);
+    }
+  }
+  collapsed.value = newCollapsed;
 }
 function setVertical(vertical_?: boolean) {
   vertical.value = vertical_ ?? !vertical.value;
