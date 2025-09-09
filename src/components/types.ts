@@ -177,16 +177,15 @@ export interface TreeNodeSize {
   bounding: { width: number; height: number };
   name: Rectangle;
 }
-export interface State {
-  vertical: Ref<boolean>;
-  collapsed: Ref<boolean>;
-}
 
 export interface TreeEvent<T, E> {
   node: T;
-  state: State;
   event: E;
   scrollIntoView(): void;
+  setCollapsed(collapsed?: boolean): void;
+  setVertical(vertical?: boolean): void;
+  getCollapsed(): boolean;
+  getVertical(): boolean;
 }
 
 export interface ExternalState {

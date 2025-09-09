@@ -200,9 +200,9 @@ const rectStyle = computed(function (): StyleValue {
 
 // Track the size of each node.
 
-function event<E extends MouseEvent>(event: E) {
+function event<E>(event: E): TreeEvent<T, E> {
   // console.log(width.value, height.value, sizes.value);
-  return { event, node: props.node, state: { vertical, collapsed }, scrollIntoView };
+  return { event, node: props.node, scrollIntoView, setCollapsed, setVertical, getCollapsed, getVertical };
 }
 
 function mouseenter($event: MouseEvent) {
@@ -595,9 +595,26 @@ function scrollIntoView() {
   );
 }
 
+function getCollapsed() {
+  return collapsed.value;
+}
+function getVertical() {
+  return vertical.value;
+}
+function setCollapsed(collapsed_?: boolean) {
+  collapsed.value = collapsed_ ?? !collapsed.value;
+}
+function setVertical(vertical_?: boolean) {
+  vertical.value = vertical_ ?? !vertical.value;
+}
+
 defineExpose({
   getBoundingClientRect: svg.value?.getBoundingClientRect,
   scrollIntoView,
+  getCollapsed,
+  getVertical,
+  setCollapsed,
+  setVertical,
   size,
   svg,
 });
@@ -609,12 +626,7 @@ function watchActive(_active: string | number | undefined) {
   if ((active.value = !!_active && key.value === _active)) {
     // console.log("scroll", active, props.node.path);
     // console.log(name.value);
-    emit("active", {
-      event: _active,
-      node: props.node,
-      state: { vertical, collapsed },
-      scrollIntoView,
-    });
+    emit("active", event(_active));
   }
 }
 

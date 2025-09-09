@@ -175,7 +175,7 @@ let state = {
 function click<T extends Data<T, "id">>($event: TreeEvent<T, MouseEvent>) {
   $event.event.stopPropagation();
   if ($event.event.shiftKey) {
-    console.log(($event.state.vertical.value = !$event.state.vertical.value));
+    $event.setVertical();
   } else {
     console.log($event);
     console.log(state.active.value);
@@ -185,7 +185,7 @@ function click<T extends Data<T, "id">>($event: TreeEvent<T, MouseEvent>) {
 
 function contextmenu<T extends Data<T, "id">>(event: TreeEvent<T, MouseEvent>) {
   event.event.preventDefault();
-  event.state.collapsed.value = !event.state.collapsed.value;
+  event.setCollapsed();
 }
 
 window.addEventListener("click", () => {
