@@ -210,6 +210,7 @@ const outStyle = computed(function (): StyleValue {
 
 const rectStyle = computed(function (): StyleValue {
   return {
+    color: props.node.color ?? undefined,
     fill: props.node.backgroundColor ?? undefined,
     boxSizing: "border-box",
   };
