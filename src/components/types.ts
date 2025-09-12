@@ -161,6 +161,11 @@ export type Data<Child extends Data<Child, Key>, Key extends string | number | s
    * You can also use 'currentColor' to use the current stroke color.
    */
   outSelfFill?: string;
+  /**
+   * @description The color of links from this node to its children. If not provided, it will use the node's color.
+   * You can also use 'currentColor' to use the current stroke color.
+   */
+  outColor?: string;
   inChildrenShape?: (Shape | undefined)[];
   inChildrenFill?: (string | undefined)[];
   extensible?: boolean;

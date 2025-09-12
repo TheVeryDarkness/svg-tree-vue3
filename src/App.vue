@@ -10,6 +10,7 @@ type T = {
   color?: string;
   outSelfShape?: Shape;
   outSelfFill?: string;
+  outColor?: string;
   dashArray?: string | number;
   children: T[] | ((_: T) => T[]);
   inChildrenShape?: (Shape | undefined)[];
@@ -126,19 +127,21 @@ const datas: T[] = [
       {
         name: "0",
         children: [
-          { name: "a", extensible: true, children: [], outSelfShape: "arrow", outSelfFill: "currentColor" },
-          { name: "b", extensible: true, children: [], outSelfShape: "circle", outSelfFill: "currentColor" },
-          { name: "c", extensible: true, children: [], outSelfShape: "diamond", outSelfFill: "currentColor" },
-          { name: "d", extensible: true, children: [], outSelfShape: "triangle", outSelfFill: "currentColor" },
+          { name: "a", extensible: true, children: [], outColor: "red", outSelfShape: "arrow", outSelfFill: "currentColor" },
+          { name: "b", extensible: true, children: [], outColor: "green", outSelfShape: "circle", outSelfFill: "currentColor" },
+          { name: "c", extensible: true, children: [], outColor: "cyan", outSelfShape: "diamond", outSelfFill: "currentColor" },
+          { name: "d", extensible: true, children: [], outColor: "blue", outSelfShape: "triangle", outSelfFill: "currentColor" },
+          { name: "e", extensible: true, children: [], outColor: undefined, outSelfShape: undefined, outSelfFill: "currentColor" },
         ],
       },
       {
         name: "1",
         children: [
-          { name: "a", extensible: true, children: [], outSelfShape: "arrow", outSelfFill: "blue" },
-          { name: "b", extensible: true, children: [], outSelfShape: "circle", outSelfFill: "blue" },
-          { name: "c", extensible: true, children: [], outSelfShape: "diamond", outSelfFill: "blue" },
-          { name: "d", extensible: true, children: [], outSelfShape: "triangle", outSelfFill: "blue" },
+          { name: "a", extensible: true, children: [], outColor: "red", outSelfShape: "arrow", outSelfFill: "blue" },
+          { name: "b", extensible: true, children: [], outColor: "green", outSelfShape: "circle", outSelfFill: "blue" },
+          { name: "c", extensible: true, children: [], outColor: "cyan", outSelfShape: "diamond", outSelfFill: "blue" },
+          { name: "d", extensible: true, children: [], outColor: "blue", outSelfShape: "triangle", outSelfFill: "blue" },
+          { name: "e", extensible: true, children: [], outColor: undefined, outSelfShape: undefined, outSelfFill: "currentColor" },
         ],
       },
     ],

@@ -11,7 +11,10 @@
     xmlns="http://www.w3.org/2000/svg"
     xmlns:xlink="http://www.w3.org/1999/xlink"
   >
+    <!-- Shadow part -->
     <rect class="shadow" :x="rect.x + 4" :y="rect.y + 4" :rx="radius" :width="rect.width" :height="rect.height" v-if="collapsed" />
+
+    <!-- Self part -->
     <rect
       class="node"
       :x="rect.x"
@@ -43,7 +46,11 @@
       {{ node.name }}
     </text>
     <!-- <rect :width="width" :height="height" stroke="red" fill="none" /> -->
-    <path v-if="!collapsed" :fill="props.node.outSelfFill ?? 'none'" class="link" stroke-linejoin="round" :d="out?.[0]" />
+
+    <!-- Out part -->
+    <path v-if="!collapsed" :fill="props.node.outSelfFill ?? 'none'" class="link" stroke-linejoin="round" :style="outStyle" :d="out?.[0]" />
+
+    <!-- Children part -->
     <tree-node
       v-for="(value, index) of node.children"
       v-if="!collapsed"
@@ -62,16 +69,29 @@
       @active="emit('active', $event)"
       @contextmenu="emit('contextmenu', $event)"
     ></tree-node>
-    <path v-for="(_, index) of node.children" v-if="!collapsed" :key="index" fill="none" class="link" :d="relative[index]?.link" :stroke-dasharray="node.dashArray" />
+    <path
+      v-for="(_, index) of node.children"
+      v-if="!collapsed"
+      :key="index"
+      fill="none"
+      :style="outStyle"
+      class="link"
+      :d="relative[index]?.link"
+      :stroke-dasharray="node.dashArray"
+    />
     <path
       v-for="(_, index) of node.children"
       v-if="!collapsed"
       :key="index"
       :fill="props.node.inChildrenFill?.[index] ?? 'none'"
+      :style="outStyle"
       class="link"
       stroke-linejoin="round"
       :d="relative[index]?.in"
     />
+
+    <!-- Extend part -->
+    <path v-if="!collapsed && node.extensible" fill="none" class="link extend" :style="outStyle" :d="extend.link" />
     <rect
       v-if="!collapsed && node.extensible"
       :x="extendRect.x"
@@ -97,7 +117,7 @@
     >
       {{ extendTextContent }}
     </text>
-    <path v-if="!collapsed && node.extensible" fill="none" class="link extend" :d="extend.link" />
+
     <!-- <rect
       v-if="!collapsed && node.extensible"
       :x="extend.left"
@@ -179,6 +199,12 @@ const textStyle = computed(function (): StyleValue {
     fontWeight: fontWeight.value,
     fontFamily,
     fontSize,
+  };
+});
+
+const outStyle = computed(function (): StyleValue {
+  return {
+    color: props.node.outColor ?? props.node.color ?? undefined,
   };
 });
 
