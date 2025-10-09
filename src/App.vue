@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from "vue";
+import { computed, onMounted, ref, useTemplateRef, watch } from "vue";
 import Tree from "./components/Tree.vue";
-import { Data, Shape, TreeEvent } from "./components/types";
+import { createContext, Data, defaultOptions, Shape, TreeEvent } from "./components/types";
 import "./auto.css";
+import { Node } from "./components/svg";
 import type { ComponentExposed } from "vue-component-type-helpers";
+// import ListNode from "./components/ListNode.vue";
 type T = {
   name: string;
   id?: number | string;
@@ -198,6 +200,15 @@ window.addEventListener("click", () => {
 function saveSvg() {
   console.log(tree.value?.svg);
 }
+
+onMounted(() => {
+  document.getElementById("tree-v2")?.appendChild(Node.create(datas[treeData.value], "id", defaultOptions, createContext(new OffscreenCanvas(100, 100))).ref);
+});
+watch(treeData, () => {
+  const tree = document.getElementById("tree-v2");
+  tree?.children.item(1)?.remove();
+  tree?.appendChild(Node.create(datas[treeData.value], "id", defaultOptions, createContext(new OffscreenCanvas(100, 100))).ref);
+});
 </script>
 
 <template>
@@ -223,8 +234,11 @@ function saveSvg() {
     <Tree ref="_tree" :data="_data" :label-key="'id'" :state="state" :options="undefined" @click="click" @dblclick="console.log('dblclick', $event)" @contextmenu="contextmenu" />
   </div>
   <br />
+  <span id="tree-v2">Tree (v2)</span>
+  <br />
   <div class="container">
     <textarea id="tree-data" title="Tree Data">{{ JSON.stringify(datas[treeData], null, 2) }}</textarea>
+    <!-- <ListNode :node="datas[treeData]" :label-key="'id'" /> -->
   </div>
 </template>
 

@@ -140,6 +140,7 @@ const props = defineProps<{
   options: Options;
   state: ExternalState;
   labelKey: Key;
+  parent?: T;
 }>();
 
 // The key of the node, used for identification.

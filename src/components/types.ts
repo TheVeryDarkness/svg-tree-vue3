@@ -1,5 +1,33 @@
 import type { Ref } from "vue";
 
+export interface ColorOptions {
+  /**
+   * Stroke color of node borders and links.
+   */
+  borderColor?: string;
+  /**
+   * Fill color of nodes.
+   */
+  backgroundColor?: string;
+  /**
+   * Fill color of node shadows.
+   */
+  shadowColor?: string;
+  /**
+   * Fill color of texts.
+   *
+   * May be overriden by {@link Data}.
+   */
+  textColor?: string;
+  /**
+   * Fill color of texts when hovering.
+   */
+  textHoverColor?: string;
+  /**
+   * Fill color of texts when active.
+   */
+  textActiveColor?: string;
+}
 export interface TextOptions {
   /**
    * Font weight of texts.
@@ -35,7 +63,7 @@ export interface LayoutOptions {
   radius: number;
 }
 export interface FontOptions {
-  fontFamily: string;
+  fontFamily?: string;
   fontSize: number;
 }
 export interface ShapeOptions {
@@ -60,11 +88,11 @@ export interface ShapeOptions {
 //   dblclick: number;
 // }
 export interface Options {
+  color: ColorOptions;
   text: TextOptions;
   layout: LayoutOptions;
   font: FontOptions;
   shape: ShapeOptions;
-  // control: ControlOptions;
 }
 
 type DeepPartial<T> = {
@@ -73,6 +101,22 @@ type DeepPartial<T> = {
 
 export type PartialOptions = DeepPartial<Options> | undefined;
 
+export const defaultLightColorOptions: ColorOptions = {
+  borderColor: "gray",
+  backgroundColor: "white",
+  shadowColor: "darkgray",
+  textColor: "black",
+  textHoverColor: "darkcyan",
+  textActiveColor: "darkcyan",
+};
+export const defaultDarkColorOptions: ColorOptions = {
+  borderColor: "lightgray",
+  backgroundColor: "darkgray",
+  shadowColor: "black",
+  textColor: "white",
+  textHoverColor: "cyan",
+  textActiveColor: "cyan",
+};
 export const defaultLayoutOptions: LayoutOptions = {
   indentX: 8,
   indentY: 16,
@@ -88,7 +132,7 @@ export const defaultTextOptions: TextOptions = {
   textActiveWeight: 1000,
 };
 export const defaultFontOptions: FontOptions = {
-  fontFamily: "JetBrains Mono",
+  fontFamily: undefined,
   fontSize: 14,
 };
 export const defaultShapeOptions: ShapeOptions = {
@@ -109,15 +153,12 @@ export const defaultShapeOptions: ShapeOptions = {
     length: 8,
   },
 };
-// export const defaultControlOptions: ControlOptions = {
-//   dblclick: 300,
-// };
 export const defaultOptions: Options = {
+  color: window.matchMedia("(prefers-color-scheme: dark)").matches ? defaultDarkColorOptions : defaultLightColorOptions,
   text: defaultTextOptions,
   layout: defaultLayoutOptions,
   font: defaultFontOptions,
   shape: defaultShapeOptions,
-  // control: defaultControlOptions,
 };
 
 /**
@@ -127,6 +168,7 @@ export const defaultOptions: Options = {
  */
 export function mergeOptions(options: PartialOptions | undefined): Options {
   return {
+    color: { ...defaultLightColorOptions, ...options?.color },
     text: { ...defaultTextOptions, ...options?.text },
     layout: { ...defaultLayoutOptions, ...options?.layout },
     font: { ...defaultFontOptions, ...options?.font },
@@ -136,7 +178,6 @@ export function mergeOptions(options: PartialOptions | undefined): Options {
       diamond: { ...defaultShapeOptions.diamond, ...options?.shape?.diamond },
       triangle: { ...defaultShapeOptions.triangle, ...options?.shape?.triangle },
     },
-    // control: { ...defaultControlOptions, ...options?.control },
   };
 }
 
@@ -178,9 +219,30 @@ export interface Rectangle {
   width: number;
   height: number;
 }
+export interface Size {
+  width: number;
+  height: number;
+}
+export interface Position {
+  x: number;
+  y: number;
+}
+export interface Relative {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  link: string;
+  in?: string;
+}
 export interface TreeNodeSize {
   bounding: { width: number; height: number };
   name: Rectangle;
+}
+export interface TextSize {
+  width: number;
+  height: number;
+  baselineOffsetY: number;
 }
 
 export interface TreeEvent<T, E> {
@@ -196,4 +258,9 @@ export interface TreeEvent<T, E> {
 export interface ExternalState {
   active: Ref<number | string | undefined>;
   hover: Ref<number | string | undefined>;
+}
+
+export interface State {
+  active: boolean;
+  hover: boolean;
 }
