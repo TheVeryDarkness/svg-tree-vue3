@@ -1,4 +1,4 @@
-import type { Data, FontOptions, Options, Rectangle, TextSize, TextOptions, TreeNodeSize, Position, State, Size, ShapeOptions, Shape, Relative } from "./types";
+import type { Data, Options, Rectangle, TextSize, TextOptions, TreeNodeSize, Position, State, Size, ShapeOptions, Shape, Relative } from "./types";
 
 /**
  * Saved properties for hot update
@@ -6,6 +6,7 @@ import type { Data, FontOptions, Options, Rectangle, TextSize, TextOptions, Tree
 class NodeBase<Key extends string | number | symbol = "path"> {
   protected name: string;
   protected color?: string;
+  protected textColor?: string;
   protected backgroundColor?: string;
   protected dashArray?: string | number;
   protected outSelfShape?: Shape;
@@ -14,6 +15,8 @@ class NodeBase<Key extends string | number | symbol = "path"> {
   protected inChildrenShape?: (Shape | undefined)[];
   protected inChildrenFill?: (string | undefined)[];
   protected extensible: boolean;
+
+  protected shadowColor?: string;
 
   protected fontFamily?: string;
   protected fontSize: number;
@@ -25,16 +28,17 @@ class NodeBase<Key extends string | number | symbol = "path"> {
 
   protected keyProp: Key;
 
-  protected vertical: boolean;
-  protected collapsed: boolean;
-  protected active: boolean;
-  protected hover: boolean;
+  protected vertical_: boolean;
+  protected collapsed_: boolean;
+  protected active_: boolean;
+  protected hover_: boolean;
 
   protected static readonly extendTextContent = "+";
 
   protected constructor(
     name: string,
     color: string | undefined,
+    textColor: string | undefined,
     backgroundColor: string | undefined,
     dashArray: string | number | undefined,
     outSelfShape: Shape | undefined,
@@ -43,19 +47,21 @@ class NodeBase<Key extends string | number | symbol = "path"> {
     inChildrenShape: (Shape | undefined)[] | undefined,
     inChildrenFill: (string | undefined)[] | undefined,
     extensible: boolean,
+    shadowColor: string | undefined,
     fontFamily: string | undefined,
     fontSize: number,
     fontWeight: number,
     radius: number,
     key: string | number | undefined,
     keyProp: Key,
-    vertical: boolean,
-    collapsed: boolean,
-    active: boolean,
-    hover: boolean,
+    vertical_: boolean,
+    collapsed_: boolean,
+    active_: boolean,
+    hover_: boolean,
   ) {
     this.name = name;
     this.color = color;
+    this.textColor = textColor;
     this.backgroundColor = backgroundColor;
     this.dashArray = dashArray;
     this.outSelfShape = outSelfShape;
@@ -64,6 +70,8 @@ class NodeBase<Key extends string | number | symbol = "path"> {
     this.inChildrenShape = inChildrenShape;
     this.inChildrenFill = inChildrenFill;
     this.extensible = extensible;
+
+    this.shadowColor = shadowColor;
 
     this.fontFamily = fontFamily;
     this.fontSize = fontSize;
@@ -75,12 +83,64 @@ class NodeBase<Key extends string | number | symbol = "path"> {
 
     this.keyProp = keyProp;
 
-    this.vertical = vertical;
-    this.collapsed = collapsed;
-    this.active = active;
-    this.hover = hover;
+    this.vertical_ = vertical_;
+    this.collapsed_ = collapsed_;
+    this.active_ = active_;
+    this.hover_ = hover_;
   }
+  protected reset(
+    name: string,
+    color: string | undefined,
+    textColor: string | undefined,
+    backgroundColor: string | undefined,
+    dashArray: string | number | undefined,
+    outSelfShape: Shape | undefined,
+    outSelfFill: string | undefined,
+    outColor: string | undefined,
+    inChildrenShape: (Shape | undefined)[] | undefined,
+    inChildrenFill: (string | undefined)[] | undefined,
+    extensible: boolean,
+    shadowColor: string | undefined,
+    fontFamily: string | undefined,
+    fontSize: number,
+    fontWeight: number,
+    radius: number,
+    key: string | number | undefined,
+    keyProp: Key,
+    vertical_: boolean,
+    collapsed_: boolean,
+    active_: boolean,
+    hover_: boolean,
+  ) {
+    this.name = name;
+    this.color = color;
+    this.textColor = textColor;
+    this.backgroundColor = backgroundColor;
+    this.dashArray = dashArray;
+    this.outSelfShape = outSelfShape;
+    this.outSelfFill = outSelfFill;
+    this.outColor = outColor;
+    this.inChildrenShape = inChildrenShape;
+    this.inChildrenFill = inChildrenFill;
+    this.extensible = extensible;
 
+    this.shadowColor = shadowColor;
+
+    this.fontFamily = fontFamily;
+    this.fontSize = fontSize;
+    this.fontWeight = fontWeight;
+
+    this.radius = radius;
+
+    this.key = key;
+
+    this.keyProp = keyProp;
+
+    this.vertical_ = vertical_;
+    this.collapsed_ = collapsed_;
+    this.active_ = active_;
+    this.hover_ = hover_;
+  }
   protected diff(other: NodeBase<Key>): Partial<NodeBase<Key>> {
     const changes: Partial<NodeBase<Key>> = {};
     for (const key of Object.keys(this) as (keyof NodeBase<Key>)[]) {
@@ -91,6 +151,9 @@ class NodeBase<Key extends string | number | symbol = "path"> {
     return changes;
   }
 }
+
+type Child<T extends Data<T, Key>, Key extends string | number | symbol = "path"> = [SVGPathElement, SVGPathElement | null, Node<T, Key>];
+type Extend = [SVGPathElement, SVGRectElement, SVGTextElement];
 
 /**
  * A virtual node class for SVG elements.
@@ -104,9 +167,9 @@ export class Node<T extends Data<T, Key>, Key extends string | number | symbol =
   private node_rect: SVGRectElement;
   private node_text: SVGTextElement;
   private out_shape: SVGPathElement | null;
-  private children_: [SVGPathElement, SVGPathElement | null, Node<T, Key>][];
-  private parent_?: Node<T, Key>;
-  private extend: [SVGPathElement, SVGRectElement, SVGTextElement] | null;
+  private children_: Child<T, Key>[];
+  private parent_?: WeakRef<Node<T, Key>>;
+  private extend: Extend | null;
 
   private static computeFontWeight(options: TextOptions, state: State): number {
     const { textWeight, textHoverWeight, textActiveWeight } = options;
@@ -193,23 +256,6 @@ export class Node<T extends Data<T, Key>, Key extends string | number | symbol =
         height: margin.y + rectSize.height + indent.y + all.reduce((acc, cur) => Math.max(acc, cur.height), 0),
       };
     }
-    //     const { fontFamily, fontSize } = options.font;
-    //     const { textWeight, textHoverWeight, textActiveWeight } = options.text;
-    //     ctx.font = computeCtxFont(fontFamily, fontSize, textWeight);
-    //     const textMetrics = ctx.measureText(this.ref.getAttribute("svg-name") || "");
-    //     const textWidth = textMetrics.width;
-    //     const textHeight = fontSize; // Approximate height using font size
-
-    //     const paddingX = options.layout.paddingX;
-    //     const paddingY = options.layout.paddingY;
-
-    //     const boundingWidth = textWidth + paddingX * 2;
-    //     const boundingHeight = textHeight + paddingY * 2;
-
-    //     return {
-    //       bounding: { width: boundingWidth, height: boundingHeight },
-    //       name: { x: -boundingWidth / 2 + paddingX, y: -boundingHeight / 2 + paddingY, width: textWidth, height: textHeight },
-    //     };
   }
 
   /**
@@ -513,7 +559,153 @@ Z`,
     };
   }
 
-  private constructor(data: T, keyProp: Key, options: Options, ctx: OffscreenCanvasRenderingContext2D, parent?: Node<T, Key>) {
+  private static setupShadow(shadow: SVGRectElement, radius: number, rectPosition: Rectangle, shadowColor: string | undefined) {
+    shadow.classList.add("shadow");
+    if (shadowColor) shadow.style.fill = shadowColor;
+    shadow.setAttribute("x", String(rectPosition.x + 4));
+    shadow.setAttribute("y", String(rectPosition.y + 4));
+    shadow.setAttribute("width", String(rectPosition.width));
+    shadow.setAttribute("height", String(rectPosition.height));
+    shadow.setAttribute("rx", String(radius));
+    shadow.setAttribute("ry", String(radius));
+  }
+
+  private static setupOutShape(out_shape: SVGPathElement, outSelfFill: string | undefined) {
+    out_shape.classList.add("link");
+    out_shape.style.fill = outSelfFill ?? "none";
+    out_shape.style.strokeLinejoin = "round";
+  }
+
+  private static setupInChildLink(path: SVGPathElement, outColor: string | undefined, dashArray: string | number | undefined) {
+    path.classList.add("link");
+    if (outColor) path.style.color = outColor;
+    path.style.fill = "none";
+    if (dashArray) path.style.strokeDasharray = String(dashArray);
+    // path.style.strokeLinejoin = "round";
+  }
+
+  private static setupInChildShape(inShape: SVGPathElement, color: string | undefined, inChildFill: string | undefined) {
+    inShape.classList.add("link");
+    if (color) inShape.style.color = color;
+    inShape.style.fill = inChildFill ?? "none";
+    inShape.style.strokeLinejoin = "round";
+  }
+
+  private static setupChild<T extends Data<T, Key>, Key extends string | number | symbol = "path">(
+    [path, inShape, child]: Child<T, Key>,
+    outColor: string | undefined,
+    dashArray: string | number | undefined,
+    relative: Relative,
+  ) {
+    this.setupInChildLink(path, outColor, dashArray);
+    if (inShape) this.setupInChildShape(inShape, child.color, child.outSelfFill);
+
+    path.setAttribute("d", relative.link);
+
+    if (inShape && relative.in) {
+      inShape.setAttribute("d", relative.in);
+    }
+
+    child.ref_.setAttribute("x", String(relative.left));
+    child.ref_.setAttribute("y", String(relative.top));
+  }
+
+  private static setupExtend(
+    [extend_path, extend_rect, extend_text]: Extend,
+    color: string | undefined,
+    backgroundColor: string | undefined,
+    outColor: string | undefined,
+    textColor: string | undefined,
+    fontFamily: string | undefined,
+    fontSize: number,
+    fontWeight: number,
+    relative: Relative,
+    extendSize: TreeNodeSize,
+    extendPosition: Position,
+    radius: number,
+  ) {
+    extend_path.classList.add("link", "extend");
+    extend_path.style.fill = "none";
+    if (outColor) extend_path.style.color = outColor;
+
+    extend_rect.classList.add("rect", "extend");
+    extend_rect.style.boxSizing = "border-box";
+    if (color) extend_rect.style.color = color;
+    extend_rect.style.cursor = "pointer";
+    if (backgroundColor) extend_rect.style.fill = backgroundColor;
+
+    extend_text.textContent = Node.extendTextContent;
+    extend_text.classList.add("text", "extend");
+    extend_text.style.cursor = "pointer";
+    if (textColor) extend_text.style.fill = textColor;
+    if (fontFamily) extend_text.style.fontFamily = fontFamily;
+    extend_text.style.fontSize = fontSize.toString();
+    extend_text.style.fontWeight = fontWeight.toString();
+    extend_text.style.userSelect = "none";
+
+    extend_path.setAttribute("d", relative.link);
+
+    extend_rect.setAttribute("x", String(relative.left + extendSize.name.x));
+    extend_rect.setAttribute("y", String(relative.top + extendSize.name.y));
+    extend_rect.setAttribute("width", String(extendSize.name.width));
+    extend_rect.setAttribute("height", String(extendSize.name.height));
+    extend_rect.setAttribute("rx", String(radius));
+    extend_rect.setAttribute("ry", String(radius));
+
+    extend_text.setAttribute("x", String(relative.left + extendPosition.x));
+    extend_text.setAttribute("y", String(relative.top + extendPosition.y));
+  }
+
+  private static setupSelf(
+    [node_rect, node_text]: [SVGRectElement, SVGTextElement],
+    size: TreeNodeSize,
+    text: Position,
+    name: string,
+    color: string | undefined,
+    backgroundColor: string | undefined,
+    textColor: string | undefined,
+    fontFamily: string | undefined,
+    fontSize: number,
+    fontWeight: number,
+    radius: number,
+  ) {
+    node_rect.classList.add("rect", "node");
+    node_rect.setAttribute("x", String(size.name.x));
+    node_rect.setAttribute("y", String(size.name.y));
+    node_rect.setAttribute("width", String(size.name.width));
+    node_rect.setAttribute("height", String(size.name.height));
+    node_rect.setAttribute("rx", String(radius));
+    node_rect.setAttribute("ry", String(radius));
+    if (color) node_rect.style.color = color;
+    if (backgroundColor) node_rect.style.fill = backgroundColor;
+    node_rect.style.boxSizing = "border-box";
+    node_rect.style.cursor = "pointer";
+
+    node_text.textContent = name;
+    node_text.classList.add("node", "text");
+    node_text.setAttribute("x", String(text.x));
+    node_text.setAttribute("y", String(text.y));
+    if (textColor) node_text.style.fill = textColor;
+    node_text.style.userSelect = "none";
+    if (fontFamily) node_text.style.fontFamily = fontFamily;
+    node_text.style.fontSize = String(fontSize);
+    node_text.style.fontWeight = String(fontWeight);
+    node_text.style.cursor = "pointer";
+  }
+
+  private static setupRoot<T extends Data<T, Key>, Key extends string | number | symbol = "path">(ref_: SVGSVGElement, data: Data<T, Key>, keyProp: Key, size: TreeNodeSize) {
+    ref_.classList.add("svg-tree-node");
+
+    ref_.setAttribute("enable-background", "true");
+    ref_.style.fill = "none";
+    ref_.setAttribute("svg-key", data[keyProp]?.toString() ?? "");
+
+    ref_.setAttribute("width", String(size.bounding.width));
+    ref_.setAttribute("height", String(size.bounding.height));
+    ref_.setAttribute("viewBox", `0 0 ${size.bounding.width} ${size.bounding.height}`);
+  }
+
+  private constructor(data: T, keyProp: Key, options: Options, ctx: OffscreenCanvasRenderingContext2D, parent?: WeakRef<Node<T, Key>>) {
     const name = data.name;
     const collapsed = typeof data.children === "function";
     const vertical = true;
@@ -532,6 +724,7 @@ Z`,
     super(
       name,
       data.color ?? options.color.borderColor,
+      data.color ?? options.color.textColor,
       data.backgroundColor ?? options.color.backgroundColor,
       data.dashArray,
       data.outSelfShape,
@@ -540,6 +733,7 @@ Z`,
       data.inChildrenShape,
       data.inChildrenFill,
       extensible,
+      options.color.shadowColor,
       fontFamily,
       fontSize,
       fontWeight,
@@ -557,7 +751,7 @@ Z`,
 
     const children_elements: SVGElement[] = [];
 
-    const _ref = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const ref_ = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
     if (collapsed) {
       this.out_shape = null;
@@ -576,14 +770,9 @@ Z`,
         name: rectPosition,
       };
 
+      // Shadow rect
       const shadow = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      shadow.classList.add("svg-tree-node-shadow-rect");
-      shadow.setAttribute("x", String(rectPosition.x + 4));
-      shadow.setAttribute("y", String(rectPosition.y + 4));
-      shadow.setAttribute("width", String(rectPosition.width));
-      shadow.setAttribute("height", String(rectPosition.height));
-      shadow.setAttribute("rx", String(options.layout.radius));
-      shadow.setAttribute("ry", String(options.layout.radius));
+      Node.setupShadow(shadow, this.radius, rectPosition, this.shadowColor);
       this.shadow_rect = shadow;
       children_elements.push(shadow);
 
@@ -592,9 +781,7 @@ Z`,
       this.shadow_rect = null;
 
       const out_shape = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      out_shape.classList.add("svg-tree-node-out-shape");
-      out_shape.style.fill = this.outSelfFill ?? "none";
-      out_shape.style.strokeLinejoin = "round";
+      Node.setupOutShape(out_shape, this.outSelfFill);
       this.out_shape = out_shape;
       children_elements.push(out_shape);
 
@@ -602,14 +789,10 @@ Z`,
       const children_nodes = typeof data.children === "function" ? data.children(data) : data.children;
 
       const children = children_nodes.map(function (data, index): [SVGPathElement, SVGPathElement | null, Node<T, Key>] {
-        const child = new Node(data, keyProp, options, ctx, self);
+        const child = new Node(data, keyProp, options, ctx, new WeakRef(self));
 
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.classList.add("svg-tree-node-link-path");
-        if (self.outColor) path.style.color = self.outColor;
-        path.style.fill = "none";
-        if (self.dashArray) path.style.strokeDasharray = String(self.dashArray);
-        // path.style.strokeLinejoin = "round";
+        Node.setupInChildLink(path, self.outColor, self.dashArray);
         children_elements.push(path);
 
         let inShape: SVGPathElement | null = null;
@@ -617,10 +800,7 @@ Z`,
         const inChildFill = self.inChildrenFill?.[index];
         if (inChildShape) {
           inShape = document.createElementNS("http://www.w3.org/2000/svg", "path");
-          inShape.classList.add("svg-tree-node-in-shape");
-          if (self.color) inShape.style.color = self.color;
-          inShape.style.fill = inChildFill ?? "none";
-          inShape.style.strokeLinejoin = "round";
+          Node.setupInChildShape(inShape, self.color, inChildFill);
           children_elements.push(inShape);
         }
 
@@ -637,31 +817,10 @@ Z`,
 
       if (this.extensible) {
         const extend_path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        extend_path.classList.add("svg-tree-node-link-path");
-        extend_path.style.fill = "none";
-        if (this.outColor) extend_path.style.color = this.outColor;
-        children_elements.push(extend_path);
-
         const extend_rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        extend_rect.classList.add("svg-tree-node-rect");
-        extend_rect.classList.add("svg-tree-node-extend-rect");
-        extend_rect.style.boxSizing = "border-box";
-        if (this.color) extend_rect.style.color = this.color;
-        extend_rect.style.cursor = "pointer";
-        if (this.backgroundColor) extend_rect.style.fill = this.backgroundColor;
-        children_elements.push(extend_rect);
-
         const extend_text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        extend_text.textContent = Node.extendTextContent;
-        extend_text.classList.add("svg-tree-node-text");
-        extend_text.classList.add("svg-tree-node-extend-text");
-        extend_text.style.cursor = "pointer";
-        if (this.color) extend_text.style.fill = this.color;
-        if (this.fontFamily) extend_text.style.fontFamily = this.fontFamily;
-        extend_text.style.fontSize = this.fontSize.toString();
-        extend_text.style.fontWeight = this.fontWeight.toString();
-        extend_text.style.userSelect = "none";
-        children_elements.push(extend_text);
+
+        children_elements.push(extend_path, extend_rect, extend_text);
 
         this.extend = [extend_path, extend_rect, extend_text];
       } else {
@@ -680,8 +839,8 @@ Z`,
         this.children_.map((c) => c[2].size.bounding),
         extendSize.bounding,
         this.extensible,
-        this.collapsed,
-        this.vertical,
+        this.collapsed_,
+        this.vertical_,
       );
       const extendPosition = Node.computeTextPosition(extendSize.name, margin, padding, extendTextSize);
       const rectPosition = Node.computeRectPosition(
@@ -691,15 +850,15 @@ Z`,
         boundingSize,
         rectSize,
         margin,
-        this.vertical,
-        this.collapsed,
+        this.vertical_,
+        this.collapsed_,
       );
 
       let outOffset = 0;
       if (this.outSelfShape) {
-        const outShape = Node.computeOutShape(this.outSelfShape, options.shape, rectPosition, rectPosition.x + rectPosition.width / 2, margin, this.vertical);
-        if (this.outColor) out_shape.style.color = this.outColor;
-        out_shape.setAttribute("d", outShape[0]);
+        const outShape = Node.computeOutShape(this.outSelfShape, options.shape, rectPosition, rectPosition.x + rectPosition.width / 2, margin, this.vertical_);
+        if (this.outColor) this.out_shape.style.color = this.outColor;
+        this.out_shape.setAttribute("d", outShape[0]);
         outOffset = outShape[1];
       }
       const relatives = Node.computeChildrenRelatives(
@@ -714,31 +873,31 @@ Z`,
         this.inChildrenShape,
         extendSize,
         this.extensible,
-        this.vertical,
+        this.vertical_,
       );
       for (let i = 0; i < children.length; i++) {
         const [path, inShape, child] = children[i];
         const relative = relatives[0][i];
-        path.setAttribute("d", relative.link);
-        if (inShape && relative.in) {
-          inShape.setAttribute("d", relative.in);
-        }
-        child.ref_.setAttribute("x", String(relative.left));
-        child.ref_.setAttribute("y", String(relative.top));
+
+        Node.setupChild([path, inShape, child], this.outColor, this.dashArray, relative);
       }
       if (this.extend && this.extensible) {
-        const [extend_path, extend_rect, extend_text] = this.extend;
         const relative = relatives[1];
-        extend_path.setAttribute("d", relative.link);
-        extend_rect.setAttribute("x", String(relative.left + extendSize.name.x));
-        extend_rect.setAttribute("y", String(relative.top + extendSize.name.y));
-        extend_rect.setAttribute("width", String(extendSize.name.width));
-        extend_rect.setAttribute("height", String(extendSize.name.height));
-        extend_rect.setAttribute("rx", String(options.layout.radius));
-        extend_rect.setAttribute("ry", String(options.layout.radius));
 
-        extend_text.setAttribute("x", String(relative.left + extendPosition.x));
-        extend_text.setAttribute("y", String(relative.top + extendPosition.y));
+        Node.setupExtend(
+          this.extend,
+          this.color,
+          this.backgroundColor,
+          this.outColor,
+          this.textColor,
+          fontFamily,
+          fontSize,
+          fontWeight,
+          relative,
+          extendSize,
+          extendPosition,
+          this.radius,
+        );
       }
 
       this.size = {
@@ -750,71 +909,19 @@ Z`,
 
     {
       const node_rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      node_rect.classList.add("svg-tree-node-rect");
-      node_rect.setAttribute("x", String(this.size.name.x));
-      node_rect.setAttribute("y", String(this.size.name.y));
-      node_rect.setAttribute("width", String(this.size.name.width));
-      node_rect.setAttribute("height", String(this.size.name.height));
-      node_rect.setAttribute("rx", String(options.layout.radius));
-      node_rect.setAttribute("ry", String(options.layout.radius));
-      if (this.color) node_rect.style.color = this.color;
-      if (this.backgroundColor) node_rect.style.fill = this.backgroundColor;
-      node_rect.style.boxSizing = "border-box";
-      node_rect.style.cursor = "pointer";
       this.node_rect = node_rect;
-      children_elements.push(node_rect);
-    }
 
-    {
       const node_text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      node_text.textContent = this.name;
-      node_text.classList.add("svg-tree-node-text");
-      node_text.setAttribute("x", String(this.text.x));
-      node_text.setAttribute("y", String(this.text.y));
-      if (this.color) node_text.style.fill = this.color;
-      node_text.style.userSelect = "none";
-      if (this.fontFamily) node_text.style.fontFamily = this.fontFamily;
-      node_text.style.fontSize = String(this.fontSize);
-      node_text.style.fontWeight = String(this.fontWeight);
-      node_text.style.cursor = "pointer";
       this.node_text = node_text;
-      children_elements.push(node_text);
+
+      children_elements.push(node_rect, node_text);
+
+      Node.setupSelf([node_rect, node_text], this.size, this.text, this.name, this.color, this.backgroundColor, this.textColor, fontFamily, fontSize, fontWeight, this.radius);
     }
 
-    _ref.classList.add("svg-tree-node");
+    Node.setupRoot(ref_, data, keyProp, this.size);
 
-    _ref.setAttribute("enable-background", "true");
-    _ref.style.fill = "none";
-    _ref.setAttribute("svg-key", data[keyProp]?.toString() ?? "");
-
-    _ref.setAttribute("width", String(this.size.bounding.width));
-    _ref.setAttribute("height", String(this.size.bounding.height));
-    _ref.setAttribute("viewBox", `0 0 ${this.size.bounding.width} ${this.size.bounding.height}`);
-
-    // if (data.color) {
-    //   _ref.setAttribute("stroke", data.color);
-    //   _ref.setAttribute("color", data.color);
-    // }
-    // if (data.backgroundColor) {
-    //   _ref.setAttribute("fill", data.backgroundColor);
-    // }
-    // if (data.dashArray) {
-    //   _ref.setAttribute("stroke-dasharray", String(data.dashArray));
-    // }
-    // if (data.outSelfShape) {
-    //   _ref.setAttribute("marker-end", `url(#${data.outSelfShape}-end)`);
-    //   if (data.outSelfFill) {
-    //     const fill = data.outSelfFill === "currentColor" ? "currentColor" : data.outSelfFill || "none";
-    //     _ref.setAttribute("marker-end", `url(#${data.outSelfShape}-end-${fill.replace("#", "")})`);
-    //   }
-    // }
-    // if (data.outColor) {
-    //   const color = data.outColor === "currentColor" ? "currentColor" : data.outColor || data.color || "black";
-    //   _ref.setAttribute("stroke", color);
-    //   _ref.setAttribute("color", color);
-    // }
-
-    this.ref_ = _ref;
+    this.ref_ = ref_;
     this.parent_ = parent;
     this.ref_.append(...children_elements);
   }
@@ -833,23 +940,349 @@ Z`,
   }
 
   protected requestSkeletonUpdate() {}
+  protected recomputeStyle() {}
 
-  update(data: T, keyProp: Key, options: Options, ctx: OffscreenCanvasRenderingContext2D) {
-    // this.data = data;
-    // this.keyProp = keyProp;
-    // this.options = options;
-    // this.ctx = ctx;
-  }
+  //   update(data: T, keyProp: Key, options: Options, ctx: OffscreenCanvasRenderingContext2D) {
+  //     const name = data.name;
+  //     const collapsed = typeof data.children === "function";
+  //     const vertical = true;
+  //     const extensible = data.extensible ?? false;
+
+  //     const { fontFamily, fontSize } = options.font;
+  //     const active = false;
+  //     const hover = false;
+  //     const fontWeight = Node.computeFontWeight(options.text, { active, hover });
+
+  //     const { indentX, indentY, marginX, marginY, paddingX, paddingY } = options.layout;
+  //     const indent = { x: indentX, y: indentY };
+  //     const margin = { x: marginX, y: marginY };
+  //     const padding = { x: paddingX, y: paddingY };
+
+  //     super.reset(
+  //       name,
+  //       data.color ?? options.color.borderColor,
+  //       data.color ?? options.color.textColor,
+  //       data.backgroundColor ?? options.color.backgroundColor,
+  //       data.dashArray,
+  //       data.outSelfShape,
+  //       data.outSelfFill,
+  //       data.outColor ?? data.color ?? options.color.borderColor,
+  //       data.inChildrenShape,
+  //       data.inChildrenFill,
+  //       extensible,
+  //       options.color.shadowColor,
+  //       fontFamily,
+  //       fontSize,
+  //       fontWeight,
+  //       options.layout.radius,
+  //       data[keyProp],
+  //       keyProp,
+  //       vertical,
+  //       collapsed,
+  //       active,
+  //       hover,
+  //     );
+
+  //     const ctxFont = Node.computeCtxFont(fontFamily, fontSize, fontWeight);
+  //     ctx.font = ctxFont;
+
+  //     const children_elements: SVGElement[] = [];
+
+  //     const ref_ = this.ref_;
+
+  //     if (collapsed) {
+  //       this.out_shape = null;
+  //       this.children_ = [];
+  //       this.extend = null;
+
+  //       const textSize = Node.computeTextSize(ctx, name);
+  //       const rectSize = Node.computeRectSize(textSize, padding);
+  //       const extendTextSize = Node.computeExtendTextSize(ctx, Node.extendTextContent);
+  //       const extendRectSize = Node.computeExtendRectSize(extendTextSize, padding);
+  //       const extendSize = Node.computeExtendSize(extendRectSize, margin);
+  //       const boundingSize = Node.computeSize(rectSize, indent, margin, [], extendSize.bounding, extensible, collapsed, vertical);
+  //       const rectPosition = Node.computeRectPosition([], extendSize, extensible, boundingSize, rectSize, margin, vertical, collapsed);
+  //       this.size = {
+  //         bounding: boundingSize,
+  //         name: rectPosition,
+  //       };
+
+  //       // Shadow rect
+  //       if (this.shadow_rect) {
+  //         const shadow = this.shadow_rect;
+  //         shadow.classList.add("shadow");
+  //         if (this.shadowColor) shadow.style.fill = this.shadowColor;
+  //         shadow.setAttribute("x", String(rectPosition.x + 4));
+  //         shadow.setAttribute("y", String(rectPosition.y + 4));
+  //         shadow.setAttribute("width", String(rectPosition.width));
+  //         shadow.setAttribute("height", String(rectPosition.height));
+  //         shadow.setAttribute("rx", String(options.layout.radius));
+  //         shadow.setAttribute("ry", String(options.layout.radius));
+  //         this.shadow_rect = shadow;
+  //         children_elements.push(shadow);
+  //       }
+
+  //       this.text = Node.computeTextPosition(this.size.name, margin, padding, textSize);
+  //     } else {
+  //       this.shadow_rect = null;
+
+  //       if (this.out_shape) {
+  //         const out_shape = this.out_shape;
+  //         out_shape.classList.add("link");
+  //         out_shape.style.fill = this.outSelfFill ?? "none";
+  //         out_shape.style.strokeLinejoin = "round";
+  //         children_elements.push(out_shape);
+  //       }
+
+  //       const self = this;
+  //       const children_nodes = typeof data.children === "function" ? data.children(data) : data.children;
+
+  //       const children = children_nodes.map(function (data, index): [SVGPathElement, SVGPathElement | null, Node<T, Key>] {
+  //         const child = new Node(data, keyProp, options, ctx, self);
+
+  //         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  //         path.classList.add("link");
+  //         if (self.outColor) path.style.color = self.outColor;
+  //         path.style.fill = "none";
+  //         if (self.dashArray) path.style.strokeDasharray = String(self.dashArray);
+  //         // path.style.strokeLinejoin = "round";
+  //         children_elements.push(path);
+
+  //         let inShape: SVGPathElement | null = null;
+  //         const inChildShape = self.inChildrenShape?.[index];
+  //         const inChildFill = self.inChildrenFill?.[index];
+  //         if (inChildShape) {
+  //           inShape = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  //           inShape.classList.add("link");
+  //           if (self.color) inShape.style.color = self.color;
+  //           inShape.style.fill = inChildFill ?? "none";
+  //           inShape.style.strokeLinejoin = "round";
+  //           children_elements.push(inShape);
+  //         }
+
+  //         return [path, inShape, child];
+  //       }, this);
+
+  //       for (const [path, inShape, child] of children) {
+  //         children_elements.push(path);
+  //         if (inShape) children_elements.push(inShape);
+  //         children_elements.push(child.ref_);
+  //       }
+
+  //       this.children_ = children;
+
+  //       if (this.extensible && this.extend) {
+  //         const extend_path = this.extend[0];
+  //         extend_path.classList.add("link", "extend");
+  //         extend_path.style.fill = "none";
+  //         if (this.outColor) extend_path.style.color = this.outColor;
+  //         children_elements.push(extend_path);
+
+  //         const extend_rect = this.extend[1];
+  //         extend_rect.classList.add("rect", "extend");
+  //         extend_rect.style.boxSizing = "border-box";
+  //         if (this.color) extend_rect.style.color = this.color;
+  //         extend_rect.style.cursor = "pointer";
+  //         if (this.backgroundColor) extend_rect.style.fill = this.backgroundColor;
+  //         children_elements.push(extend_rect);
+
+  //         const extend_text = this.extend[2];
+  //         extend_text.textContent = Node.extendTextContent;
+  //         extend_text.classList.add("text", "extend");
+  //         extend_text.style.cursor = "pointer";
+  //         if (this.textColor) extend_text.style.fill = this.textColor;
+  //         if (this.fontFamily) extend_text.style.fontFamily = this.fontFamily;
+  //         extend_text.style.fontSize = this.fontSize.toString();
+  //         extend_text.style.fontWeight = this.fontWeight.toString();
+  //         extend_text.style.userSelect = "none";
+  //         children_elements.push(extend_text);
+
+  //         this.extend = [extend_path, extend_rect, extend_text];
+  //       } else {
+  //         this.extend = null;
+  //       }
+
+  //       const textSize = Node.computeTextSize(ctx, this.name);
+  //       const rectSize = Node.computeRectSize(textSize, padding);
+  //       const extendTextSize = Node.computeExtendTextSize(ctx, Node.extendTextContent);
+  //       const extendRectSize = Node.computeExtendRectSize(extendTextSize, padding);
+  //       const extendSize = Node.computeExtendSize(extendRectSize, margin);
+  //       const boundingSize = Node.computeSize(
+  //         rectSize,
+  //         indent,
+  //         margin,
+  //         this.children_.map((c) => c[2].size.bounding),
+  //         extendSize.bounding,
+  //         this.extensible,
+  //         this.collapsed_,
+  //         this.vertical_,
+  //       );
+  //       const extendPosition = Node.computeTextPosition(extendSize.name, margin, padding, extendTextSize);
+  //       const rectPosition = Node.computeRectPosition(
+  //         this.children_.map((c) => c[2].size),
+  //         extendSize,
+  //         this.extensible,
+  //         boundingSize,
+  //         rectSize,
+  //         margin,
+  //         this.vertical_,
+  //         this.collapsed_,
+  //       );
+
+  //       let outOffset = 0;
+  //       if (this.outSelfShape && this.out_shape) {
+  //         const outShape = Node.computeOutShape(this.outSelfShape, options.shape, rectPosition, rectPosition.x + rectPosition.width / 2, margin, this.vertical_);
+  //         if (this.outColor) this.out_shape.style.color = this.outColor;
+  //         this.out_shape.setAttribute("d", outShape[0]);
+  //         outOffset = outShape[1];
+  //       }
+  //       const relatives = Node.computeChildrenRelatives(
+  //         this.radius,
+  //         options.shape,
+  //         boundingSize,
+  //         rectSize,
+  //         indent,
+  //         margin,
+  //         outOffset,
+  //         children.map((c) => c[2].size),
+  //         this.inChildrenShape,
+  //         extendSize,
+  //         this.extensible,
+  //         this.vertical_,
+  //       );
+  //       for (let i = 0; i < children.length; i++) {
+  //         const [path, inShape, child] = children[i];
+  //         const relative = relatives[0][i];
+  //         path.setAttribute("d", relative.link);
+  //         if (inShape && relative.in) {
+  //           inShape.setAttribute("d", relative.in);
+  //         }
+  //         child.ref_.setAttribute("x", String(relative.left));
+  //         child.ref_.setAttribute("y", String(relative.top));
+  //       }
+  //       if (this.extend && this.extensible) {
+  //         const [extend_path, extend_rect, extend_text] = this.extend;
+  //         const relative = relatives[1];
+  //         extend_path.setAttribute("d", relative.link);
+
+  //         extend_rect.setAttribute("x", String(relative.left + extendSize.name.x));
+  //         extend_rect.setAttribute("y", String(relative.top + extendSize.name.y));
+  //         extend_rect.setAttribute("width", String(extendSize.name.width));
+  //         extend_rect.setAttribute("height", String(extendSize.name.height));
+  //         extend_rect.setAttribute("rx", String(options.layout.radius));
+  //         extend_rect.setAttribute("ry", String(options.layout.radius));
+
+  //         extend_text.setAttribute("x", String(relative.left + extendPosition.x));
+  //         extend_text.setAttribute("y", String(relative.top + extendPosition.y));
+  //       }
+
+  //       this.size = {
+  //         bounding: boundingSize,
+  //         name: rectPosition,
+  //       };
+  //       this.text = Node.computeTextPosition(this.size.name, margin, padding, textSize);
+  //     }
+
+  //     {
+  //       const node_rect = this.node_rect;
+  //       node_rect.classList.add("rect", "node");
+  //       node_rect.setAttribute("x", String(this.size.name.x));
+  //       node_rect.setAttribute("y", String(this.size.name.y));
+  //       node_rect.setAttribute("width", String(this.size.name.width));
+  //       node_rect.setAttribute("height", String(this.size.name.height));
+  //       node_rect.setAttribute("rx", String(options.layout.radius));
+  //       node_rect.setAttribute("ry", String(options.layout.radius));
+  //       if (this.color) node_rect.style.color = this.color;
+  //       if (this.backgroundColor) node_rect.style.fill = this.backgroundColor;
+  //       node_rect.style.boxSizing = "border-box";
+  //       node_rect.style.cursor = "pointer";
+  //       this.node_rect = node_rect;
+  //       children_elements.push(node_rect);
+  //     }
+
+  //     {
+  //       const node_text = this.node_text;
+  //       node_text.textContent = this.name;
+  //       node_text.classList.add("node", "text");
+  //       node_text.setAttribute("x", String(this.text.x));
+  //       node_text.setAttribute("y", String(this.text.y));
+  //       if (this.textColor) node_text.style.fill = this.textColor;
+  //       node_text.style.userSelect = "none";
+  //       if (this.fontFamily) node_text.style.fontFamily = this.fontFamily;
+  //       node_text.style.fontSize = String(this.fontSize);
+  //       node_text.style.fontWeight = String(this.fontWeight);
+  //       node_text.style.cursor = "pointer";
+  //       this.node_text = node_text;
+  //       children_elements.push(node_text);
+  //     }
+
+  //     ref_.classList.add("svg-tree-node");
+
+  //     ref_.setAttribute("enable-background", "true");
+  //     ref_.style.fill = "none";
+  //     ref_.setAttribute("svg-key", data[keyProp]?.toString() ?? "");
+
+  //     ref_.setAttribute("width", String(this.size.bounding.width));
+  //     ref_.setAttribute("height", String(this.size.bounding.height));
+  //     ref_.setAttribute("viewBox", `0 0 ${this.size.bounding.width} ${this.size.bounding.height}`);
+
+  //     this.ref_ = ref_;
+  //     this.ref_.append(...children_elements);
+  //   }
 
   get ref(): SVGSVGElement {
     return this.ref_;
   }
 
   get parent(): Node<T, Key> | undefined {
-    return this.parent_;
+    return this.parent_?.deref();
   }
 
   get children(): Node<T, Key>[] {
     return this.children_.map((c) => c[2]);
+  }
+
+  get vertical(): boolean {
+    return this.vertical_;
+  }
+
+  set vertical(value: boolean) {
+    if (this.vertical_ !== value) {
+      this.vertical_ = value;
+      this.requestSkeletonUpdate();
+    }
+  }
+
+  get collapsed(): boolean {
+    return this.collapsed_;
+  }
+
+  set collapsed(value: boolean) {
+    if (this.collapsed_ !== value) {
+      this.collapsed_ = value;
+      this.requestSkeletonUpdate();
+    }
+  }
+
+  get active(): boolean {
+    return this.active_;
+  }
+
+  set active(value: boolean) {
+    if (this.active_ !== value) {
+      this.active_ = value;
+      this.requestSkeletonUpdate();
+    }
+  }
+
+  get hover(): boolean {
+    return this.hover_;
+  }
+
+  set hover(value: boolean) {
+    if (this.hover_ !== value) {
+      this.hover_ = value;
+      this.requestSkeletonUpdate();
+    }
   }
 }

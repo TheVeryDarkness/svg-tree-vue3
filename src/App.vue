@@ -202,12 +202,19 @@ function saveSvg() {
 }
 
 onMounted(() => {
-  document.getElementById("tree-v2")?.appendChild(Node.create(datas[treeData.value], "id", defaultOptions, createContext(new OffscreenCanvas(100, 100))).ref);
+  const tree = document.getElementById("tree-v2");
+  console.log(tree);
+  if (!tree) return;
+  tree.appendChild(document.createElement("hr"));
+  tree.appendChild(Node.create(datas[treeData.value], "id", defaultOptions, createContext(new OffscreenCanvas(0, 0))).ref);
 });
 watch(treeData, () => {
   const tree = document.getElementById("tree-v2");
-  tree?.children.item(1)?.remove();
-  tree?.appendChild(Node.create(datas[treeData.value], "id", defaultOptions, createContext(new OffscreenCanvas(100, 100))).ref);
+  if (!tree) return;
+  console.log(tree);
+  while (tree.children.length > 0) tree.children[0]?.remove();
+  tree.appendChild(document.createElement("hr"));
+  tree.appendChild(Node.create(datas[treeData.value], "id", defaultOptions, createContext(new OffscreenCanvas(0, 0))).ref);
 });
 </script>
 
