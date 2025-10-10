@@ -100,6 +100,8 @@ type DeepPartial<T> = {
 };
 
 export type PartialOptions = DeepPartial<Options> | undefined;
+export type PartialColorOptions = DeepPartial<ColorOptions> | undefined;
+export type PartialShapeOptions = DeepPartial<ShapeOptions> | undefined;
 
 export const defaultLightColorOptions: ColorOptions = {
   borderColor: "gray",
@@ -153,8 +155,16 @@ export const defaultShapeOptions: ShapeOptions = {
     length: 8,
   },
 };
+export const schemeMatcher = window.matchMedia("(prefers-color-scheme: dark)");
+schemeMatcher.addEventListener("change", (e) => {
+  if (e.matches) {
+    defaultOptions.color = defaultDarkColorOptions;
+  } else {
+    defaultOptions.color = defaultLightColorOptions;
+  }
+});
 export const defaultOptions: Options = {
-  color: window.matchMedia("(prefers-color-scheme: dark)").matches ? defaultDarkColorOptions : defaultLightColorOptions,
+  color: schemeMatcher.matches ? defaultDarkColorOptions : defaultLightColorOptions,
   text: defaultTextOptions,
   layout: defaultLayoutOptions,
   font: defaultFontOptions,
@@ -166,19 +176,48 @@ export const defaultOptions: Options = {
  * @param options Partial options to merge with the default options.
  * @returns The merged options.
  */
+export function mergeColorOptions(options: PartialColorOptions | undefined): ColorOptions {
+  return { ...defaultLightColorOptions, ...options };
+}
+
+/**
+ * Merges the default options with the provided options.
+ * @param options Partial options to merge with the default options.
+ * @returns The merged options.
+ */
+export function mergeShapeOptions(options: PartialShapeOptions | undefined): ShapeOptions {
+  return {
+    arrow: { ...defaultShapeOptions.arrow, ...options?.arrow },
+    circle: { ...defaultShapeOptions.circle, ...options?.circle },
+    diamond: { ...defaultShapeOptions.diamond, ...options?.diamond },
+    triangle: { ...defaultShapeOptions.triangle, ...options?.triangle },
+  };
+}
+
+/**
+ * Merges the default options with the provided options.
+ * @param options Partial options to merge with the default options.
+ * @returns The merged options.
+ */
 export function mergeOptions(options: PartialOptions | undefined): Options {
   return {
-    color: { ...defaultLightColorOptions, ...options?.color },
+    color: mergeColorOptions(options?.color),
     text: { ...defaultTextOptions, ...options?.text },
     layout: { ...defaultLayoutOptions, ...options?.layout },
     font: { ...defaultFontOptions, ...options?.font },
-    shape: {
-      arrow: { ...defaultShapeOptions.arrow, ...options?.shape?.arrow },
-      circle: { ...defaultShapeOptions.circle, ...options?.shape?.circle },
-      diamond: { ...defaultShapeOptions.diamond, ...options?.shape?.diamond },
-      triangle: { ...defaultShapeOptions.triangle, ...options?.shape?.triangle },
-    },
+    shape: mergeShapeOptions(options?.shape),
   };
+}
+export function needsWatchScheme(options: PartialOptions | undefined): boolean {
+  return (
+    options?.color === undefined ||
+    options.color.textColor === undefined ||
+    options.color.backgroundColor === undefined ||
+    options.color.borderColor === undefined ||
+    options.color.shadowColor === undefined ||
+    options.color.textHoverColor === undefined ||
+    options.color.textActiveColor === undefined
+  );
 }
 
 export function createContext(canvas: OffscreenCanvas) {

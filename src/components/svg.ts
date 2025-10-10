@@ -1,69 +1,76 @@
-import type { Data, Options, Rectangle, TextSize, TextOptions, TreeNodeSize, Position, State, Size, ShapeOptions, Shape, Relative } from "./types";
+import {
+  Data,
+  Options,
+  Rectangle,
+  TextSize,
+  TextOptions,
+  TreeNodeSize,
+  Position,
+  State,
+  Size,
+  ShapeOptions,
+  Shape,
+  Relative,
+  PartialOptions,
+  createContext,
+  mergeOptions,
+  defaultOptions,
+  needsWatchScheme,
+  schemeMatcher,
+  mergeColorOptions,
+  ColorOptions,
+  mergeShapeOptions,
+} from "./types";
+
+type UUID = number;
 
 /**
  * Saved properties for hot update
  */
-class NodeBase<Key extends string | number | symbol = "path"> {
-  ctx: OffscreenCanvasRenderingContext2D;
+class NodeBase<T extends Data<T, Key>, Key extends string | number | symbol = "path"> {
+  protected ctx: OffscreenCanvasRenderingContext2D;
+  protected data: T;
+  protected options: PartialOptions;
+  protected keyProp: Key;
 
-  name: string;
-  color?: string;
-  textColor?: string;
-  backgroundColor?: string;
-  dashArray?: string | number;
-  outSelfShape?: Shape;
-  outSelfFill?: string;
-  outColor?: string;
-  inChildrenShape?: (Shape | undefined)[];
-  inChildrenFill?: (string | undefined)[];
-  extensible: boolean;
+  private key_: string | number | undefined;
 
-  shadowColor?: string;
+  private vertical_: boolean;
+  private collapsed_: boolean;
+  private active_: boolean;
+  private hasActive_: boolean;
+  private hover_: boolean;
 
-  fontFamily?: string;
-  fontSize: number;
-  fontWeight: number;
-
-  radius: number;
-  padding: Position;
-  indent: Position;
-  margin: Position;
-  shape: ShapeOptions;
-
-  key?: string | number;
-
-  keyProp: Key;
-
-  vertical_: boolean;
-  collapsed_: boolean;
-  active_: boolean;
-  hover_: boolean;
-
-  static readonly extendTextContent = "+";
+  protected static readonly extendTextContent = "+";
 
   protected constructor(
     ctx: OffscreenCanvasRenderingContext2D,
-    name: string,
-    color: string | undefined,
-    textColor: string | undefined,
-    backgroundColor: string | undefined,
-    dashArray: string | number | undefined,
-    outSelfShape: Shape | undefined,
-    outSelfFill: string | undefined,
-    outColor: string | undefined,
-    inChildrenShape: (Shape | undefined)[] | undefined,
-    inChildrenFill: (string | undefined)[] | undefined,
-    extensible: boolean,
-    shadowColor: string | undefined,
-    fontFamily: string | undefined,
-    fontSize: number,
-    fontWeight: number,
-    radius: number,
-    padding: Position,
-    indent: Position,
-    margin: Position,
-    shape: ShapeOptions,
-    key: string | number | undefined,
+    data: T,
+    options: PartialOptions,
+    keyProp: Key,
+    vertical_: boolean,
+    collapsed_: boolean,
+    active_: boolean,
+    has_active_: boolean,
+    hover_: boolean,
+  ) {
+    this.ctx = ctx;
+    this.data = data;
+    this.options = options;
+    this.keyProp = keyProp;
+
+    this.key_ = this.data[this.keyProp];
+
+    this.vertical_ = vertical_;
+    this.collapsed_ = collapsed_;
+    this.active_ = active_;
+    this.hasActive_ = has_active_;
+    this.hover_ = hover_;
+  }
+  protected reset(
+    ctx: OffscreenCanvasRenderingContext2D,
+    data: T,
+    options: PartialOptions,
     keyProp: Key,
     vertical_: boolean,
     collapsed_: boolean,
@@ -71,101 +78,134 @@ class NodeBase<Key extends string | number | symbol = "path"> {
     hover_: boolean,
   ) {
     this.ctx = ctx;
-    this.name = name;
-    this.color = color;
-    this.textColor = textColor;
-    this.backgroundColor = backgroundColor;
-    this.dashArray = dashArray;
-    this.outSelfShape = outSelfShape;
-    this.outSelfFill = outSelfFill;
-    this.outColor = outColor;
-    this.inChildrenShape = inChildrenShape;
-    this.inChildrenFill = inChildrenFill;
-    this.extensible = extensible;
-
-    this.shadowColor = shadowColor;
-
-    this.fontFamily = fontFamily;
-    this.fontSize = fontSize;
-    this.fontWeight = fontWeight;
-
-    this.radius = radius;
-    this.padding = padding;
-    this.indent = indent;
-    this.margin = margin;
-    this.shape = shape;
-
-    this.key = key;
-
+    this.data = data;
+    this.options = options;
     this.keyProp = keyProp;
+
+    this.key_ = this.data[this.keyProp];
 
     this.vertical_ = vertical_;
     this.collapsed_ = collapsed_;
     this.active_ = active_;
     this.hover_ = hover_;
   }
-  protected reset(
-    ctx: OffscreenCanvasRenderingContext2D,
-    name: string,
-    color: string | undefined,
-    textColor: string | undefined,
-    backgroundColor: string | undefined,
-    dashArray: string | number | undefined,
-    outSelfShape: Shape | undefined,
-    outSelfFill: string | undefined,
-    outColor: string | undefined,
-    inChildrenShape: (Shape | undefined)[] | undefined,
-    inChildrenFill: (string | undefined)[] | undefined,
-    extensible: boolean,
-    shadowColor: string | undefined,
-    fontFamily: string | undefined,
-    fontSize: number,
-    fontWeight: number,
-    radius: number,
-    padding: Position,
-    indent: Position,
-    margin: Position,
-    shape: ShapeOptions,
-    key: string | number | undefined,
-    keyProp: Key,
-    vertical_: boolean,
-    collapsed_: boolean,
-    active_: boolean,
-    hover_: boolean,
-  ) {
-    this.ctx = ctx;
-    this.name = name;
-    this.color = color;
-    this.textColor = textColor;
-    this.backgroundColor = backgroundColor;
-    this.dashArray = dashArray;
-    this.outSelfShape = outSelfShape;
-    this.outSelfFill = outSelfFill;
-    this.outColor = outColor;
-    this.inChildrenShape = inChildrenShape;
-    this.inChildrenFill = inChildrenFill;
-    this.extensible = extensible;
 
-    this.shadowColor = shadowColor;
+  protected get key(): string | number | undefined {
+    return this.key_;
+  }
+  protected get name(): string {
+    return this.data.name;
+  }
 
-    this.fontFamily = fontFamily;
-    this.fontSize = fontSize;
-    this.fontWeight = fontWeight;
+  protected get extensible(): boolean {
+    return this.data.extensible ?? false;
+  }
 
-    this.radius = radius;
-    this.padding = padding;
-    this.indent = indent;
-    this.margin = margin;
-    this.shape = shape;
+  protected get radius() {
+    return this.options?.layout?.radius ?? defaultOptions.layout.radius;
+  }
 
-    this.key = key;
+  protected get shape(): ShapeOptions {
+    return mergeShapeOptions(this.options?.shape);
+  }
 
-    this.keyProp = keyProp;
+  protected get borderColor(): string | undefined {
+    return this.data?.color ?? defaultOptions.color.borderColor;
+  }
+  protected get textColor(): string | undefined {
+    return this.data?.color ?? (this.active ? defaultOptions.color.textActiveColor : this.hover ? defaultOptions.color.textActiveColor : defaultOptions.color.textColor);
+  }
+  protected get backgroundColor(): string | undefined {
+    return this.data?.backgroundColor ?? defaultOptions.color.backgroundColor;
+  }
+  protected get dashArray(): string | number | undefined {
+    return this.data.dashArray;
+  }
+  protected get outSelfShape(): Shape | undefined {
+    return this.data.outSelfShape;
+  }
+  protected get outSelfFill(): string | undefined {
+    return this.data.outSelfFill;
+  }
+  protected get outColor(): string | undefined {
+    return this.data.outColor ?? this.data.color ?? this.options?.color?.borderColor ?? defaultOptions.color.borderColor;
+  }
+  protected get inChildrenShape(): (Shape | undefined)[] | undefined {
+    return this.data.inChildrenShape;
+  }
+  protected get inChildrenFill(): (string | undefined)[] | undefined {
+    return this.data.inChildrenFill;
+  }
+  protected get shadowColor(): string | undefined {
+    return this.options?.color?.shadowColor ?? defaultOptions.color.shadowColor;
+  }
+  protected get textWeight(): number {
+    return this.options?.text?.textWeight ?? defaultOptions.text.textWeight;
+  }
+  protected get textHoverWeight(): number {
+    return this.options?.text?.textHoverWeight ?? defaultOptions.text.textHoverWeight;
+  }
+  protected get textActiveWeight(): number {
+    return this.options?.text?.textActiveWeight ?? defaultOptions.text.textActiveWeight;
+  }
+  protected get fontWeight(): number {
+    return this.active_ ? this.textActiveWeight : this.hover_ ? this.textHoverWeight : this.textWeight;
+  }
+  protected get fontSize(): number {
+    return this.options?.font?.fontSize ?? defaultOptions.font.fontSize;
+  }
+  protected get fontFamily(): string | undefined {
+    return this.options?.font?.fontFamily ?? defaultOptions.font.fontFamily;
+  }
 
-    this.vertical_ = vertical_;
-    this.collapsed_ = collapsed_;
-    this.active_ = active_;
-    this.hover_ = hover_;
+  protected get padding(): Position {
+    return {
+      x: this.options?.layout?.paddingX ?? defaultOptions.layout.paddingX,
+      y: this.options?.layout?.paddingY ?? defaultOptions.layout.paddingY,
+    };
+  }
+  protected get indent(): Position {
+    return {
+      x: this.options?.layout?.indentX ?? defaultOptions.layout.indentX,
+      y: this.options?.layout?.indentY ?? defaultOptions.layout.indentY,
+    };
+  }
+  protected get margin(): Position {
+    return {
+      x: this.options?.layout?.marginX ?? defaultOptions.layout.marginX,
+      y: this.options?.layout?.marginY ?? defaultOptions.layout.marginY,
+    };
+  }
+
+  protected get collapsed(): boolean {
+    return this.collapsed_;
+  }
+  protected get active(): boolean {
+    return this.active_;
+  }
+  protected get hasActive(): boolean {
+    return this.hasActive_;
+  }
+  protected get hover(): boolean {
+    return this.hover_;
+  }
+  protected get vertical(): boolean {
+    return this.vertical_;
+  }
+  protected set collapsed(value: boolean) {
+    this.collapsed_ = value;
+  }
+  protected set active(value: boolean) {
+    this.active_ = value;
+  }
+  protected set hasActive(value: boolean) {
+    this.hasActive_ = value;
+  }
+  protected set hover(value: boolean) {
+    this.hover_ = value;
+  }
+  protected set vertical(value: boolean) {
+    this.vertical_ = value;
   }
 }
 
@@ -176,9 +216,12 @@ type Extend = [SVGPathElement, SVGRectElement, SVGTextElement];
 /**
  * A virtual node class for SVG elements.
  */
-export class TreeNode<T extends Data<T, Key>, Key extends string | number | symbol = "path"> extends NodeBase<Key> {
+class TreeNode<T extends Data<T, Key>, Key extends string | number | symbol = "path"> extends NodeBase<T, Key> {
   private text: Position;
   private size: TreeNodeSize;
+
+  private uuid_: number;
+  private manager: UUIDManager;
 
   private ref_: SVGSVGElement;
   private node: Node;
@@ -200,8 +243,8 @@ export class TreeNode<T extends Data<T, Key>, Key extends string | number | symb
   /**
    * Compute the size of the text using the provided canvas context and font settings.
    */
-  private static computeTextSize(ctx: OffscreenCanvasRenderingContext2D, text: string): TextSize {
-    // ctx.font = ctxFont;
+  private static computeTextSize(ctx: OffscreenCanvasRenderingContext2D, text: string, ctxFont: string): TextSize {
+    ctx.font = ctxFont;
     const metrics = ctx.measureText(text);
     const width = metrics.width;
     const height = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
@@ -221,8 +264,8 @@ export class TreeNode<T extends Data<T, Key>, Key extends string | number | symb
   /**
    * Compute the size of the extend mark using the provided canvas context and font settings.
    */
-  private static computeExtendTextSize(ctx: OffscreenCanvasRenderingContext2D, text: string): TextSize {
-    // ctx.font = ctxFont;
+  private static computeExtendTextSize(ctx: OffscreenCanvasRenderingContext2D, text: string, ctxFont: string): TextSize {
+    ctx.font = ctxFont;
     const metrics = ctx.measureText(text);
     const width = metrics.width;
     const height = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
@@ -254,23 +297,30 @@ export class TreeNode<T extends Data<T, Key>, Key extends string | number | symb
    */
   private static computeSize(rectSize: Size, indent: Position, margin: Position, children: Size[], extend: Size, extensible: boolean, collapsed: boolean, vertical: boolean): Size {
     const all = extensible ? [...children, extend] : children;
-    if (collapsed)
+    if (collapsed) {
+      const width = rectSize.width + margin.x * 2;
+      const height = rectSize.height + margin.y * 2;
       return {
-        width: rectSize.width + margin.x * 2,
-        height: rectSize.height + margin.y * 2,
+        width,
+        height,
       };
+    }
     if (vertical) {
+      const width = Math.max(
+        all.reduce((acc, cur) => Math.max(acc, cur.width + rectSize.width / 2 + indent.x + margin.x), rectSize.width + margin.x * 2),
+        rectSize.width + margin.x * 2,
+      );
+      const height = margin.y + rectSize.height + all.reduce((acc, cur) => acc + cur.height, 0) + (all.length === 0 ? margin.y : -(all.length - 1) * margin.y);
       return {
-        width: Math.max(
-          all.reduce((acc, cur) => Math.max(acc, cur.width + rectSize.width / 2 + indent.x + margin.x), rectSize.width + margin.x * 2),
-          rectSize.width + margin.x * 2,
-        ),
-        height: margin.y + rectSize.height + all.reduce((acc, cur) => acc + cur.height, 0) + (all.length === 0 ? margin.y : -(all.length - 1) * margin.y),
+        width,
+        height,
       };
     } else {
+      const width = Math.max(all.reduce((acc, cur) => acc + cur.width, 0) - Math.max(0, all.length - 1) * margin.x, rectSize.width + margin.x * 2);
+      const height = margin.y + rectSize.height + indent.y + all.reduce((acc, cur) => Math.max(acc, cur.height), 0);
       return {
-        width: Math.max(all.reduce((acc, cur) => acc + cur.height, 0) - Math.max(0, all.length - 1) * margin.x, rectSize.width + margin.x * 2),
-        height: margin.y + rectSize.height + indent.y + all.reduce((acc, cur) => Math.max(acc, cur.height), 0),
+        width,
+        height,
       };
     }
   }
@@ -281,7 +331,7 @@ export class TreeNode<T extends Data<T, Key>, Key extends string | number | symb
    * *Horizontal layout only*.
    */
   private static computeChildrenWidth(all: TreeNodeSize[], marginX: number): number {
-    return all.reduce((acc, cur) => acc + cur.bounding.width, 0) + Math.max(0, all.length - 1) * marginX;
+    return all.reduce((acc, cur) => acc + cur.bounding.width, 0) - Math.max(0, all.length - 1) * marginX;
   }
 
   /**
@@ -298,8 +348,9 @@ export class TreeNode<T extends Data<T, Key>, Key extends string | number | symb
     const last = all[all.length - 1];
     const leftFirst = Math.max(0, width - childrenWidth) / 2;
     const firstMiddleX = first.name.x + first.name.width / 2;
-    const lastMiddleX = last.name.x + last.name.width / 2;
+    const lastMiddleX = childrenWidth - last.bounding.width + last.name.x + last.name.width / 2;
     const middle = leftFirst + (lastMiddleX + firstMiddleX) / 2;
+    // console.log({ all, width, first, last, childrenWidth, leftFirst, firstMiddleX, lastMiddleX, middle });
     return Math.max(Math.min(middle, width - (rectWidth / 2 + marginX)), rectWidth / 2 + marginX);
   }
 
@@ -576,7 +627,7 @@ Z`,
     };
   }
 
-  private static setupShadow(shadow: SVGRectElement, radius: number, rectPosition: Rectangle, shadowColor: string | undefined) {
+  private static setupShadow(shadow: SVGRectElement, radius: number, rectPosition: Rectangle, shadowColor: string | undefined, uuid: UUID) {
     shadow.classList.add("shadow");
     if (shadowColor) shadow.style.fill = shadowColor;
     shadow.setAttribute("x", String(rectPosition.x + 4));
@@ -585,15 +636,18 @@ Z`,
     shadow.setAttribute("height", String(rectPosition.height));
     shadow.setAttribute("rx", String(radius));
     shadow.setAttribute("ry", String(radius));
+    shadow.setAttribute("svg-uuid", String(uuid));
   }
 
-  private static setupOutShape(out_shape: SVGPathElement, outSelfFill: string | undefined, outColor: string | undefined, outPath: string) {
+  private static setupOutShape(out_shape: SVGPathElement, outSelfFill: string | undefined, outColor: string | undefined, outPath: string, uuid: UUID) {
     out_shape.classList.add("link");
     out_shape.style.fill = outSelfFill ?? "none";
     out_shape.style.strokeLinejoin = "round";
+    out_shape.style.vectorEffect = "non-scaling-stroke";
 
     if (outColor) out_shape.style.color = outColor;
     out_shape.setAttribute("d", outPath);
+    out_shape.setAttribute("svg-uuid", String(uuid));
   }
 
   private static setupChild<T extends Data<T, Key>, Key extends string | number | symbol = "path">(
@@ -602,6 +656,7 @@ Z`,
     outColor: string | undefined,
     dashArray: string | number | undefined,
     relative: Relative,
+    uuid: UUID,
   ) {
     path.classList.add("link");
     if (outColor) path.style.color = outColor;
@@ -617,9 +672,13 @@ Z`,
     }
 
     path.setAttribute("d", relative.link);
+    path.setAttribute("svg-uuid", String(uuid));
 
-    if (inShape && relative.in) {
-      inShape.setAttribute("d", relative.in);
+    if (inShape) {
+      if (relative.in) {
+        inShape.setAttribute("d", relative.in);
+      }
+      inShape.setAttribute("svg-uuid", String(uuid));
     }
 
     child.ref_.setAttribute("x", String(relative.left));
@@ -628,7 +687,7 @@ Z`,
 
   private static setupExtend(
     [extend_path, extend_rect, extend_text]: Extend,
-    color: string | undefined,
+    borderColor: string | undefined,
     backgroundColor: string | undefined,
     outColor: string | undefined,
     textColor: string | undefined,
@@ -639,16 +698,28 @@ Z`,
     extendSize: TreeNodeSize,
     extendPosition: Position,
     radius: number,
+    uuid: UUID,
   ) {
     extend_path.classList.add("link", "extend");
     extend_path.style.fill = "none";
     if (outColor) extend_path.style.color = outColor;
+    extend_path.style.strokeLinejoin = "round";
+    extend_path.style.vectorEffect = "non-scaling-stroke";
+    extend_path.setAttribute("d", relative.link);
+    extend_path.setAttribute("svg-uuid", String(uuid));
 
     extend_rect.classList.add("rect", "extend");
     extend_rect.style.boxSizing = "border-box";
-    if (color) extend_rect.style.color = color;
+    if (borderColor) extend_rect.style.color = borderColor;
     extend_rect.style.cursor = "pointer";
     if (backgroundColor) extend_rect.style.fill = backgroundColor;
+    extend_rect.setAttribute("x", String(relative.left + extendSize.name.x));
+    extend_rect.setAttribute("y", String(relative.top + extendSize.name.y));
+    extend_rect.setAttribute("width", String(extendSize.name.width));
+    extend_rect.setAttribute("height", String(extendSize.name.height));
+    extend_rect.setAttribute("rx", String(radius));
+    extend_rect.setAttribute("ry", String(radius));
+    extend_rect.setAttribute("svg-uuid", String(uuid));
 
     extend_text.textContent = TreeNode.extendTextContent;
     extend_text.classList.add("text", "extend");
@@ -658,18 +729,9 @@ Z`,
     extend_text.style.fontSize = fontSize.toString();
     extend_text.style.fontWeight = fontWeight.toString();
     extend_text.style.userSelect = "none";
-
-    extend_path.setAttribute("d", relative.link);
-
-    extend_rect.setAttribute("x", String(relative.left + extendSize.name.x));
-    extend_rect.setAttribute("y", String(relative.top + extendSize.name.y));
-    extend_rect.setAttribute("width", String(extendSize.name.width));
-    extend_rect.setAttribute("height", String(extendSize.name.height));
-    extend_rect.setAttribute("rx", String(radius));
-    extend_rect.setAttribute("ry", String(radius));
-
     extend_text.setAttribute("x", String(relative.left + extendPosition.x));
     extend_text.setAttribute("y", String(relative.top + extendPosition.y));
+    extend_text.setAttribute("svg-uuid", String(uuid));
   }
 
   private static setupSelf(
@@ -677,13 +739,14 @@ Z`,
     size: TreeNodeSize,
     text: Position,
     name: string,
-    color: string | undefined,
+    borderColor: string | undefined,
     backgroundColor: string | undefined,
     textColor: string | undefined,
     fontFamily: string | undefined,
     fontSize: number,
     fontWeight: number,
     radius: number,
+    uuid: UUID,
   ) {
     node_rect.classList.add("rect", "node");
     node_rect.setAttribute("x", String(size.name.x));
@@ -692,10 +755,11 @@ Z`,
     node_rect.setAttribute("height", String(size.name.height));
     node_rect.setAttribute("rx", String(radius));
     node_rect.setAttribute("ry", String(radius));
-    if (color) node_rect.style.color = color;
+    if (borderColor) node_rect.style.color = borderColor;
     if (backgroundColor) node_rect.style.fill = backgroundColor;
     node_rect.style.boxSizing = "border-box";
     node_rect.style.cursor = "pointer";
+    node_rect.setAttribute("svg-uuid", String(uuid));
 
     node_text.textContent = name;
     node_text.classList.add("node", "text");
@@ -707,14 +771,32 @@ Z`,
     node_text.style.fontSize = String(fontSize);
     node_text.style.fontWeight = String(fontWeight);
     node_text.style.cursor = "pointer";
+    node_text.setAttribute("svg-uuid", String(uuid));
   }
 
-  private static setupRoot<T extends Data<T, Key>, Key extends string | number | symbol = "path">(ref_: SVGSVGElement, key: string | number | undefined, size: TreeNodeSize) {
+  private static setupRoot<T extends Data<T, Key>, Key extends string | number | symbol = "path">(
+    ref_: SVGSVGElement,
+    key: string | number | undefined,
+    size: TreeNodeSize,
+    active: boolean,
+    hasActive: boolean,
+  ) {
     ref_.classList.add("svg-tree-node");
+    if (active) {
+      ref_.classList.add("active");
+      ref_.classList.remove("inactive", "normal");
+    } else if (hasActive) {
+      ref_.classList.add("inactive");
+      ref_.classList.remove("active", "normal");
+    } else {
+      ref_.classList.add("normal");
+      ref_.classList.remove("active", "inactive");
+    }
 
     ref_.setAttribute("enable-background", "true");
     ref_.style.fill = "none";
     ref_.setAttribute("svg-key", key?.toString() ?? "");
+    // ref_.setAttribute("svg-uuid", uuid.toString());
 
     ref_.setAttribute("width", String(size.bounding.width));
     ref_.setAttribute("height", String(size.bounding.height));
@@ -731,61 +813,65 @@ Z`,
       inChildrenFill,
       dashArray,
       shadowColor,
-      color,
+      borderColor,
       backgroundColor,
       textColor,
+      padding,
+      indent,
+      margin,
+      shape,
       fontSize,
       fontWeight,
       fontFamily,
-    }: NodeBase<Key>,
+    }: TreeNode<T, Key>,
     ctx: OffscreenCanvasRenderingContext2D,
     name: string,
-    padding: Position,
-    indent: Position,
-    margin: Position,
-    shape: ShapeOptions,
-    ref_: SVGSVGElement,
+    ref: SVGSVGElement,
     node: Node,
     shadow: SVGRectElement | null,
     out_shape: SVGPathElement | null,
-    children_: Child<T, Key>[],
+    children: Child<T, Key>[],
     extend: Extend | null,
     key: string | number | undefined,
     extensible: boolean,
-    vertical_: boolean,
-    collapsed_: boolean,
+    vertical: boolean,
+    collapsed: boolean,
+    active: boolean,
+    hasActive: boolean,
+    uuid: number,
   ): [TreeNodeSize, Position] {
-    const textSize = TreeNode.computeTextSize(ctx, name);
+    const ctxFont = TreeNode.computeCtxFont(fontFamily, fontSize, fontWeight);
+    const textSize = TreeNode.computeTextSize(ctx, name, ctxFont);
     const rectSize = TreeNode.computeRectSize(textSize, padding);
-    const extendTextSize = TreeNode.computeExtendTextSize(ctx, TreeNode.extendTextContent);
+    const extendTextSize = TreeNode.computeExtendTextSize(ctx, TreeNode.extendTextContent, ctxFont);
     const extendRectSize = TreeNode.computeExtendRectSize(extendTextSize, padding);
     const extendSize = TreeNode.computeExtendSize(extendRectSize, margin);
     const boundingSize = TreeNode.computeSize(
       rectSize,
       indent,
       margin,
-      children_.map((c) => c[2].size.bounding),
+      children.map((c) => c[2].size.bounding),
       extendSize.bounding,
       extensible,
-      collapsed_,
-      vertical_,
+      collapsed,
+      vertical,
     );
     const extendPosition = TreeNode.computeTextPosition(extendSize.name, margin, padding, extendTextSize);
     const rectPosition = TreeNode.computeRectPosition(
-      children_.map((c) => c[2].size),
+      children.map((c) => c[2].size),
       extendSize,
       extensible,
       boundingSize,
       rectSize,
       margin,
-      vertical_,
-      collapsed_,
+      vertical,
+      collapsed,
     );
 
     let outOffset = 0;
     if (outSelfShape && out_shape) {
-      const outShape = TreeNode.computeOutShape(outSelfShape, shape, rectPosition, rectPosition.x + rectPosition.width / 2, margin, vertical_);
-      TreeNode.setupOutShape(out_shape, outSelfFill, outColor, outShape[0]);
+      const outShape = TreeNode.computeOutShape(outSelfShape, shape, rectPosition, rectPosition.x + rectPosition.width / 2, margin, vertical);
+      TreeNode.setupOutShape(out_shape, outSelfFill, outColor, outShape[0], uuid);
       outOffset = outShape[1];
     }
     const relatives = TreeNode.computeChildrenRelatives(
@@ -796,28 +882,28 @@ Z`,
       indent,
       margin,
       outOffset,
-      children_.map((c) => c[2].size),
+      children.map((c) => c[2].size),
       inChildrenShape,
       extendSize,
       extensible,
-      vertical_,
+      vertical,
     );
 
-    for (const [index, [path, inShape, child]] of children_.entries()) {
+    for (const [index, [path, inShape, child]] of children.entries()) {
       const inChildFill = inChildrenFill?.[index];
 
       const relative = relatives[0][index];
-      TreeNode.setupChild([path, inShape, child], inChildFill, outColor, dashArray, relative);
+      TreeNode.setupChild([path, inShape, child], inChildFill, outColor, dashArray, relative, uuid);
     }
 
     if (shadow) {
-      TreeNode.setupShadow(shadow, radius, rectPosition, shadowColor);
+      TreeNode.setupShadow(shadow, radius, rectPosition, shadowColor, uuid);
     }
 
     if (extend && extensible) {
       const relative = relatives[1];
 
-      TreeNode.setupExtend(extend, color, backgroundColor, outColor, textColor, fontFamily, fontSize, fontWeight, relative, extendSize, extendPosition, radius);
+      TreeNode.setupExtend(extend, borderColor, backgroundColor, outColor, textColor, fontFamily, fontSize, fontWeight, relative, extendSize, extendPosition, radius, uuid);
     }
 
     const size = {
@@ -826,60 +912,29 @@ Z`,
     };
     const text = TreeNode.computeTextPosition(size.name, margin, padding, textSize);
 
-    TreeNode.setupSelf(node, size, text, name, color, backgroundColor, textColor, fontFamily, fontSize, fontWeight, radius);
+    TreeNode.setupSelf(node, size, text, name, borderColor, backgroundColor, textColor, fontFamily, fontSize, fontWeight, radius, uuid);
 
-    TreeNode.setupRoot(ref_, key, size);
+    TreeNode.setupRoot(ref, key, size, active, hasActive);
 
     return [size, text];
   }
 
-  private constructor(data: T, keyProp: Key, options: Options, ctx: OffscreenCanvasRenderingContext2D, parent?: WeakRef<TreeNode<T, Key>>) {
+  private constructor(data: T, keyProp: Key, options: PartialOptions, ctx: OffscreenCanvasRenderingContext2D, manager: UUIDManager, parent?: WeakRef<TreeNode<T, Key>>) {
     const name = data.name;
     const collapsed = typeof data.children === "function";
     const vertical = true;
     const extensible = data.extensible ?? false;
 
-    const { fontFamily, fontSize } = options.font;
     const active = false;
+    const hasActive = false;
     const hover = false;
-    const fontWeight = TreeNode.computeFontWeight(options.text, { active, hover });
 
-    const { indentX, indentY, marginX, marginY, paddingX, paddingY } = options.layout;
-    const indent = { x: indentX, y: indentY };
-    const margin = { x: marginX, y: marginY };
-    const padding = { x: paddingX, y: paddingY };
+    super(ctx, data, options, keyProp, vertical, collapsed, active, hasActive, hover);
 
-    super(
-      ctx,
-      name,
-      data.color ?? options.color.borderColor,
-      data.color ?? options.color.textColor,
-      data.backgroundColor ?? options.color.backgroundColor,
-      data.dashArray,
-      data.outSelfShape,
-      data.outSelfFill,
-      data.outColor ?? data.color ?? options.color.borderColor,
-      data.inChildrenShape,
-      data.inChildrenFill,
-      extensible,
-      options.color.shadowColor,
-      fontFamily,
-      fontSize,
-      fontWeight,
-      options.layout.radius,
-      padding,
-      indent,
-      margin,
-      options.shape,
-      data[keyProp],
-      keyProp,
-      vertical,
-      collapsed,
-      active,
-      hover,
-    );
+    this.uuid_ = manager.next();
+    this.manager = manager;
 
-    const ctxFont = TreeNode.computeCtxFont(fontFamily, fontSize, fontWeight);
+    const ctxFont = TreeNode.computeCtxFont(this.fontFamily, this.fontSize, this.fontWeight);
     ctx.font = ctxFont;
 
     const ref_ = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -917,7 +972,7 @@ Z`,
       const self = this;
       children_nodes = typeof data.children === "function" ? data.children(data) : data.children;
       const children = children_nodes.map(function (data, index): Child<T, Key> {
-        const child = new TreeNode(data, keyProp, options, ctx, new WeakRef(self));
+        const child = new TreeNode(data, keyProp, options, ctx, manager, new WeakRef(self));
 
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
 
@@ -957,10 +1012,6 @@ Z`,
       this,
       ctx,
       name,
-      padding,
-      indent,
-      margin,
-      options.shape,
       ref_,
       this.node,
       this.shadow,
@@ -971,6 +1022,9 @@ Z`,
       extensible,
       vertical,
       collapsed,
+      active,
+      hasActive,
+      this.uuid_,
     );
     this.size = size;
     this.text = text;
@@ -981,8 +1035,9 @@ Z`,
     keyProp: Key,
     options: Options,
     ctx: OffscreenCanvasRenderingContext2D,
+    manager: UUIDManager,
   ): TreeNode<T, Key> {
-    return new TreeNode(data, keyProp, options, ctx);
+    return new TreeNode(data, keyProp, options, ctx, manager);
   }
 
   private static sizeDiffer(a: Size, b: Size): boolean {
@@ -1001,18 +1056,10 @@ Z`,
     }
   }
   protected recomputeStyle() {
-    const padding = { x: this.padding.x, y: this.padding.y };
-    const indent = { x: this.indent.x, y: this.indent.y };
-    const margin = { x: this.margin.x, y: this.margin.y };
-
     const [size, text] = TreeNode.setup(
       this,
       this.ctx,
       this.name,
-      padding,
-      indent,
-      margin,
-      this.shape,
       this.ref_,
       this.node,
       this.shadow,
@@ -1023,6 +1070,9 @@ Z`,
       this.extensible,
       this.vertical,
       this.collapsed,
+      this.active,
+      this.hasActive,
+      this.uuid_,
     );
 
     const skeletonChanged = TreeNode.sizeDiffer(this.size.bounding, size.bounding);
@@ -1032,46 +1082,14 @@ Z`,
     return skeletonChanged;
   }
 
-  fullUpdate(data: T, keyProp: Key, options: Options, ctx: OffscreenCanvasRenderingContext2D) {
-    const name = data.name;
-    const collapsed = this.collapsed_; // typeof data.children === "function";
-    const vertical = this.vertical_; // true;
-    const extensible = data.extensible ?? false;
+  fullUpdate(data: T = this.data, keyProp: Key = this.keyProp, options: PartialOptions = this.options, ctx: OffscreenCanvasRenderingContext2D = this.ctx) {
+    const collapsed = this.collapsed; // typeof data.children === "function";
+    const vertical = this.vertical; // true;
 
-    const { fontFamily, fontSize } = options.font;
-    const active = false;
-    const hover = false;
-    const fontWeight = TreeNode.computeFontWeight(options.text, { active, hover });
+    const active = this.active;
+    const hover = this.hover;
 
-    super.reset(
-      ctx,
-      name,
-      data.color ?? options.color.borderColor,
-      data.color ?? options.color.textColor,
-      data.backgroundColor ?? options.color.backgroundColor,
-      data.dashArray,
-      data.outSelfShape,
-      data.outSelfFill,
-      data.outColor ?? data.color ?? options.color.borderColor,
-      data.inChildrenShape,
-      data.inChildrenFill,
-      extensible,
-      options.color.shadowColor,
-      fontFamily,
-      fontSize,
-      fontWeight,
-      options.layout.radius,
-      { x: options.layout.paddingX, y: options.layout.paddingY },
-      { x: options.layout.indentX, y: options.layout.indentY },
-      { x: options.layout.marginX, y: options.layout.marginY },
-      options.shape,
-      data[keyProp],
-      keyProp,
-      vertical,
-      collapsed,
-      active,
-      hover,
-    );
+    super.reset(ctx, data, options, keyProp, vertical, collapsed, active, hover);
 
     if (this.shadow === null && collapsed) {
       const shadow = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -1109,8 +1127,8 @@ Z`,
       this.out_shape = null;
     }
 
-    const children = this.collapsed_ ? [] : typeof data.children === "function" ? data.children(data) : data.children;
-    if (!this.collapsed_) {
+    const children = this.collapsed ? [] : typeof data.children === "function" ? data.children(data) : data.children;
+    if (!this.collapsed) {
       // Update existing children and add new ones
       const minLength = Math.min(this.children_.length, children.length);
       for (let i = 0; i < minLength; i++) {
@@ -1130,7 +1148,7 @@ Z`,
         // Add new children
         const self = this;
         const newChildren = children.slice(this.children_.length).map(function (data, index): Child<T, Key> {
-          const child = new TreeNode(data, keyProp, options, ctx, new WeakRef(self));
+          const child = new TreeNode(data, keyProp, options, ctx, self.manager, new WeakRef(self));
 
           const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
 
@@ -1175,6 +1193,30 @@ Z`,
     }
   }
 
+  updateColor(options: ColorOptions) {
+    const collapsed = this.collapsed;
+    const vertical = this.vertical;
+    const active = this.active;
+    const hover = this.hover;
+
+    if (!this.options) this.options = { color: options };
+    else {
+      this.options.color = options;
+    }
+
+    super.reset(this.ctx, this.data, this.options, this.keyProp, vertical, collapsed, active, hover);
+
+    for (const [, , child] of this.children_) {
+      child.updateColor(options);
+    }
+
+    const skeletonChanged = this.recomputeStyle();
+
+    if (skeletonChanged) {
+      console.error("Skeleton changed during color update, this should not happen.");
+    }
+  }
+
   get ref(): SVGSVGElement {
     return this.ref_;
   }
@@ -1187,51 +1229,242 @@ Z`,
     return this.children_.map((c) => c[2]);
   }
 
-  get vertical(): boolean {
-    return this.vertical_;
+  get key(): string | number | undefined {
+    return super.key;
+  }
+  get uuid(): number {
+    return this.uuid_;
   }
 
-  set vertical(value: boolean) {
-    if (this.vertical_ !== value) {
-      this.vertical_ = value;
-      this.requestSkeletonUpdate();
-    }
+  setVertical(value: boolean = !super.vertical) {
+    if (super.vertical === value) return;
+    super.vertical = value;
+    this.fullUpdate();
   }
-
-  get collapsed(): boolean {
-    return this.collapsed_;
-  }
-
-  set collapsed(value: boolean) {
-    if (!this.collapsed_ && this.children_.length === 0) {
+  setCollapsed(value: boolean = !super.collapsed) {
+    if (!super.collapsed && this.children_.length === 0) {
       // Cannot collapse a non-collapsed node without children
       return;
     }
-    if (this.collapsed_ !== value) {
-      this.collapsed_ = value;
-      this.requestSkeletonUpdate();
+    if (super.collapsed !== value) {
+      super.collapsed = value;
+      this.fullUpdate();
+    }
+  }
+  setActive(active: boolean = !super.active, hasActive: boolean = active) {
+    if (super.hasActive === hasActive && super.active === active) return;
+    super.hasActive = hasActive;
+    super.active = active;
+    this.fullUpdate();
+  }
+  setHover(value: boolean = !super.hover) {
+    if (super.hover === value) return;
+    super.hover = value;
+    this.fullUpdate();
+  }
+
+  //   set vertical(value: boolean) {
+  //     if (super.vertical !== value) {
+  //       super.vertical = value;
+  //       this.fullUpdate(this.data, this.keyProp, this.options!, this.ctx, new UUIDManager());
+  //     }
+  //   }
+  //   set collapsed(value: boolean) {
+  //     if (!super.collapsed && this.children_.length === 0) {
+  //       // Cannot collapse a non-collapsed node without children
+  //       return;
+  //     }
+  //     if (super.collapsed !== value) {
+  //       super.collapsed = value;
+  //       this.requestSkeletonUpdate();
+  //     }
+  //   }
+  //   set active(value: boolean) {
+  //     if (super.active !== value) {
+  //       super.active = value;
+  //       this.requestSkeletonUpdate();
+  //     }
+  //   }
+  //   set hover(value: boolean) {
+  //     if (super.hover !== value) {
+  //       super.hover = value;
+  //       this.requestSkeletonUpdate();
+  //     }
+  //   }
+}
+
+class UUIDManager {
+  private current = 0;
+
+  next() {
+    return this.current++;
+  }
+}
+
+interface EventMap<T extends Data<T, Key>, Key extends string | number | symbol = "path"> {
+  active: { node: TreeNode<T, Key>[]; uuid: number[] };
+  click: { node?: TreeNode<T, Key>; originalEvent: MouseEvent; uuid?: number };
+  contextmenu: { node?: TreeNode<T, Key>; originalEvent: MouseEvent; uuid?: number };
+  mouseenter: { node: TreeNode<T, Key>; originalEvent: MouseEvent; uuid: number };
+  mouseleave: { node: TreeNode<T, Key>; originalEvent: MouseEvent; uuid: number };
+}
+type EventKind<K extends keyof EventMap<T, Key>, T extends Data<T, Key>, Key extends string | number | symbol = "path"> = EventMap<T, Key>[K];
+function event<K extends keyof EventMap<T, Key>, T extends Data<T, Key>, Key extends string | number | symbol = "path">(
+  type: K,
+  detail: EventKind<K, T, Key>,
+): CustomEvent<EventKind<K, T, Key>> {
+  return new CustomEvent<EventKind<K, T, Key>>(type, { detail });
+}
+
+export class Tree<T extends Data<T, Key>, Key extends string | number | symbol = "path"> {
+  private readonly root_: TreeNode<T, Key>;
+  private options_: PartialOptions;
+  private readonly nodes = new Map<string | number | undefined, TreeNode<T, Key>[]>();
+  private readonly nodesByUUID = new Map<number, TreeNode<T, Key>>();
+  private readonly manager = new UUIDManager();
+  private readonly eventTarget = new EventTarget();
+  private activeKey_: string | number | undefined = undefined;
+
+  private watchScheme() {
+    const options_ = mergeColorOptions(this.options_?.color);
+    this.root_.updateColor(options_);
+  }
+
+  recordNodes() {
+    this.nodes.clear();
+    this.nodesByUUID.clear();
+    let queue: TreeNode<T, Key>[] = [this.root_];
+    while (queue.length > 0) {
+      const node = queue.shift();
+      if (!node) break;
+      if (!this.nodes.has(node.key)) this.nodes.set(node.key, []);
+      this.nodes.get(node.key)?.push(node);
+      if (this.nodesByUUID.has(node.uuid)) {
+        console.error("UUID collision detected, this should not happen.");
+      }
+      this.nodesByUUID.set(node.uuid, node);
+      queue.push(...node.children);
     }
   }
 
-  get active(): boolean {
-    return this.active_;
-  }
+  constructor(data: T, keyProp: Key, options?: PartialOptions, ctx?: OffscreenCanvasRenderingContext2D) {
+    const options_ = mergeOptions(options);
+    if (needsWatchScheme(options)) {
+      schemeMatcher.addEventListener("change", this.watchScheme);
+    }
+    const ctx_ = ctx ?? createContext(new OffscreenCanvas(0, 0));
+    this.root_ = TreeNode.create(data, keyProp, options_, ctx_, this.manager);
+    this.options_ = options_;
 
-  set active(value: boolean) {
-    if (this.active_ !== value) {
-      this.active_ = value;
-      this.requestSkeletonUpdate();
+    this.recordNodes();
+
+    for (const type of ["click", "contextmenu"] as const) {
+      this.root_.ref.addEventListener(type, (e) => {
+        const target = this.getEventTarget(e);
+        if (!target) {
+          this.eventTarget.dispatchEvent(event<typeof type, T, Key>(type, { originalEvent: e }));
+          return;
+        }
+        const [node, uuid] = target;
+        this.eventTarget.dispatchEvent(event<typeof type, T, Key>(type, { node, originalEvent: e, uuid }));
+      });
+    }
+    for (const type of ["mouseover", "mouseout"] as const) {
+      this.root_.ref.addEventListener(type, (e) => {
+        const target = this.getEventTarget(e);
+        if (!target) return;
+        const [node, uuid] = target;
+        node.setHover(type === "mouseover");
+        const eventType = type === "mouseover" ? "mouseenter" : "mouseleave";
+        this.eventTarget.dispatchEvent(event<typeof eventType, T, Key>(eventType, { node, originalEvent: e, uuid }));
+      });
     }
   }
 
-  get hover(): boolean {
-    return this.hover_;
+  protected findNodeByUUID(uuid: number): TreeNode<T, Key> | undefined {
+    return this.nodesByUUID.get(uuid);
+  }
+  protected findNodesByKey(key: string | number | undefined): TreeNode<T, Key>[] {
+    return key === undefined ? [] : (this.nodes.get(key) ?? []);
   }
 
-  set hover(value: boolean) {
-    if (this.hover_ !== value) {
-      this.hover_ = value;
-      this.requestSkeletonUpdate();
+  protected getEventTarget(e: Event): [TreeNode<T, Key>, number] | undefined {
+    const target = e.target;
+    if (!(target instanceof SVGElement)) {
+      //   console.warn("Event target is not an SVGElement");
+      return;
     }
+    const uuid_string = target.attributes.getNamedItem("svg-uuid")?.value;
+    if (!uuid_string) {
+      //   console.log("Event target does not have a svg-uuid attribute", target);
+      return;
+    }
+    const uuid = Number(uuid_string);
+    if (isNaN(uuid)) {
+      //   console.error("Invalid UUID");
+      return;
+    }
+    const node = this.findNodeByUUID(uuid);
+    if (!node) {
+      //   console.error("Node not found for UUID:", uuid);
+      return;
+    }
+    return [node, uuid];
+  }
+
+  update(data: T, keyProp: Key, options?: PartialOptions, ctx?: OffscreenCanvasRenderingContext2D) {
+    const options_ = mergeOptions(options);
+    if (needsWatchScheme(options) && !needsWatchScheme(this.options_)) {
+      schemeMatcher.addEventListener("change", this.watchScheme);
+    } else if (!needsWatchScheme(options) && needsWatchScheme(this.options_)) {
+      schemeMatcher.removeEventListener("change", this.watchScheme);
+    }
+    this.options_ = options_;
+    const ctx_ = ctx ?? createContext(new OffscreenCanvas(0, 0));
+    this.root_.fullUpdate(data, keyProp, options_, ctx_);
+
+    this.recordNodes();
+  }
+
+  setActiveKey(key: string | number | undefined) {
+    if (this.activeKey_ === key) return;
+    const prevActiveNodes = this.findNodesByKey(this.activeKey_);
+    const newActiveNodes = this.findNodesByKey(key);
+    const hasActive = newActiveNodes.length > 0;
+    for (const node of prevActiveNodes) {
+      node.setActive(false, hasActive);
+    }
+    for (const node of newActiveNodes) {
+      node.setActive(true, hasActive);
+    }
+
+    this.activeKey_ = key;
+    this.eventTarget.dispatchEvent(event<"active", T, Key>("active", { node: newActiveNodes, uuid: newActiveNodes.map((n) => n.uuid) }));
+  }
+  get activeKey(): string | number | undefined {
+    return this.activeKey_;
+  }
+
+  addEventListener<K extends keyof EventMap<T, Key>>(
+    type: K,
+    listener: (this: Tree<T, Key>, ev: CustomEvent<EventMap<T, Key>[K]>) => any,
+    options?: boolean | AddEventListenerOptions,
+  ) {
+    this.eventTarget.addEventListener(type, <EventListener>listener, options);
+  }
+  removeEventListener<K extends keyof EventMap<T, Key>>(
+    type: K,
+    listener: (this: Tree<T, Key>, ev: CustomEvent<EventMap<T, Key>[K]>) => any,
+    options?: boolean | EventListenerOptions,
+  ) {
+    this.eventTarget.removeEventListener(type, <EventListener>listener, options);
+  }
+
+  mountTo(element: HTMLElement) {
+    element.appendChild(this.root_.ref);
+  }
+
+  unmountFrom(element: HTMLElement) {
+    element.removeChild(this.root_.ref);
   }
 }

@@ -3,7 +3,7 @@ import { computed, onMounted, ref, useTemplateRef, watch } from "vue";
 import Tree from "./components/Tree.vue";
 import { createContext, Data, defaultOptions, Shape, TreeEvent } from "./components/types";
 import "./auto.css";
-import { TreeNode } from "./components/svg";
+import { Tree as TreeV2 } from "./components/svg";
 import type { ComponentExposed } from "vue-component-type-helpers";
 // import ListNode from "./components/ListNode.vue";
 type T = {
@@ -68,6 +68,15 @@ const datas: T[] = [
       { name: "?", color: "green", children: () => [{ name: new Date().toString(), color: "blue", children: [] }], extensible: true },
       { name: "~~~~", color: "green", outSelfShape: "arrow", children: [{ name: "????", color: "blue", children: [] }], extensible: true },
       { name: "~~~~~~~~~~~~~~~~~~~~~~~~~", color: "green", children: [{ name: "????????", color: "blue", children: [] }], extensible: true },
+      {
+        name: "~~~~~~~~~~~~~~~~~~~~~~~~~",
+        color: "green",
+        children: [
+          { name: "????????", color: "blue", children: [] },
+          { name: "?", color: "blue", children: [] },
+        ],
+        extensible: false,
+      },
       {
         name: "abcdefgdwewok",
         id: "kkkk",
@@ -202,28 +211,45 @@ function saveSvg() {
 }
 
 const ctx = createContext(new OffscreenCanvas(0, 0));
-let node: TreeNode<T, "id"> | null = null;
+let tree_v2: TreeV2<T, "id"> | null = null;
 onMounted(() => {
   const tree = document.getElementById("tree-v2");
   console.log(tree);
   if (!tree) return;
   tree.appendChild(document.createElement("hr"));
-  node = TreeNode.create(datas[treeData.value], "id", defaultOptions, ctx);
-  tree.appendChild(node.ref);
+  tree_v2 = new TreeV2(datas[treeData.value], "id", defaultOptions, ctx);
+  tree_v2.addEventListener("click", (e) => {
+    console.log("tree_v2 click", e);
+    e.detail.originalEvent.stopPropagation();
+    if (e.detail.originalEvent.shiftKey) {
+      e.detail.node?.setVertical();
+    } else {
+      console.log(e.detail);
+      tree_v2?.setActiveKey(e.detail.node?.key);
+      // state.active.value = e.detail.node.key;
+    }
+  });
+  tree_v2.addEventListener("contextmenu", (e) => {
+    console.log("tree_v2 contextmenu", e);
+    e.detail.originalEvent.preventDefault();
+    e.detail.node?.setCollapsed();
+  });
+  tree_v2.addEventListener("mouseenter", (e) => {
+    console.log("tree_v2 mouseenter", e);
+  });
+  tree_v2.mountTo(tree);
 });
 watch(treeData, () => {
   const tree = document.getElementById("tree-v2");
   if (!tree) return;
   console.log(tree);
-  while (tree.children.length > 0) tree.children[0]?.remove();
-  tree.appendChild(document.createElement("hr"));
-  if (!node) {
-    node = TreeNode.create(datas[treeData.value], "id", defaultOptions, ctx);
-    tree.appendChild(node.ref);
+  if (!tree_v2) {
+    tree_v2 = new TreeV2(datas[treeData.value], "id", defaultOptions, ctx);
+    tree_v2.mountTo(tree);
     return;
   }
-  node.fullUpdate(datas[treeData.value], "id", defaultOptions, ctx);
-  tree.appendChild(node.ref);
+  tree_v2.update(datas[treeData.value], "id", defaultOptions, ctx);
+  tree_v2.mountTo(tree);
 });
 </script>
 
@@ -246,9 +272,9 @@ watch(treeData, () => {
   <label for="hover-node">Hover: </label>
   <input type="text" id="hover-node" title="Hover Node" v-model="state.hover.value" />
   <br />
-  <div class="container">
+  <span class="container">
     <Tree ref="_tree" :data="_data" :label-key="'id'" :state="state" :options="undefined" @click="click" @dblclick="console.log('dblclick', $event)" @contextmenu="contextmenu" />
-  </div>
+  </span>
   <br />
   <span id="tree-v2">Tree (v2)</span>
   <br />
@@ -259,13 +285,13 @@ watch(treeData, () => {
 </template>
 
 <style>
-.container {
+/* .container {
   width: 99%;
   display: flex;
   align-content: center;
   align-items: center;
   justify-content: center;
-}
+} */
 
 textarea {
   width: 98%;
@@ -274,9 +300,9 @@ textarea {
 
 svg.active > rect.node,
 svg.active > .link {
-  color: red;
-  stroke: currentColor;
-  stroke-width: 2px;
+  color: red !important;
+  stroke: currentColor !important;
+  stroke-width: 2px !important;
 }
 
 @media (prefers-color-scheme: light) {
