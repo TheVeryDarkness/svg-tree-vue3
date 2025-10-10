@@ -3,7 +3,7 @@ import { computed, onMounted, ref, useTemplateRef, watch } from "vue";
 import Tree from "./components/Tree.vue";
 import { createContext, Data, defaultOptions, Shape, TreeEvent } from "./components/types";
 import "./auto.css";
-import { Node } from "./components/svg";
+import { TreeNode } from "./components/svg";
 import type { ComponentExposed } from "vue-component-type-helpers";
 // import ListNode from "./components/ListNode.vue";
 type T = {
@@ -201,12 +201,15 @@ function saveSvg() {
   console.log(tree.value?.svg);
 }
 
+const ctx = createContext(new OffscreenCanvas(0, 0));
+let node: TreeNode<T, "id"> | null = null;
 onMounted(() => {
   const tree = document.getElementById("tree-v2");
   console.log(tree);
   if (!tree) return;
   tree.appendChild(document.createElement("hr"));
-  tree.appendChild(Node.create(datas[treeData.value], "id", defaultOptions, createContext(new OffscreenCanvas(0, 0))).ref);
+  node = TreeNode.create(datas[treeData.value], "id", defaultOptions, ctx);
+  tree.appendChild(node.ref);
 });
 watch(treeData, () => {
   const tree = document.getElementById("tree-v2");
@@ -214,7 +217,13 @@ watch(treeData, () => {
   console.log(tree);
   while (tree.children.length > 0) tree.children[0]?.remove();
   tree.appendChild(document.createElement("hr"));
-  tree.appendChild(Node.create(datas[treeData.value], "id", defaultOptions, createContext(new OffscreenCanvas(0, 0))).ref);
+  if (!node) {
+    node = TreeNode.create(datas[treeData.value], "id", defaultOptions, ctx);
+    tree.appendChild(node.ref);
+    return;
+  }
+  node.fullUpdate(datas[treeData.value], "id", defaultOptions, ctx);
+  tree.appendChild(node.ref);
 });
 </script>
 
