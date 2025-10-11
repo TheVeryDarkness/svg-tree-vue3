@@ -51,16 +51,6 @@
       "import": "./dist/state.js",
       "require": "./dist/state.cjs"
     },
-    "./svg": {
-      "types": "./dist/svg.d.ts",
-      "import": "./dist/svg.js",
-      "require": "./dist/svg.cjs"
-    },
-    "./types": {
-      "types": "./dist/types.d.ts",
-      "import": "./dist/types.js",
-      "require": "./dist/types.cjs"
-    },
     "./auto.css": "./dist/auto.css",
     "./dark.css": "./dist/dark.css",
     "./light.css": "./dist/light.css"
@@ -75,6 +65,7 @@
     "prepublishOnly": "vue-tsc -b && vite build"
   },
   "dependencies": {
+    "tree2svg": "^1.0.0",
     "vue": "^3.5.17"
   },
   "devDependencies": {

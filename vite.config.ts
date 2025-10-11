@@ -22,8 +22,6 @@ export default defineConfig({
         "src/components/TreeV2.vue",
         "src/components/ForestV2.vue",
         "src/components/state.ts",
-        "src/components/svg.ts",
-        "src/components/types.ts",
         "src/auto.css",
         "src/dark.css",
         "src/light.css",

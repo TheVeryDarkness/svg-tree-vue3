@@ -131,7 +131,7 @@
 </template>
 <script setup lang="ts" generic="T extends Data<Key> & Children<T>, Key extends string | number | symbol = 'path'">
 import { computed, ref, StyleValue, useTemplateRef, watch } from "vue";
-import type { Children, Data, Options, Rectangle, Shape, TreeEvent, TreeNodeSize } from "./types";
+import type { Children, Data, Options, Rectangle, Shape, TreeEvent, TreeNodeSize } from "tree2svg/types";
 import type { ExternalState } from "./state";
 
 // Props.

@@ -20,7 +20,7 @@
 <script setup lang="ts" generic="T extends Data<Key> & Children<T>, Key extends string | number | symbol = 'path'">
 import { computed, useTemplateRef } from "vue";
 import TreeNode from "./TreeNode.vue";
-import { Children, createContext, Data, mergeOptions, Options, PartialOptions, TreeEvent } from "./types";
+import { Children, createContext, Data, mergeOptions, Options, PartialOptions, TreeEvent } from "tree2svg/types";
 import { ExternalState } from "./state";
 import { ComponentExposed } from "vue-component-type-helpers";
 

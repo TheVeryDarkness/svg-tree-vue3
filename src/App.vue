@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, useTemplateRef } from "vue";
 import Tree from "./components/Tree.vue";
-import { Data, Shape, TreeEvent } from "./components/types";
+import { Data, Shape, TreeEvent } from "tree2svg/types";
 import "./auto.css";
 import TreeV2 from "./components/TreeV2.vue";
 import ForestV2 from "./components/ForestV2.vue";
 import type { ComponentExposed } from "vue-component-type-helpers";
-import { EventKind } from "./components/svg";
+import { EventKind } from "tree2svg/svg";
 import Forest from "./components/Forest.vue";
 // import ListNode from "./components/ListNode.vue";
 type T = {

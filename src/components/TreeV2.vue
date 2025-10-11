@@ -4,8 +4,8 @@
 
 <script setup lang="ts" generic="T extends Data<Key> & Children<T>, Key extends string | number | symbol = 'path'">
 import { computed, onMounted, onUnmounted, onUpdated, useTemplateRef, watch } from "vue";
-import { EventKind, Tree, TreeNode } from "./svg";
-import { Children, createContext, Data, mergeOptions, Options, PartialOptions } from "./types";
+import { EventKind, Tree, TreeNode } from "tree2svg/svg";
+import { Children, createContext, Data, mergeOptions, Options, PartialOptions } from "tree2svg/types";
 
 onMounted(() => {
   // console.log("TreeV2 mounted");
