@@ -212,7 +212,7 @@ type Extend = [SVGPathElement, SVGRectElement, SVGTextElement];
 /**
  * A virtual node class for SVG elements.
  */
-class TreeNode<T extends Data<T, Key>, Key extends string | number | symbol = "path"> extends NodeBase<T, Key> {
+export class TreeNode<T extends Data<T, Key>, Key extends string | number | symbol = "path"> extends NodeBase<T, Key> {
   // private text: Position;
   private size: TreeNodeSize;
 
