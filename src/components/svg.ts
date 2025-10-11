@@ -1238,7 +1238,6 @@ Z`,
     this.fullUpdate();
   }
   setCollapsed(value: boolean = !super.collapsed) {
-    console.log("setCollapsed", value, this.children_.length, this.extensible);
     if (!super.collapsed && this.children_.length === 0 && !this.extensible) {
       // Cannot collapse a non-collapsed node without children
       return;
