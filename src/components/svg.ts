@@ -1334,6 +1334,7 @@ interface EventMap<T extends Data<T, Key>, Key extends string | number | symbol 
   active: { node: TreeNode<T, Key>[]; key: string | number | undefined; uuid: number[] };
   click: { node?: TreeNode<T, Key>; originalEvent: MouseEvent; uuid?: number };
   contextmenu: { node?: TreeNode<T, Key>; originalEvent: MouseEvent; uuid?: number };
+  keydown: { node: TreeNode<T, Key>; originalEvent: KeyboardEvent; uuid: number };
   mouseenter: { node: TreeNode<T, Key>; originalEvent: MouseEvent; uuid: number };
   mouseleave: { node: TreeNode<T, Key>; originalEvent: MouseEvent; uuid: number };
 }
@@ -1488,6 +1489,14 @@ export class Forest<T extends Data<T, Key>, Key extends string | number | symbol
           node.setHover(type === "mouseover");
           const eventType = type === "mouseover" ? "mouseenter" : "mouseleave";
           this.eventTarget.dispatchEvent(event<typeof eventType, T, Key>(eventType, { node, originalEvent: e, uuid }));
+        });
+      }
+      for (const type of ["keydown"] as const) {
+        root.ref.addEventListener(type, (e) => {
+          const target = this.manager.getEventTarget(e);
+          if (!target) return;
+          const [node, uuid] = target;
+          this.eventTarget.dispatchEvent(event<typeof type, T, Key>(type, { node, originalEvent: e, uuid }));
         });
       }
     }
