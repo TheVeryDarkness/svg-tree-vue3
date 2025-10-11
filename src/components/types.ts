@@ -233,6 +233,9 @@ export type Data<Child extends Data<Child, Key>, Key extends string | number | s
   backgroundColor?: string;
   children: Child[] | ((_: Data<Child, Key>) => Child[]);
   dashArray?: string | number;
+  /**
+   * @description The shape of the start point of the link from this node to its children.
+   */
   outSelfShape?: Shape;
   /**
    * @description The fill color of the outSelfShape. If not provided, it will be 'none'.
@@ -244,8 +247,14 @@ export type Data<Child extends Data<Child, Key>, Key extends string | number | s
    * You can also use 'currentColor' to use the current stroke color.
    */
   outColor?: string;
+  /**
+   * @description The shape of the end points of links from this node to its children.
+   */
   inChildrenShape?: (Shape | undefined)[];
   inChildrenFill?: (string | undefined)[];
+  /**
+   * @description Whether the node has an automatically generated extensible marker (after its children if any).
+   */
   extensible?: boolean;
 } & {
   [key in Key]?: string | number | undefined;
