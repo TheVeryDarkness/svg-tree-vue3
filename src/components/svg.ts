@@ -1,6 +1,5 @@
 import {
   Data,
-  Options,
   Rectangle,
   TextSize,
   TreeNodeSize,
@@ -13,7 +12,6 @@ import {
   createContext,
   mergeOptions,
   defaultOptions,
-  needsWatchScheme,
   schemeMatcher,
   mergeColorOptions,
   ColorOptions,
@@ -215,7 +213,7 @@ type Extend = [SVGPathElement, SVGRectElement, SVGTextElement];
  * A virtual node class for SVG elements.
  */
 class TreeNode<T extends Data<T, Key>, Key extends string | number | symbol = "path"> extends NodeBase<T, Key> {
-  private text: Position;
+  // private text: Position;
   private size: TreeNodeSize;
 
   private uuid_: number;
@@ -1004,7 +1002,7 @@ Z`,
     this.parent_ = parent;
     this.ref_.append(...children_elements);
 
-    const [size, text] = TreeNode.setup(
+    const [size, _] = TreeNode.setup(
       this,
       ctx,
       name,
@@ -1023,7 +1021,7 @@ Z`,
       this.uuid_,
     );
     this.size = size;
-    this.text = text;
+    // this.text = text;
 
     manager.add(this);
   }
@@ -1054,7 +1052,7 @@ Z`,
     }
   }
   protected recomputeStyle() {
-    const [size, text] = TreeNode.setup(
+    const [size, _] = TreeNode.setup(
       this,
       this.ctx,
       this.name,
@@ -1075,7 +1073,7 @@ Z`,
 
     const skeletonChanged = TreeNode.sizeDiffer(this.size.bounding, size.bounding);
     this.size = size;
-    this.text = text;
+    // this.text = text;
 
     return skeletonChanged;
   }
