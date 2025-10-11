@@ -3,10 +3,8 @@ import {
   Options,
   Rectangle,
   TextSize,
-  TextOptions,
   TreeNodeSize,
   Position,
-  State,
   Size,
   ShapeOptions,
   Shape,
@@ -230,11 +228,6 @@ class TreeNode<T extends Data<T, Key>, Key extends string | number | symbol = "p
   private children_: Child<T, Key>[];
   private parent_?: WeakRef<TreeNode<T, Key>>;
   private extend: Extend | null;
-
-  private static computeFontWeight(options: TextOptions, state: State): number {
-    const { textWeight, textHoverWeight, textActiveWeight } = options;
-    return state.active ? textActiveWeight : state.hover ? textHoverWeight : textWeight;
-  }
 
   private static computeCtxFont(fontFamily: string | undefined, fontSize: number, fontWeight: number): string {
     return `${fontWeight} ${fontSize}px ${fontFamily}`;
@@ -970,7 +963,10 @@ Z`,
       children_nodes = [];
     } else {
       const self = this;
-      children_nodes = typeof data.children === "function" ? data.children(data) : data.children;
+      if (typeof data.children === "function") {
+        data.children = data.children(data);
+      }
+      children_nodes = data.children;
       const children = children_nodes.map(function (data, index): Child<T, Key> {
         const child = new TreeNode(data, keyProp, options, ctx, manager, new WeakRef(self));
 
@@ -1033,7 +1029,7 @@ Z`,
   static create<T extends Data<T, Key>, Key extends string | number | symbol = "path">(
     data: T,
     keyProp: Key,
-    options: Options,
+    options: PartialOptions,
     ctx: OffscreenCanvasRenderingContext2D,
     manager: UUIDManager,
   ): TreeNode<T, Key> {
@@ -1127,7 +1123,7 @@ Z`,
       this.out_shape = null;
     }
 
-    const children = this.collapsed ? [] : typeof data.children === "function" ? data.children(data) : data.children;
+    const children = this.collapsed ? [] : typeof data.children === "function" ? (data.children = data.children(data)) : data.children;
     if (!this.collapsed) {
       // Update existing children and add new ones
       const minLength = Math.min(this.children_.length, children.length);
@@ -1242,7 +1238,8 @@ Z`,
     this.fullUpdate();
   }
   setCollapsed(value: boolean = !super.collapsed) {
-    if (!super.collapsed && this.children_.length === 0) {
+    console.log("setCollapsed", value, this.children_.length, this.extensible);
+    if (!super.collapsed && this.children_.length === 0 && !this.extensible) {
       // Cannot collapse a non-collapsed node without children
       return;
     }
@@ -1302,13 +1299,13 @@ class UUIDManager {
 }
 
 interface EventMap<T extends Data<T, Key>, Key extends string | number | symbol = "path"> {
-  active: { node: TreeNode<T, Key>[]; uuid: number[] };
+  active: { node: TreeNode<T, Key>[]; key: string | number | undefined; uuid: number[] };
   click: { node?: TreeNode<T, Key>; originalEvent: MouseEvent; uuid?: number };
   contextmenu: { node?: TreeNode<T, Key>; originalEvent: MouseEvent; uuid?: number };
   mouseenter: { node: TreeNode<T, Key>; originalEvent: MouseEvent; uuid: number };
   mouseleave: { node: TreeNode<T, Key>; originalEvent: MouseEvent; uuid: number };
 }
-type EventKind<K extends keyof EventMap<T, Key>, T extends Data<T, Key>, Key extends string | number | symbol = "path"> = EventMap<T, Key>[K];
+export type EventKind<K extends keyof EventMap<T, Key>, T extends Data<T, Key>, Key extends string | number | symbol = "path"> = EventMap<T, Key>[K];
 function event<K extends keyof EventMap<T, Key>, T extends Data<T, Key>, Key extends string | number | symbol = "path">(
   type: K,
   detail: EventKind<K, T, Key>,
@@ -1412,16 +1409,15 @@ export class Tree<T extends Data<T, Key>, Key extends string | number | symbol =
     return [node, uuid];
   }
 
-  update(data: T, keyProp: Key, options?: PartialOptions, ctx?: OffscreenCanvasRenderingContext2D) {
-    const options_ = mergeOptions(options);
+  update(data?: T, keyProp?: Key, options?: PartialOptions, ctx?: OffscreenCanvasRenderingContext2D) {
+    const options_ = options;
     if (needsWatchScheme(options) && !needsWatchScheme(this.options_)) {
       schemeMatcher.addEventListener("change", this.watchScheme);
     } else if (!needsWatchScheme(options) && needsWatchScheme(this.options_)) {
       schemeMatcher.removeEventListener("change", this.watchScheme);
     }
     this.options_ = options_;
-    const ctx_ = ctx ?? createContext(new OffscreenCanvas(0, 0));
-    this.root_.fullUpdate(data, keyProp, options_, ctx_);
+    this.root_.fullUpdate(data, keyProp, options, ctx);
 
     this.recordNodes();
   }
@@ -1439,7 +1435,7 @@ export class Tree<T extends Data<T, Key>, Key extends string | number | symbol =
     }
 
     this.activeKey_ = key;
-    this.eventTarget.dispatchEvent(event<"active", T, Key>("active", { node: newActiveNodes, uuid: newActiveNodes.map((n) => n.uuid) }));
+    this.eventTarget.dispatchEvent(event<"active", T, Key>("active", { node: newActiveNodes, key, uuid: newActiveNodes.map((n) => n.uuid) }));
   }
   get activeKey(): string | number | undefined {
     return this.activeKey_;
@@ -1466,5 +1462,191 @@ export class Tree<T extends Data<T, Key>, Key extends string | number | symbol =
 
   unmountFrom(element: HTMLElement) {
     element.removeChild(this.root_.ref);
+  }
+
+  /**
+   * Get the root SVG element of the tree.
+   *
+   * This is intended for saving purposes. Do not modify the returned SVG element directly.
+   */
+  get svg(): SVGSVGElement {
+    return this.root_.ref;
+  }
+}
+
+export class Forest<T extends Data<T, Key>, Key extends string | number | symbol = "path"> {
+  private readonly roots_: TreeNode<T, Key>[];
+  private options_: PartialOptions;
+  private keyProp_: Key;
+  private readonly nodes = new Map<string | number | undefined, TreeNode<T, Key>[]>();
+  private readonly nodesByUUID = new Map<number, TreeNode<T, Key>>();
+  private readonly manager = new UUIDManager();
+  private readonly eventTarget = new EventTarget();
+  private activeKey_: string | number | undefined = undefined;
+
+  private watchScheme() {
+    const options_ = mergeColorOptions(this.options_?.color);
+    for (const root of this.roots_) {
+      root.updateColor(options_);
+    }
+  }
+
+  recordNodes() {
+    this.nodes.clear();
+    this.nodesByUUID.clear();
+    let queue: TreeNode<T, Key>[] = [...this.roots_];
+    while (queue.length > 0) {
+      const node = queue.shift();
+      if (!node) break;
+      if (!this.nodes.has(node.key)) this.nodes.set(node.key, []);
+      this.nodes.get(node.key)?.push(node);
+      if (this.nodesByUUID.has(node.uuid)) {
+        console.error("UUID collision detected, this should not happen.");
+      }
+      this.nodesByUUID.set(node.uuid, node);
+      queue.push(...node.children);
+    }
+  }
+
+  constructor(data: T[], keyProp: Key, options?: PartialOptions, ctx?: OffscreenCanvasRenderingContext2D) {
+    const options_ = mergeOptions(options);
+    if (needsWatchScheme(options)) {
+      schemeMatcher.addEventListener("change", this.watchScheme);
+    }
+    const ctx_ = ctx ?? createContext(new OffscreenCanvas(0, 0));
+    this.roots_ = data.map((item) => TreeNode.create(item, keyProp, options_, ctx_, this.manager));
+    this.options_ = options_;
+    this.keyProp_ = keyProp;
+
+    this.recordNodes();
+
+    for (const root of this.roots_) {
+      for (const type of ["click", "contextmenu"] as const) {
+        root.ref.addEventListener(type, (e) => {
+          const target = this.getEventTarget(e);
+          if (!target) {
+            this.eventTarget.dispatchEvent(event<typeof type, T, Key>(type, { originalEvent: e }));
+            return;
+          }
+          const [node, uuid] = target;
+          this.eventTarget.dispatchEvent(event<typeof type, T, Key>(type, { node, originalEvent: e, uuid }));
+        });
+      }
+      for (const type of ["mouseover", "mouseout"] as const) {
+        root.ref.addEventListener(type, (e) => {
+          const target = this.getEventTarget(e);
+          if (!target) return;
+          const [node, uuid] = target;
+          node.setHover(type === "mouseover");
+          const eventType = type === "mouseover" ? "mouseenter" : "mouseleave";
+          this.eventTarget.dispatchEvent(event<typeof eventType, T, Key>(eventType, { node, originalEvent: e, uuid }));
+        });
+      }
+    }
+  }
+
+  protected findNodeByUUID(uuid: number): TreeNode<T, Key> | undefined {
+    return this.nodesByUUID.get(uuid);
+  }
+  protected findNodesByKey(key: string | number | undefined): TreeNode<T, Key>[] {
+    return key === undefined ? [] : (this.nodes.get(key) ?? []);
+  }
+
+  protected getEventTarget(e: Event): [TreeNode<T, Key>, number] | undefined {
+    const target = e.target;
+    if (!(target instanceof SVGElement)) {
+      // console.warn("Event target is not an SVGElement");
+      return;
+    }
+    const uuid_string = target.attributes.getNamedItem("svg-uuid")?.value;
+    if (!uuid_string) {
+      // console.log("Event target does not have a svg-uuid attribute", target);
+      return;
+    }
+    const uuid = Number(uuid_string);
+    if (isNaN(uuid)) {
+      // console.error("Invalid UUID");
+      return;
+    }
+    const node = this.findNodeByUUID(uuid);
+    if (!node) {
+      // console.error("Node not found for UUID:", uuid);
+      return;
+    }
+    return [node, uuid];
+  }
+
+  update(data?: T[], keyProp?: Key, options?: PartialOptions, ctx?: OffscreenCanvasRenderingContext2D) {
+    const options_ = options;
+    if (needsWatchScheme(options) && !needsWatchScheme(this.options_)) {
+      schemeMatcher.addEventListener("change", this.watchScheme);
+    } else if (!needsWatchScheme(options) && needsWatchScheme(this.options_)) {
+      schemeMatcher.removeEventListener("change", this.watchScheme);
+    }
+    this.options_ = options_;
+    if (data && data.length !== this.roots_.length) {
+      // Recreate all roots if the number of roots has changed
+      for (const root of this.roots_) {
+        root.ref.remove();
+      }
+      this.roots_.length = 0;
+      for (const item of data) {
+        this.roots_.push(TreeNode.create<T, Key>(item, keyProp ?? this.keyProp_, options_, ctx ?? createContext(new OffscreenCanvas(0, 0)), this.manager));
+      }
+    }
+    // for (const root of this.roots_) root.fullUpdate(data, keyProp, options, ctx);
+
+    this.recordNodes();
+  }
+
+  setActiveKey(key: string | number | undefined) {
+    if (this.activeKey_ === key) return;
+    const prevActiveNodes = this.findNodesByKey(this.activeKey_);
+    const newActiveNodes = this.findNodesByKey(key);
+    const hasActive = newActiveNodes.length > 0;
+    for (const node of prevActiveNodes) {
+      node.setActive(false, hasActive);
+    }
+    for (const node of newActiveNodes) {
+      node.setActive(true, hasActive);
+    }
+
+    this.activeKey_ = key;
+    this.eventTarget.dispatchEvent(event<"active", T, Key>("active", { node: newActiveNodes, key, uuid: newActiveNodes.map((n) => n.uuid) }));
+  }
+  get activeKey(): string | number | undefined {
+    return this.activeKey_;
+  }
+
+  addEventListener<K extends keyof EventMap<T, Key>>(
+    type: K,
+    listener: (this: Tree<T, Key>, ev: CustomEvent<EventMap<T, Key>[K]>) => any,
+    options?: boolean | AddEventListenerOptions,
+  ) {
+    this.eventTarget.addEventListener(type, <EventListener>listener, options);
+  }
+  removeEventListener<K extends keyof EventMap<T, Key>>(
+    type: K,
+    listener: (this: Tree<T, Key>, ev: CustomEvent<EventMap<T, Key>[K]>) => any,
+    options?: boolean | EventListenerOptions,
+  ) {
+    this.eventTarget.removeEventListener(type, <EventListener>listener, options);
+  }
+
+  mountTo(element: HTMLElement) {
+    for (const root of this.roots_) element.appendChild(root.ref);
+  }
+
+  unmountFrom(element: HTMLElement) {
+    for (const root of this.roots_) element.removeChild(root.ref);
+  }
+
+  /**
+   * Get the root SVG element of the tree.
+   *
+   * This is intended for saving purposes. Do not modify the returned SVG element directly.
+   */
+  get svg(): SVGSVGElement[] {
+    return this.roots_.map((root) => root.ref);
   }
 }

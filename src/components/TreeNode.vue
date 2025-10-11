@@ -131,7 +131,8 @@
 </template>
 <script setup lang="ts" generic="T extends Data<T, Key>, Key extends string | number | symbol = 'path'">
 import { computed, ref, StyleValue, useTemplateRef, watch } from "vue";
-import type { Data, ExternalState, Options, Rectangle, Shape, TreeEvent, TreeNodeSize } from "./types";
+import type { Data, Options, Rectangle, Shape, TreeEvent, TreeNodeSize } from "./types";
+import type { ExternalState } from "./state";
 
 // Props.
 const props = defineProps<{

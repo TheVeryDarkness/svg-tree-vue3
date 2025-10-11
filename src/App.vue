@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, useTemplateRef, watch } from "vue";
+import { ref, useTemplateRef } from "vue";
 import Tree from "./components/Tree.vue";
-import { createContext, Data, defaultOptions, Shape, TreeEvent } from "./components/types";
+import { Data, Shape, TreeEvent } from "./components/types";
 import "./auto.css";
-import { Tree as TreeV2 } from "./components/svg";
+// import { Tree as TreeV2 } from "./components/svg";
+import TreeV2 from "./components/TreeV2.vue";
+import ForestV2 from "./components/ForestV2.vue";
 import type { ComponentExposed } from "vue-component-type-helpers";
+import { EventKind } from "./components/svg";
+import Forest from "./components/Forest.vue";
 // import ListNode from "./components/ListNode.vue";
 type T = {
   name: string;
@@ -176,11 +180,11 @@ const datas: T[] = [
   },
 ];
 // Ensure data conforms to Data interface with 'id' as key
-const _data = computed(function (): Data<T, "id"> {
-  return datas[treeData.value];
-});
-const treeData = ref(0);
+const treeData = ref("0");
 let tree = useTemplateRef<ComponentExposed<typeof Tree>>("_tree");
+let forest = useTemplateRef<ComponentExposed<typeof Forest>>("_forest");
+let tree_v2 = useTemplateRef<ComponentExposed<typeof TreeV2>>("_tree_v2");
+let forest_v2 = useTemplateRef<ComponentExposed<typeof ForestV2>>("_forest_v2");
 let state = {
   active: ref<string | number | undefined>(undefined),
   hover: ref<string | number | undefined>(undefined),
@@ -207,50 +211,32 @@ window.addEventListener("click", () => {
 });
 
 function saveSvg() {
-  console.log(tree.value?.svg);
+  console.log(tree.value?.svg, forest.value?.svg, tree_v2.value?.svg, forest_v2.value?.svg);
 }
 
-const ctx = createContext(new OffscreenCanvas(0, 0));
-let tree_v2: TreeV2<T, "id"> | null = null;
-onMounted(() => {
-  const tree = document.getElementById("tree-v2");
-  console.log(tree);
-  if (!tree) return;
-  tree.appendChild(document.createElement("hr"));
-  tree_v2 = new TreeV2(datas[treeData.value], "id", defaultOptions, ctx);
-  tree_v2.addEventListener("click", (e) => {
-    console.log("tree_v2 click", e);
-    e.detail.originalEvent.stopPropagation();
-    if (e.detail.originalEvent.shiftKey) {
-      e.detail.node?.setVertical();
-    } else {
-      console.log(e.detail);
-      tree_v2?.setActiveKey(e.detail.node?.key);
-      // state.active.value = e.detail.node.key;
-    }
-  });
-  tree_v2.addEventListener("contextmenu", (e) => {
-    console.log("tree_v2 contextmenu", e);
-    e.detail.originalEvent.preventDefault();
-    e.detail.node?.setCollapsed();
-  });
-  tree_v2.addEventListener("mouseenter", (e) => {
-    console.log("tree_v2 mouseenter", e);
-  });
-  tree_v2.mountTo(tree);
-});
-watch(treeData, () => {
-  const tree = document.getElementById("tree-v2");
-  if (!tree) return;
-  console.log(tree);
-  if (!tree_v2) {
-    tree_v2 = new TreeV2(datas[treeData.value], "id", defaultOptions, ctx);
-    tree_v2.mountTo(tree);
-    return;
+function click2(e: CustomEvent<EventKind<"click", T, "id">>) {
+  console.log("tree_v2 click", e);
+  e.detail.originalEvent.stopPropagation();
+  if (e.detail.originalEvent.shiftKey) {
+    e.detail.node?.setVertical();
+  } else {
+    console.log(e.detail);
+    tree_v2?.value?.setActiveKey(e.detail.node?.key);
+    forest_v2?.value?.setActiveKey(e.detail.node?.key);
+    // state.active.value = e.detail.node.key;
   }
-  tree_v2.update(datas[treeData.value], "id", defaultOptions, ctx);
-  tree_v2.mountTo(tree);
-});
+}
+function contextmenu2(e: CustomEvent<EventKind<"contextmenu", T, "id">>) {
+  console.log("tree_v2 contextmenu", e);
+  e.detail.originalEvent.preventDefault();
+  e.detail.node?.setCollapsed();
+}
+
+let darkMode = ref(false);
+function switchScheme() {
+  document.documentElement.style.colorScheme = darkMode.value ? "only dark" : "only light";
+  darkMode.value = !darkMode.value;
+}
 </script>
 
 <template>
@@ -258,6 +244,8 @@ watch(treeData, () => {
   <p>Shift + Left Click = Switch direction</p>
   <p>Ctrl + Left Click = Scroll into view</p>
   <p>Right Click = Collapse or expand</p>
+  <label for="switch-scheme">Switch Scheme: </label>
+  <button id="switch-scheme" @click="switchScheme">{{ darkMode ? "Light" : "Dark" }}</button>
   <label for="save-svg">Save SVG: </label>
   <button id="save-svg" @click="saveSvg">Save</button>
   <label for="tree-data">Tree Data: </label>
@@ -265,6 +253,7 @@ watch(treeData, () => {
     <option value="0">Arbitrary</option>
     <option value="1">Shapes</option>
     <option value="2">Lazy Evaluation</option>
+    <option value="*">All</option>
   </select>
   <br />
   <label for="active-node">Active: </label>
@@ -273,13 +262,28 @@ watch(treeData, () => {
   <input type="text" id="hover-node" title="Hover Node" v-model="state.hover.value" />
   <br />
   <span class="container">
-    <Tree ref="_tree" :data="_data" :label-key="'id'" :state="state" :options="undefined" @click="click" @dblclick="console.log('dblclick', $event)" @contextmenu="contextmenu" />
+    <Tree
+      v-if="treeData !== '*'"
+      ref="_tree"
+      :data="datas[Number(treeData)]"
+      :label-key="'id'"
+      :state="state"
+      :options="undefined"
+      @click="click"
+      @dblclick="console.log('dblclick', $event)"
+      @contextmenu="contextmenu"
+    />
+    <Forest v-else ref="_forest" :data="datas" :label-key="'id'" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
   </span>
   <br />
-  <span id="tree-v2">Tree (v2)</span>
+  <span id="tree-v2">
+    Tree (v2)<br />
+    <TreeV2 v-if="treeData !== '*'" ref="_tree_v2" :data="datas[Number(treeData)]" :label-key="'id'" :options="undefined" @click="click2" @contextmenu="contextmenu2" />
+    <ForestV2 v-else ref="_forest_v2" :data="datas" :label-key="'id'" :options="undefined" @click="click2" @contextmenu="contextmenu2" />
+  </span>
   <br />
   <div class="container">
-    <textarea id="tree-data" title="Tree Data">{{ JSON.stringify(datas[treeData], null, 2) }}</textarea>
+    <textarea v-if="treeData !== '*'" id="tree-data" title="Tree Data">{{ JSON.stringify(datas[Number(treeData)], null, 2) }}</textarea>
     <!-- <ListNode :node="datas[treeData]" :label-key="'id'" /> -->
   </div>
 </template>

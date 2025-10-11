@@ -1,5 +1,3 @@
-import type { Ref } from "vue";
-
 export interface ColorOptions {
   /**
    * Stroke color of node borders and links.
@@ -292,14 +290,4 @@ export interface TreeEvent<T, E> {
   setVertical(vertical?: boolean): void;
   getCollapsed(): boolean;
   getVertical(): boolean;
-}
-
-export interface ExternalState {
-  active: Ref<number | string | undefined>;
-  hover: Ref<number | string | undefined>;
-}
-
-export interface State {
-  active: boolean;
-  hover: boolean;
 }
