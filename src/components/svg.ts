@@ -1508,16 +1508,23 @@ export class Forest<T extends Data<T, Key>, Key extends string | number | symbol
     }
   }
 
+  setActiveNode(node: TreeNode<T, Key> | undefined) {
+    const hasActive = node !== undefined;
+    for (const node_ of this.manager.nodes.values()) {
+      const derefNode = node_[0]?.deref();
+      if (derefNode) derefNode.setActive(derefNode === node, hasActive);
+    }
+
+    this.activeKey_ = node?.key;
+    this.eventTarget.dispatchEvent(event<"active", T, Key>("active", { node: node ? [node] : [], key: node?.key, uuid: node ? [node.uuid] : [] }));
+  }
   setActiveKey(key: string | number | undefined) {
     if (this.activeKey_ === key) return;
-    const prevActiveNodes = this.manager.findNodesByKey(this.activeKey_);
     const newActiveNodes = this.manager.findNodesByKey(key);
     const hasActive = newActiveNodes.length > 0;
-    for (const node of prevActiveNodes) {
-      node.setActive(false, hasActive);
-    }
-    for (const node of newActiveNodes) {
-      node.setActive(true, hasActive);
+    for (const node of this.manager.nodes.values()) {
+      const derefNode = node[0]?.deref();
+      if (derefNode) derefNode.setActive(derefNode.key === key, hasActive);
     }
 
     this.activeKey_ = key;
