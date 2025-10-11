@@ -1221,9 +1221,34 @@ Z`,
   get parent(): TreeNode<T, Key> | undefined {
     return this.parent_?.deref();
   }
-
   get children(): TreeNode<T, Key>[] {
     return this.children_.map((c) => c[2]);
+  }
+  get prevSibling(): TreeNode<T, Key> | undefined {
+    const parent = this.parent;
+    if (parent) {
+      const siblings = parent.children;
+      let index = siblings.indexOf(this);
+      if (index === -1) {
+        console.error("Inconsistent state: parent does not contain this child");
+        return undefined;
+      }
+      index = (index + siblings.length - 1) % siblings.length;
+      return siblings[index];
+    }
+  }
+  get nextSibling(): TreeNode<T, Key> | undefined {
+    const parent = this.parent;
+    if (parent) {
+      const siblings = parent.children;
+      let index = siblings.indexOf(this);
+      if (index === -1) {
+        console.error("Inconsistent state: parent does not contain this child");
+        return undefined;
+      }
+      index = (index + 1) % siblings.length;
+      return siblings[index];
+    }
   }
 
   get key(): string | number | undefined {
