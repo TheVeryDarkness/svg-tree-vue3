@@ -109,7 +109,7 @@ class NodeBase<T extends Data<T, Key>, Key extends string | number | symbol = "p
     return this.data?.color ?? defaultOptions.color.borderColor;
   }
   protected get textColor(): string | undefined {
-    return this.data?.color ?? (this.active ? defaultOptions.color.textActiveColor : this.hover ? defaultOptions.color.textActiveColor : defaultOptions.color.textColor);
+    return this.data?.color ?? (this.active ? defaultOptions.color.textActiveColor : this.hover ? defaultOptions.color.textHoverColor : defaultOptions.color.textColor);
   }
   protected get backgroundColor(): string | undefined {
     return this.data?.backgroundColor ?? defaultOptions.color.backgroundColor;
@@ -528,7 +528,7 @@ l ${-width / 2} ${-length}`,
               ];
             }
             case "circle": {
-              const { width, length } = options.arrow;
+              const { width, length } = options.circle;
               return [
                 `M ${x3} ${y3 + dy4 - length - offset}
 a ${width / 2} ${length / 2} 0.5 1 1 0 ${length}

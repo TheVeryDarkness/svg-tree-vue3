@@ -101,7 +101,7 @@ export type PartialOptions = DeepPartial<Options> | undefined;
 export type PartialColorOptions = DeepPartial<ColorOptions> | undefined;
 export type PartialShapeOptions = DeepPartial<ShapeOptions> | undefined;
 
-export const defaultLightColorOptions: ColorOptions = {
+export const defaultLightColorOptions: Readonly<ColorOptions> = {
   borderColor: "gray",
   backgroundColor: "white",
   shadowColor: "darkgray",
@@ -109,7 +109,7 @@ export const defaultLightColorOptions: ColorOptions = {
   textHoverColor: "darkcyan",
   textActiveColor: "darkcyan",
 };
-export const defaultDarkColorOptions: ColorOptions = {
+export const defaultDarkColorOptions: Readonly<ColorOptions> = {
   borderColor: "lightgray",
   backgroundColor: "darkgray",
   shadowColor: "black",
@@ -117,7 +117,23 @@ export const defaultDarkColorOptions: ColorOptions = {
   textHoverColor: "cyan",
   textActiveColor: "cyan",
 };
-export const defaultLayoutOptions: LayoutOptions = {
+export const schemeMatcher = window.matchMedia("(prefers-color-scheme: dark)");
+schemeMatcher.addEventListener("change", (e) => {
+  const colorKeys = ["borderColor", "backgroundColor", "shadowColor", "textColor", "textHoverColor", "textActiveColor"] as const;
+  if (e.matches) {
+    defaultOptions.color = defaultDarkColorOptions;
+    for (const key of colorKeys) {
+      defaultColorOptions[key as keyof ColorOptions] = defaultDarkColorOptions[key as keyof ColorOptions];
+    }
+  } else {
+    defaultOptions.color = defaultLightColorOptions;
+    for (const key of colorKeys) {
+      defaultColorOptions[key as keyof ColorOptions] = defaultLightColorOptions[key as keyof ColorOptions];
+    }
+  }
+});
+export const defaultColorOptions: ColorOptions = schemeMatcher.matches ? defaultDarkColorOptions : defaultLightColorOptions;
+export const defaultLayoutOptions: Readonly<LayoutOptions> = {
   indentX: 8,
   indentY: 16,
   marginX: 20,
@@ -126,16 +142,16 @@ export const defaultLayoutOptions: LayoutOptions = {
   paddingY: 8,
   radius: 4,
 };
-export const defaultTextOptions: TextOptions = {
+export const defaultTextOptions: Readonly<TextOptions> = {
   textWeight: 400,
   textHoverWeight: 700,
   textActiveWeight: 1000,
 };
-export const defaultFontOptions: FontOptions = {
+export const defaultFontOptions: Readonly<FontOptions> = {
   fontFamily: undefined,
   fontSize: 14,
 };
-export const defaultShapeOptions: ShapeOptions = {
+export const defaultShapeOptions: Readonly<ShapeOptions> = {
   arrow: {
     width: 8,
     length: 8,
@@ -153,16 +169,8 @@ export const defaultShapeOptions: ShapeOptions = {
     length: 8,
   },
 };
-export const schemeMatcher = window.matchMedia("(prefers-color-scheme: dark)");
-schemeMatcher.addEventListener("change", (e) => {
-  if (e.matches) {
-    defaultOptions.color = defaultDarkColorOptions;
-  } else {
-    defaultOptions.color = defaultLightColorOptions;
-  }
-});
 export const defaultOptions: Options = {
-  color: schemeMatcher.matches ? defaultDarkColorOptions : defaultLightColorOptions,
+  color: defaultColorOptions,
   text: defaultTextOptions,
   layout: defaultLayoutOptions,
   font: defaultFontOptions,
@@ -175,7 +183,7 @@ export const defaultOptions: Options = {
  * @returns The merged options.
  */
 export function mergeColorOptions(options: PartialColorOptions | undefined): ColorOptions {
-  return { ...defaultLightColorOptions, ...options };
+  return { ...defaultColorOptions, ...options };
 }
 
 /**
