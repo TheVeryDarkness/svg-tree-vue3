@@ -1209,7 +1209,8 @@ Z`,
     const skeletonChanged = this.recomputeStyle();
 
     if (skeletonChanged) {
-      console.error("Skeleton changed during color update, this should not happen.");
+      console.warn("Skeleton changed during color update, this should not happen.");
+      this.requestSkeletonUpdate();
     }
   }
 
@@ -1258,35 +1259,6 @@ Z`,
     super.hover = value;
     this.fullUpdate();
   }
-
-  //   set vertical(value: boolean) {
-  //     if (super.vertical !== value) {
-  //       super.vertical = value;
-  //       this.fullUpdate(this.data, this.keyProp, this.options!, this.ctx, new UUIDManager());
-  //     }
-  //   }
-  //   set collapsed(value: boolean) {
-  //     if (!super.collapsed && this.children_.length === 0) {
-  //       // Cannot collapse a non-collapsed node without children
-  //       return;
-  //     }
-  //     if (super.collapsed !== value) {
-  //       super.collapsed = value;
-  //       this.requestSkeletonUpdate();
-  //     }
-  //   }
-  //   set active(value: boolean) {
-  //     if (super.active !== value) {
-  //       super.active = value;
-  //       this.requestSkeletonUpdate();
-  //     }
-  //   }
-  //   set hover(value: boolean) {
-  //     if (super.hover !== value) {
-  //       super.hover = value;
-  //       this.requestSkeletonUpdate();
-  //     }
-  //   }
 }
 
 class Manager<T extends Data<T, Key>, Key extends string | number | symbol = "path"> {
@@ -1534,7 +1506,6 @@ export class Forest<T extends Data<T, Key>, Key extends string | number | symbol
         this.roots_.push(TreeNode.create<T, Key>(item, keyProp ?? this.keyProp_, options_, ctx ?? createContext(new OffscreenCanvas(0, 0)), this.manager));
       }
     }
-    // for (const root of this.roots_) root.fullUpdate(data, keyProp, options, ctx);
   }
 
   setActiveKey(key: string | number | undefined) {
