@@ -181,6 +181,8 @@ const datas: T[] = [
 ];
 // Ensure data conforms to Data interface with 'id' as key
 const treeData = ref("0");
+let version1 = ref(true);
+let version2 = ref(true);
 let tree = useTemplateRef<ComponentExposed<typeof Tree>>("_tree");
 let forest = useTemplateRef<ComponentExposed<typeof Forest>>("_forest");
 let tree_v2 = useTemplateRef<ComponentExposed<typeof TreeV2>>("_tree_v2");
@@ -231,12 +233,6 @@ function contextmenu2(e: CustomEvent<EventKind<"contextmenu", T, "id">>) {
   e.detail.originalEvent.preventDefault();
   e.detail.node?.setCollapsed();
 }
-
-let darkMode = ref(false);
-function switchScheme() {
-  document.documentElement.style.colorScheme = darkMode.value ? "only dark" : "only light";
-  darkMode.value = !darkMode.value;
-}
 </script>
 
 <template>
@@ -244,24 +240,34 @@ function switchScheme() {
   <p>Shift + Left Click = Switch direction</p>
   <p>Ctrl + Left Click = Scroll into view</p>
   <p>Right Click = Collapse or expand</p>
-  <label for="switch-scheme">Switch Scheme: </label>
-  <button id="switch-scheme" @click="switchScheme">{{ darkMode ? "Light" : "Dark" }}</button>
-  <label for="save-svg">Save SVG: </label>
-  <button id="save-svg" @click="saveSvg">Save</button>
-  <label for="tree-data">Tree Data: </label>
-  <select id="tree-data" title="Tree Data" v-model="treeData">
-    <option value="0">Arbitrary</option>
-    <option value="1">Shapes</option>
-    <option value="2">Lazy Evaluation</option>
-    <option value="*">All</option>
-  </select>
-  <br />
-  <label for="active-node">Active: </label>
-  <input type="text" id="active-node" title="Active Node" v-model="state.active.value" />
-  <label for="hover-node">Hover: </label>
-  <input type="text" id="hover-node" title="Hover Node" v-model="state.hover.value" />
-  <br />
-  <span class="container">
+  <p>
+    <label for="v1">Version 1: </label>
+    <input id="v1" type="checkbox" v-model="version1" />
+    &ensp;
+    <label for="v2">Version 2: </label>
+    <input id="v2" type="checkbox" v-model="version2" />
+  </p>
+  <p>
+    <label for="save-svg">Save SVG: </label>
+    <button id="save-svg" @click="saveSvg">Save</button>
+  </p>
+  <p>
+    <label for="tree-data">Tree Data: </label>
+    <select id="tree-data" title="Tree Data" v-model="treeData">
+      <option value="0">Arbitrary</option>
+      <option value="1">Shapes</option>
+      <option value="2">Lazy Evaluation</option>
+      <option value="*">All</option>
+    </select>
+  </p>
+  <p>
+    <label for="active-node">Active: </label>
+    <input type="text" id="active-node" title="Active Node" v-model="state.active.value" />
+    &ensp;
+    <label for="hover-node">Hover: </label>
+    <input type="text" id="hover-node" title="Hover Node" v-model="state.hover.value" />
+  </p>
+  <p class="container" v-if="version1">
     <Tree
       v-if="treeData !== '*'"
       ref="_tree"
@@ -274,18 +280,16 @@ function switchScheme() {
       @contextmenu="contextmenu"
     />
     <Forest v-else ref="_forest" :data="datas" :label-key="'id'" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
-  </span>
-  <br />
-  <span id="tree-v2">
+  </p>
+  <p id="tree-v2" class="container" v-if="version2">
     Tree (v2)<br />
     <TreeV2 v-if="treeData !== '*'" ref="_tree_v2" :data="datas[Number(treeData)]" :label-key="'id'" :options="undefined" @click="click2" @contextmenu="contextmenu2" />
     <ForestV2 v-else ref="_forest_v2" :data="datas" :label-key="'id'" :options="undefined" @click="click2" @contextmenu="contextmenu2" />
-  </span>
-  <br />
-  <div class="container">
+  </p>
+  <p class="container">
     <textarea v-if="treeData !== '*'" id="tree-data" title="Tree Data">{{ JSON.stringify(datas[Number(treeData)], null, 2) }}</textarea>
     <!-- <ListNode :node="datas[treeData]" :label-key="'id'" /> -->
-  </div>
+  </p>
 </template>
 
 <style>
