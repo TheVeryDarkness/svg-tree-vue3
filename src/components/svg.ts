@@ -1388,33 +1388,12 @@ export class Tree<T extends Data<T, Key>, Key extends string | number | symbol =
     this.root_.updateColor(options_);
   }
 
-  //   recordNodes() {
-  //     this.manager.nodes.clear();
-  //     this.manager.nodesByUUID.clear();
-  //     let queue: TreeNode<T, Key>[] = [this.root_];
-  //     while (queue.length > 0) {
-  //       const node = queue.shift();
-  //       if (!node) break;
-  //       if (!this.manager.nodes.has(node.key)) this.manager.nodes.set(node.key, []);
-  //       this.manager.nodes.get(node.key)?.push(node);
-  //       if (this.manager.nodesByUUID.has(node.uuid)) {
-  //         console.error("UUID collision detected, this should not happen.");
-  //       }
-  //       this.manager.nodesByUUID.set(node.uuid, node);
-  //       queue.push(...node.children);
-  //     }
-  //   }
-
   constructor(data: T, keyProp: Key, options?: PartialOptions, ctx?: OffscreenCanvasRenderingContext2D) {
     const options_ = mergeOptions(options);
-    if (needsWatchScheme(options)) {
-      schemeMatcher.addEventListener("change", this.watchScheme);
-    }
+    schemeMatcher.addEventListener("change", () => this.watchScheme());
     const ctx_ = ctx ?? createContext(new OffscreenCanvas(0, 0));
     this.root_ = TreeNode.create(data, keyProp, options_, ctx_, this.manager);
     this.options_ = options_;
-
-    // this.recordNodes();
 
     for (const type of ["click", "contextmenu"] as const) {
       this.root_.ref.addEventListener(type, (e) => {
@@ -1441,15 +1420,8 @@ export class Tree<T extends Data<T, Key>, Key extends string | number | symbol =
 
   update(data?: T, keyProp?: Key, options?: PartialOptions, ctx?: OffscreenCanvasRenderingContext2D) {
     const options_ = options;
-    if (needsWatchScheme(options) && !needsWatchScheme(this.options_)) {
-      schemeMatcher.addEventListener("change", this.watchScheme);
-    } else if (!needsWatchScheme(options) && needsWatchScheme(this.options_)) {
-      schemeMatcher.removeEventListener("change", this.watchScheme);
-    }
     this.options_ = options_;
     this.root_.fullUpdate(data, keyProp, options, ctx);
-
-    // this.recordNodes();
   }
 
   setActiveKey(key: string | number | undefined) {
@@ -1508,8 +1480,6 @@ export class Forest<T extends Data<T, Key>, Key extends string | number | symbol
   private readonly roots_: TreeNode<T, Key>[];
   private options_: PartialOptions;
   private keyProp_: Key;
-  private readonly nodes = new Map<string | number | undefined, TreeNode<T, Key>[]>();
-  private readonly nodesByUUID = new Map<number, TreeNode<T, Key>>();
   private readonly manager = new Manager<T, Key>();
   private readonly eventTarget = new EventTarget();
   private activeKey_: string | number | undefined = undefined;
@@ -1521,34 +1491,13 @@ export class Forest<T extends Data<T, Key>, Key extends string | number | symbol
     }
   }
 
-  recordNodes() {
-    this.nodes.clear();
-    this.nodesByUUID.clear();
-    let queue: TreeNode<T, Key>[] = [...this.roots_];
-    while (queue.length > 0) {
-      const node = queue.shift();
-      if (!node) break;
-      if (!this.nodes.has(node.key)) this.nodes.set(node.key, []);
-      this.nodes.get(node.key)?.push(node);
-      if (this.nodesByUUID.has(node.uuid)) {
-        console.error("UUID collision detected, this should not happen.");
-      }
-      this.nodesByUUID.set(node.uuid, node);
-      queue.push(...node.children);
-    }
-  }
-
   constructor(data: T[], keyProp: Key, options?: PartialOptions, ctx?: OffscreenCanvasRenderingContext2D) {
     const options_ = mergeOptions(options);
-    if (needsWatchScheme(options)) {
-      schemeMatcher.addEventListener("change", this.watchScheme);
-    }
+    schemeMatcher.addEventListener("change", () => this.watchScheme());
     const ctx_ = ctx ?? createContext(new OffscreenCanvas(0, 0));
     this.roots_ = data.map((item) => TreeNode.create(item, keyProp, options_, ctx_, this.manager));
     this.options_ = options_;
     this.keyProp_ = keyProp;
-
-    this.recordNodes();
 
     for (const root of this.roots_) {
       for (const type of ["click", "contextmenu"] as const) {
@@ -1577,11 +1526,6 @@ export class Forest<T extends Data<T, Key>, Key extends string | number | symbol
 
   update(data?: T[], keyProp?: Key, options?: PartialOptions, ctx?: OffscreenCanvasRenderingContext2D) {
     const options_ = options;
-    if (needsWatchScheme(options) && !needsWatchScheme(this.options_)) {
-      schemeMatcher.addEventListener("change", this.watchScheme);
-    } else if (!needsWatchScheme(options) && needsWatchScheme(this.options_)) {
-      schemeMatcher.removeEventListener("change", this.watchScheme);
-    }
     this.options_ = options_;
     if (data && data.length !== this.roots_.length) {
       // Recreate all roots if the number of roots has changed
@@ -1594,8 +1538,6 @@ export class Forest<T extends Data<T, Key>, Key extends string | number | symbol
       }
     }
     // for (const root of this.roots_) root.fullUpdate(data, keyProp, options, ctx);
-
-    this.recordNodes();
   }
 
   setActiveKey(key: string | number | undefined) {
