@@ -235,11 +235,13 @@ export function createContext(canvas: OffscreenCanvas) {
 
 export type Shape = "arrow" | "circle" | "diamond" | "triangle";
 
-export type Data<Child extends Data<Child, Key>, Key extends string | number | symbol = "path"> = {
+export type Lazy<T> = T[] | ((_: T) => T[]);
+export type Children<T> = { children: Lazy<T> };
+
+export type Data<Key extends string | number | symbol = "path"> = {
   name: string;
   color?: string;
   backgroundColor?: string;
-  children: Child[] | ((_: Data<Child, Key>) => Child[]);
   dashArray?: string | number;
   /**
    * @description The shape of the start point of the link from this node to its children.

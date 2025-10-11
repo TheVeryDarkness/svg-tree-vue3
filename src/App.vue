@@ -3,7 +3,6 @@ import { ref, useTemplateRef } from "vue";
 import Tree from "./components/Tree.vue";
 import { Data, Shape, TreeEvent } from "./components/types";
 import "./auto.css";
-// import { Tree as TreeV2 } from "./components/svg";
 import TreeV2 from "./components/TreeV2.vue";
 import ForestV2 from "./components/ForestV2.vue";
 import type { ComponentExposed } from "vue-component-type-helpers";
@@ -192,7 +191,7 @@ let state = {
   hover: ref<string | number | undefined>(undefined),
 };
 
-function click<T extends Data<T, "id">>($event: TreeEvent<T, MouseEvent>) {
+function click<T extends Data<"id">>($event: TreeEvent<T, MouseEvent>) {
   $event.event.stopPropagation();
   if ($event.event.shiftKey) {
     $event.setVertical();
@@ -203,7 +202,7 @@ function click<T extends Data<T, "id">>($event: TreeEvent<T, MouseEvent>) {
   }
 }
 
-function contextmenu<T extends Data<T, "id">>(event: TreeEvent<T, MouseEvent>) {
+function contextmenu<T extends Data<"id">>(event: TreeEvent<T, MouseEvent>) {
   event.event.preventDefault();
   event.setCollapsed();
 }

@@ -16,6 +16,7 @@ import {
   mergeColorOptions,
   ColorOptions,
   mergeShapeOptions,
+  Children,
 } from "./types";
 
 type UUID = number;
@@ -23,7 +24,7 @@ type UUID = number;
 /**
  * Saved properties for hot update
  */
-class NodeBase<T extends Data<T, Key>, Key extends string | number | symbol = "path"> {
+class NodeBase<T extends Data<Key>, Key extends string | number | symbol = "path"> {
   protected ctx: OffscreenCanvasRenderingContext2D;
   protected data_: T;
   protected options: PartialOptions;
@@ -86,7 +87,7 @@ class NodeBase<T extends Data<T, Key>, Key extends string | number | symbol = "p
     this.hover_ = hover_;
   }
 
-  protected get data(): Data<T, Key> {
+  protected get data(): Data<Key> {
     return this.data_;
   }
   protected get key(): string | number | undefined {
@@ -209,13 +210,13 @@ class NodeBase<T extends Data<T, Key>, Key extends string | number | symbol = "p
 }
 
 type Node = [SVGRectElement, SVGTextElement];
-type Child<T extends Data<T, Key>, Key extends string | number | symbol = "path"> = [SVGPathElement, SVGPathElement | null, TreeNode<T, Key>];
+type Child<T extends Data<Key> & Children<T>, Key extends string | number | symbol = "path"> = [SVGPathElement, SVGPathElement | null, TreeNode<T, Key>];
 type Extend = [SVGPathElement, SVGRectElement, SVGTextElement];
 
 /**
  * A virtual node class for SVG elements.
  */
-export class TreeNode<T extends Data<T, Key>, Key extends string | number | symbol = "path"> extends NodeBase<T, Key> {
+export class TreeNode<T extends Data<Key> & Children<T>, Key extends string | number | symbol = "path"> extends NodeBase<T, Key> {
   // private text: Position;
   private size: TreeNodeSize;
 
@@ -644,7 +645,7 @@ Z`,
     out_shape.setAttribute("svg-uuid", String(uuid));
   }
 
-  private static setupChild<T extends Data<T, Key>, Key extends string | number | symbol = "path">(
+  private static setupChild<T extends Data<Key> & Children<T>, Key extends string | number | symbol = "path">(
     [path, inShape, child]: Child<T, Key>,
     inChildFill: string | undefined,
     outColor: string | undefined,
@@ -768,13 +769,7 @@ Z`,
     node_text.setAttribute("svg-uuid", String(uuid));
   }
 
-  private static setupRoot<T extends Data<T, Key>, Key extends string | number | symbol = "path">(
-    ref_: SVGSVGElement,
-    key: string | number | undefined,
-    size: TreeNodeSize,
-    active: boolean,
-    hasActive: boolean,
-  ) {
+  private static setupRoot(ref_: SVGSVGElement, key: string | number | undefined, size: TreeNodeSize, active: boolean, hasActive: boolean) {
     ref_.classList.add("svg-tree-node");
     if (active) {
       ref_.classList.add("active");
@@ -797,7 +792,7 @@ Z`,
     ref_.setAttribute("viewBox", `0 0 ${size.bounding.width} ${size.bounding.height}`);
   }
 
-  private static setup<T extends Data<T, Key>, Key extends string | number | symbol = "path">(
+  private static setup<T extends Data<Key> & Children<T>, Key extends string | number | symbol = "path">(
     {
       radius,
       outColor,
@@ -1029,7 +1024,7 @@ Z`,
     manager.add(this);
   }
 
-  static create<T extends Data<T, Key>, Key extends string | number | symbol = "path">(
+  static create<T extends Data<Key> & Children<T>, Key extends string | number | symbol = "path">(
     data: T,
     keyProp: Key,
     options: PartialOptions,
@@ -1313,7 +1308,7 @@ Z`,
   }
 }
 
-class Manager<T extends Data<T, Key>, Key extends string | number | symbol = "path"> {
+class Manager<T extends Data<Key> & Children<T>, Key extends string | number | symbol = "path"> {
   private current = 0;
   readonly nodes = new Map<string | number | undefined, WeakRef<TreeNode<T, Key>>[]>();
   readonly nodesByUUID = new Map<number, WeakRef<TreeNode<T, Key>>>();
@@ -1382,7 +1377,7 @@ class Manager<T extends Data<T, Key>, Key extends string | number | symbol = "pa
   }
 }
 
-interface EventMap<T extends Data<T, Key>, Key extends string | number | symbol = "path"> {
+interface EventMap<T extends Data<Key> & Children<T>, Key extends string | number | symbol = "path"> {
   active: { node: TreeNode<T, Key>[]; key: string | number | undefined; uuid: number[] };
   click: { node?: TreeNode<T, Key>; originalEvent: MouseEvent; uuid?: number };
   contextmenu: { node?: TreeNode<T, Key>; originalEvent: MouseEvent; uuid?: number };
@@ -1390,15 +1385,15 @@ interface EventMap<T extends Data<T, Key>, Key extends string | number | symbol 
   mouseenter: { node: TreeNode<T, Key>; originalEvent: MouseEvent; uuid: number };
   mouseleave: { node: TreeNode<T, Key>; originalEvent: MouseEvent; uuid: number };
 }
-export type EventKind<K extends keyof EventMap<T, Key>, T extends Data<T, Key>, Key extends string | number | symbol = "path"> = EventMap<T, Key>[K];
-function event<K extends keyof EventMap<T, Key>, T extends Data<T, Key>, Key extends string | number | symbol = "path">(
+export type EventKind<K extends keyof EventMap<T, Key>, T extends Data<Key> & Children<T>, Key extends string | number | symbol = "path"> = EventMap<T, Key>[K];
+function event<K extends keyof EventMap<T, Key>, T extends Data<Key> & Children<T>, Key extends string | number | symbol = "path">(
   type: K,
   detail: EventKind<K, T, Key>,
 ): CustomEvent<EventKind<K, T, Key>> {
   return new CustomEvent<EventKind<K, T, Key>>(type, { detail });
 }
 
-export class Tree<T extends Data<T, Key>, Key extends string | number | symbol = "path"> {
+export class Tree<T extends Data<Key> & Children<T>, Key extends string | number | symbol = "path"> {
   private readonly root_: TreeNode<T, Key>;
   private options_: PartialOptions;
   private readonly manager = new Manager<T, Key>();
@@ -1508,7 +1503,7 @@ export class Tree<T extends Data<T, Key>, Key extends string | number | symbol =
   }
 }
 
-export class Forest<T extends Data<T, Key>, Key extends string | number | symbol = "path"> {
+export class Forest<T extends Data<Key> & Children<T>, Key extends string | number | symbol = "path"> {
   private readonly roots_: TreeNode<T, Key>[];
   private options_: PartialOptions;
   private keyProp_: Key;

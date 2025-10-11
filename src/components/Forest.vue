@@ -17,10 +17,10 @@
   />
 </template>
 
-<script setup lang="ts" generic="T extends Data<T, Key>, Key extends string | number | symbol = 'path'">
+<script setup lang="ts" generic="T extends Data<Key> & Children<T>, Key extends string | number | symbol = 'path'">
 import { computed, useTemplateRef } from "vue";
 import TreeNode from "./TreeNode.vue";
-import { createContext, Data, mergeOptions, Options, PartialOptions, TreeEvent } from "./types";
+import { Children, createContext, Data, mergeOptions, Options, PartialOptions, TreeEvent } from "./types";
 import { ExternalState } from "./state";
 import { ComponentExposed } from "vue-component-type-helpers";
 

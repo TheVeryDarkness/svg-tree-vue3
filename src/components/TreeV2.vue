@@ -2,10 +2,10 @@
   <span ref="_root" />
 </template>
 
-<script setup lang="ts" generic="T extends Data<T, Key>, Key extends string | number | symbol = 'path'">
+<script setup lang="ts" generic="T extends Data<Key> & Children<T>, Key extends string | number | symbol = 'path'">
 import { computed, onMounted, onUnmounted, onUpdated, useTemplateRef, watch } from "vue";
 import { EventKind, Tree, TreeNode } from "./svg";
-import { createContext, Data, mergeOptions, Options, PartialOptions } from "./types";
+import { Children, createContext, Data, mergeOptions, Options, PartialOptions } from "./types";
 
 onMounted(() => {
   // console.log("TreeV2 mounted");
