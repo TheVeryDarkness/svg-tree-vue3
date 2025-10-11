@@ -634,7 +634,7 @@ Z`,
     out_shape.classList.add("link");
     out_shape.style.fill = outSelfFill ?? "none";
     out_shape.style.strokeLinejoin = "round";
-    out_shape.style.vectorEffect = "non-scaling-stroke";
+    // out_shape.style.vectorEffect = "non-scaling-stroke";
 
     if (outColor) out_shape.style.color = outColor;
     out_shape.setAttribute("d", outPath);
@@ -695,7 +695,7 @@ Z`,
     extend_path.style.fill = "none";
     if (outColor) extend_path.style.color = outColor;
     extend_path.style.strokeLinejoin = "round";
-    extend_path.style.vectorEffect = "non-scaling-stroke";
+    // extend_path.style.vectorEffect = "non-scaling-stroke";
     extend_path.setAttribute("d", relative.link);
     extend_path.setAttribute("svg-uuid", String(uuid));
 
