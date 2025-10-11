@@ -15,7 +15,19 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: ["src/components/TreeNode.vue", "src/components/Tree.vue", "src/components/Forest.vue", "src/components/types.ts", "src/auto.css", "src/dark.css", "src/light.css"],
+      entry: [
+        "src/components/TreeNode.vue",
+        "src/components/Tree.vue",
+        "src/components/Forest.vue",
+        "src/components/TreeV2.vue",
+        "src/components/ForestV2.vue",
+        "src/components/state.ts",
+        "src/components/svg.ts",
+        "src/components/types.ts",
+        "src/auto.css",
+        "src/dark.css",
+        "src/light.css",
+      ],
       formats: ["es", "cjs"],
     },
     cssCodeSplit: true,
