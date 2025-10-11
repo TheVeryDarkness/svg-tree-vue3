@@ -219,7 +219,7 @@ class TreeNode<T extends Data<T, Key>, Key extends string | number | symbol = "p
   private size: TreeNodeSize;
 
   private uuid_: number;
-  private manager: UUIDManager;
+  private manager: Manager<T, Key>;
 
   private ref_: SVGSVGElement;
   private node: Node;
@@ -912,7 +912,7 @@ Z`,
     return [size, text];
   }
 
-  private constructor(data: T, keyProp: Key, options: PartialOptions, ctx: OffscreenCanvasRenderingContext2D, manager: UUIDManager, parent?: WeakRef<TreeNode<T, Key>>) {
+  private constructor(data: T, keyProp: Key, options: PartialOptions, ctx: OffscreenCanvasRenderingContext2D, manager: Manager<T, Key>, parent?: WeakRef<TreeNode<T, Key>>) {
     const name = data.name;
     const collapsed = typeof data.children === "function";
     const vertical = true;
@@ -1024,6 +1024,8 @@ Z`,
     );
     this.size = size;
     this.text = text;
+
+    manager.add(this);
   }
 
   static create<T extends Data<T, Key>, Key extends string | number | symbol = "path">(
@@ -1031,7 +1033,7 @@ Z`,
     keyProp: Key,
     options: PartialOptions,
     ctx: OffscreenCanvasRenderingContext2D,
-    manager: UUIDManager,
+    manager: Manager<T, Key>,
   ): TreeNode<T, Key> {
     return new TreeNode(data, keyProp, options, ctx, manager);
   }
@@ -1290,11 +1292,72 @@ Z`,
   //   }
 }
 
-class UUIDManager {
+class Manager<T extends Data<T, Key>, Key extends string | number | symbol = "path"> {
   private current = 0;
+  readonly nodes = new Map<string | number | undefined, WeakRef<TreeNode<T, Key>>[]>();
+  readonly nodesByUUID = new Map<number, WeakRef<TreeNode<T, Key>>>();
+
+  add(node: TreeNode<T, Key>) {
+    const nodeRef = new WeakRef(node);
+    if (!this.nodes.has(node.key)) this.nodes.set(node.key, []);
+    this.nodes.get(node.key)?.push(nodeRef);
+    if (this.nodesByUUID.has(node.uuid)) {
+      console.error("UUID collision detected, this should not happen.");
+    }
+    this.nodesByUUID.set(node.uuid, nodeRef);
+  }
+  remove(node: TreeNode<T, Key>) {
+    const nodeRef = new WeakRef(node);
+
+    const nodes = this.nodes.get(node.key);
+    if (nodes) {
+      const index = nodes.indexOf(nodeRef);
+      if (index !== -1) {
+        nodes.splice(index, 1);
+        if (nodes.length === 0) {
+          this.nodes.delete(node.key);
+        }
+      }
+    }
+    this.nodesByUUID.delete(node.uuid);
+  }
 
   next() {
     return this.current++;
+  }
+
+  findNodeByUUID(uuid: number): TreeNode<T, Key> | undefined {
+    return this.nodesByUUID.get(uuid)?.deref();
+  }
+  findNodesByKey(key: string | number | undefined): TreeNode<T, Key>[] {
+    if (key === undefined) return [];
+    const nodes = this.nodes.get(key);
+    if (!nodes) return [];
+    return nodes.map((ref) => ref.deref()).filter((ref) => ref !== undefined);
+  }
+
+  getEventTarget(e: Event): [TreeNode<T, Key>, number] | undefined {
+    const target = e.target;
+    if (!(target instanceof SVGElement)) {
+      // console.warn("Event target is not an SVGElement");
+      return;
+    }
+    const uuid_string = target.attributes.getNamedItem("svg-uuid")?.value;
+    if (!uuid_string) {
+      // console.log("Event target does not have a svg-uuid attribute", target);
+      return;
+    }
+    const uuid = Number(uuid_string);
+    if (isNaN(uuid)) {
+      // console.error("Invalid UUID");
+      return;
+    }
+    const node = this.findNodeByUUID(uuid);
+    if (!node) {
+      // console.error("Node not found for UUID:", uuid);
+      return;
+    }
+    return [node, uuid];
   }
 }
 
@@ -1316,9 +1379,7 @@ function event<K extends keyof EventMap<T, Key>, T extends Data<T, Key>, Key ext
 export class Tree<T extends Data<T, Key>, Key extends string | number | symbol = "path"> {
   private readonly root_: TreeNode<T, Key>;
   private options_: PartialOptions;
-  private readonly nodes = new Map<string | number | undefined, TreeNode<T, Key>[]>();
-  private readonly nodesByUUID = new Map<number, TreeNode<T, Key>>();
-  private readonly manager = new UUIDManager();
+  private readonly manager = new Manager<T, Key>();
   private readonly eventTarget = new EventTarget();
   private activeKey_: string | number | undefined = undefined;
 
@@ -1327,22 +1388,22 @@ export class Tree<T extends Data<T, Key>, Key extends string | number | symbol =
     this.root_.updateColor(options_);
   }
 
-  recordNodes() {
-    this.nodes.clear();
-    this.nodesByUUID.clear();
-    let queue: TreeNode<T, Key>[] = [this.root_];
-    while (queue.length > 0) {
-      const node = queue.shift();
-      if (!node) break;
-      if (!this.nodes.has(node.key)) this.nodes.set(node.key, []);
-      this.nodes.get(node.key)?.push(node);
-      if (this.nodesByUUID.has(node.uuid)) {
-        console.error("UUID collision detected, this should not happen.");
-      }
-      this.nodesByUUID.set(node.uuid, node);
-      queue.push(...node.children);
-    }
-  }
+  //   recordNodes() {
+  //     this.manager.nodes.clear();
+  //     this.manager.nodesByUUID.clear();
+  //     let queue: TreeNode<T, Key>[] = [this.root_];
+  //     while (queue.length > 0) {
+  //       const node = queue.shift();
+  //       if (!node) break;
+  //       if (!this.manager.nodes.has(node.key)) this.manager.nodes.set(node.key, []);
+  //       this.manager.nodes.get(node.key)?.push(node);
+  //       if (this.manager.nodesByUUID.has(node.uuid)) {
+  //         console.error("UUID collision detected, this should not happen.");
+  //       }
+  //       this.manager.nodesByUUID.set(node.uuid, node);
+  //       queue.push(...node.children);
+  //     }
+  //   }
 
   constructor(data: T, keyProp: Key, options?: PartialOptions, ctx?: OffscreenCanvasRenderingContext2D) {
     const options_ = mergeOptions(options);
@@ -1353,11 +1414,11 @@ export class Tree<T extends Data<T, Key>, Key extends string | number | symbol =
     this.root_ = TreeNode.create(data, keyProp, options_, ctx_, this.manager);
     this.options_ = options_;
 
-    this.recordNodes();
+    // this.recordNodes();
 
     for (const type of ["click", "contextmenu"] as const) {
       this.root_.ref.addEventListener(type, (e) => {
-        const target = this.getEventTarget(e);
+        const target = this.manager.getEventTarget(e);
         if (!target) {
           this.eventTarget.dispatchEvent(event<typeof type, T, Key>(type, { originalEvent: e }));
           return;
@@ -1368,7 +1429,7 @@ export class Tree<T extends Data<T, Key>, Key extends string | number | symbol =
     }
     for (const type of ["mouseover", "mouseout"] as const) {
       this.root_.ref.addEventListener(type, (e) => {
-        const target = this.getEventTarget(e);
+        const target = this.manager.getEventTarget(e);
         if (!target) return;
         const [node, uuid] = target;
         node.setHover(type === "mouseover");
@@ -1376,37 +1437,6 @@ export class Tree<T extends Data<T, Key>, Key extends string | number | symbol =
         this.eventTarget.dispatchEvent(event<typeof eventType, T, Key>(eventType, { node, originalEvent: e, uuid }));
       });
     }
-  }
-
-  protected findNodeByUUID(uuid: number): TreeNode<T, Key> | undefined {
-    return this.nodesByUUID.get(uuid);
-  }
-  protected findNodesByKey(key: string | number | undefined): TreeNode<T, Key>[] {
-    return key === undefined ? [] : (this.nodes.get(key) ?? []);
-  }
-
-  protected getEventTarget(e: Event): [TreeNode<T, Key>, number] | undefined {
-    const target = e.target;
-    if (!(target instanceof SVGElement)) {
-      //   console.warn("Event target is not an SVGElement");
-      return;
-    }
-    const uuid_string = target.attributes.getNamedItem("svg-uuid")?.value;
-    if (!uuid_string) {
-      //   console.log("Event target does not have a svg-uuid attribute", target);
-      return;
-    }
-    const uuid = Number(uuid_string);
-    if (isNaN(uuid)) {
-      //   console.error("Invalid UUID");
-      return;
-    }
-    const node = this.findNodeByUUID(uuid);
-    if (!node) {
-      //   console.error("Node not found for UUID:", uuid);
-      return;
-    }
-    return [node, uuid];
   }
 
   update(data?: T, keyProp?: Key, options?: PartialOptions, ctx?: OffscreenCanvasRenderingContext2D) {
@@ -1419,13 +1449,13 @@ export class Tree<T extends Data<T, Key>, Key extends string | number | symbol =
     this.options_ = options_;
     this.root_.fullUpdate(data, keyProp, options, ctx);
 
-    this.recordNodes();
+    // this.recordNodes();
   }
 
   setActiveKey(key: string | number | undefined) {
     if (this.activeKey_ === key) return;
-    const prevActiveNodes = this.findNodesByKey(this.activeKey_);
-    const newActiveNodes = this.findNodesByKey(key);
+    const prevActiveNodes = this.manager.findNodesByKey(this.activeKey_);
+    const newActiveNodes = this.manager.findNodesByKey(key);
     const hasActive = newActiveNodes.length > 0;
     for (const node of prevActiveNodes) {
       node.setActive(false, hasActive);
@@ -1480,7 +1510,7 @@ export class Forest<T extends Data<T, Key>, Key extends string | number | symbol
   private keyProp_: Key;
   private readonly nodes = new Map<string | number | undefined, TreeNode<T, Key>[]>();
   private readonly nodesByUUID = new Map<number, TreeNode<T, Key>>();
-  private readonly manager = new UUIDManager();
+  private readonly manager = new Manager<T, Key>();
   private readonly eventTarget = new EventTarget();
   private activeKey_: string | number | undefined = undefined;
 
@@ -1523,7 +1553,7 @@ export class Forest<T extends Data<T, Key>, Key extends string | number | symbol
     for (const root of this.roots_) {
       for (const type of ["click", "contextmenu"] as const) {
         root.ref.addEventListener(type, (e) => {
-          const target = this.getEventTarget(e);
+          const target = this.manager.getEventTarget(e);
           if (!target) {
             this.eventTarget.dispatchEvent(event<typeof type, T, Key>(type, { originalEvent: e }));
             return;
@@ -1534,7 +1564,7 @@ export class Forest<T extends Data<T, Key>, Key extends string | number | symbol
       }
       for (const type of ["mouseover", "mouseout"] as const) {
         root.ref.addEventListener(type, (e) => {
-          const target = this.getEventTarget(e);
+          const target = this.manager.getEventTarget(e);
           if (!target) return;
           const [node, uuid] = target;
           node.setHover(type === "mouseover");
@@ -1543,37 +1573,6 @@ export class Forest<T extends Data<T, Key>, Key extends string | number | symbol
         });
       }
     }
-  }
-
-  protected findNodeByUUID(uuid: number): TreeNode<T, Key> | undefined {
-    return this.nodesByUUID.get(uuid);
-  }
-  protected findNodesByKey(key: string | number | undefined): TreeNode<T, Key>[] {
-    return key === undefined ? [] : (this.nodes.get(key) ?? []);
-  }
-
-  protected getEventTarget(e: Event): [TreeNode<T, Key>, number] | undefined {
-    const target = e.target;
-    if (!(target instanceof SVGElement)) {
-      // console.warn("Event target is not an SVGElement");
-      return;
-    }
-    const uuid_string = target.attributes.getNamedItem("svg-uuid")?.value;
-    if (!uuid_string) {
-      // console.log("Event target does not have a svg-uuid attribute", target);
-      return;
-    }
-    const uuid = Number(uuid_string);
-    if (isNaN(uuid)) {
-      // console.error("Invalid UUID");
-      return;
-    }
-    const node = this.findNodeByUUID(uuid);
-    if (!node) {
-      // console.error("Node not found for UUID:", uuid);
-      return;
-    }
-    return [node, uuid];
   }
 
   update(data?: T[], keyProp?: Key, options?: PartialOptions, ctx?: OffscreenCanvasRenderingContext2D) {
@@ -1601,8 +1600,8 @@ export class Forest<T extends Data<T, Key>, Key extends string | number | symbol
 
   setActiveKey(key: string | number | undefined) {
     if (this.activeKey_ === key) return;
-    const prevActiveNodes = this.findNodesByKey(this.activeKey_);
-    const newActiveNodes = this.findNodesByKey(key);
+    const prevActiveNodes = this.manager.findNodesByKey(this.activeKey_);
+    const newActiveNodes = this.manager.findNodesByKey(key);
     const hasActive = newActiveNodes.length > 0;
     for (const node of prevActiveNodes) {
       node.setActive(false, hasActive);
