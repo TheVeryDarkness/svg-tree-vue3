@@ -79,4 +79,13 @@ watch(
     }
   },
 );
+watch(
+  () => props.options,
+  (newData) => {
+    if (forest) {
+      forest.update(undefined, undefined, newData);
+    }
+  },
+  { deep: true },
+);
 </script>

@@ -78,4 +78,13 @@ watch(
     }
   },
 );
+watch(
+  () => props.options,
+  (newData) => {
+    if (tree) {
+      tree.update(undefined, undefined, newData);
+    }
+  },
+  { deep: true },
+);
 </script>
