@@ -4,7 +4,7 @@
 
 <script setup lang="ts" generic="T extends Data<T, Key>, Key extends string | number | symbol = 'path'">
 import { computed, onMounted, onUnmounted, onUpdated, useTemplateRef, watch } from "vue";
-import { EventKind, Forest } from "./svg";
+import { EventKind, Forest, TreeNode } from "./svg";
 import { createContext, Data, mergeOptions, Options, PartialOptions } from "./types";
 
 onMounted(() => {
@@ -34,6 +34,9 @@ defineExpose({
   svg: computed(() => forest?.svg ?? null),
   setActiveKey(key: string | number | undefined) {
     forest?.setActiveKey(key);
+  },
+  setActiveNode(node: TreeNode<T, Key> | undefined) {
+    forest?.setActiveNode(node);
   },
 });
 

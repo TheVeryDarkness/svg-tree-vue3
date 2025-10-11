@@ -25,7 +25,7 @@ type UUID = number;
  */
 class NodeBase<T extends Data<T, Key>, Key extends string | number | symbol = "path"> {
   protected ctx: OffscreenCanvasRenderingContext2D;
-  protected data: T;
+  protected data_: T;
   protected options: PartialOptions;
   protected keyProp: Key;
 
@@ -51,11 +51,11 @@ class NodeBase<T extends Data<T, Key>, Key extends string | number | symbol = "p
     hover_: boolean,
   ) {
     this.ctx = ctx;
-    this.data = data;
+    this.data_ = data;
     this.options = options;
     this.keyProp = keyProp;
 
-    this.key_ = this.data[this.keyProp];
+    this.key_ = this.data_[this.keyProp];
 
     this.vertical_ = vertical_;
     this.collapsed_ = collapsed_;
@@ -74,11 +74,11 @@ class NodeBase<T extends Data<T, Key>, Key extends string | number | symbol = "p
     hover_: boolean,
   ) {
     this.ctx = ctx;
-    this.data = data;
+    this.data_ = data;
     this.options = options;
     this.keyProp = keyProp;
 
-    this.key_ = this.data[this.keyProp];
+    this.key_ = this.data_[this.keyProp];
 
     this.vertical_ = vertical_;
     this.collapsed_ = collapsed_;
@@ -86,15 +86,18 @@ class NodeBase<T extends Data<T, Key>, Key extends string | number | symbol = "p
     this.hover_ = hover_;
   }
 
+  protected get data(): Data<T, Key> {
+    return this.data_;
+  }
   protected get key(): string | number | undefined {
     return this.key_;
   }
   protected get name(): string {
-    return this.data.name;
+    return this.data_.name;
   }
 
   protected get extensible(): boolean {
-    return this.data.extensible ?? false;
+    return this.data_.extensible ?? false;
   }
 
   protected get radius() {
@@ -106,31 +109,31 @@ class NodeBase<T extends Data<T, Key>, Key extends string | number | symbol = "p
   }
 
   protected get borderColor(): string | undefined {
-    return this.data?.color ?? defaultOptions.color.borderColor;
+    return this.data_?.color ?? defaultOptions.color.borderColor;
   }
   protected get textColor(): string | undefined {
-    return this.data?.color ?? (this.active ? defaultOptions.color.textActiveColor : this.hover ? defaultOptions.color.textHoverColor : defaultOptions.color.textColor);
+    return this.data_?.color ?? (this.active ? defaultOptions.color.textActiveColor : this.hover ? defaultOptions.color.textHoverColor : defaultOptions.color.textColor);
   }
   protected get backgroundColor(): string | undefined {
-    return this.data?.backgroundColor ?? defaultOptions.color.backgroundColor;
+    return this.data_?.backgroundColor ?? defaultOptions.color.backgroundColor;
   }
   protected get dashArray(): string | number | undefined {
-    return this.data.dashArray;
+    return this.data_.dashArray;
   }
   protected get outSelfShape(): Shape | undefined {
-    return this.data.outSelfShape;
+    return this.data_.outSelfShape;
   }
   protected get outSelfFill(): string | undefined {
-    return this.data.outSelfFill;
+    return this.data_.outSelfFill;
   }
   protected get outColor(): string | undefined {
-    return this.data.outColor ?? this.data.color ?? this.options?.color?.borderColor ?? defaultOptions.color.borderColor;
+    return this.data_.outColor ?? this.data_.color ?? this.options?.color?.borderColor ?? defaultOptions.color.borderColor;
   }
   protected get inChildrenShape(): (Shape | undefined)[] | undefined {
-    return this.data.inChildrenShape;
+    return this.data_.inChildrenShape;
   }
   protected get inChildrenFill(): (string | undefined)[] | undefined {
-    return this.data.inChildrenFill;
+    return this.data_.inChildrenFill;
   }
   protected get shadowColor(): string | undefined {
     return this.options?.color?.shadowColor ?? defaultOptions.color.shadowColor;
@@ -1078,7 +1081,7 @@ Z`,
     return skeletonChanged;
   }
 
-  fullUpdate(data: T = this.data, keyProp: Key = this.keyProp, options: PartialOptions = this.options, ctx: OffscreenCanvasRenderingContext2D = this.ctx) {
+  fullUpdate(data: T = this.data_, keyProp: Key = this.keyProp, options: PartialOptions = this.options, ctx: OffscreenCanvasRenderingContext2D = this.ctx) {
     const collapsed = this.collapsed; // typeof data.children === "function";
     const vertical = this.vertical; // true;
 
@@ -1200,7 +1203,7 @@ Z`,
       this.options.color = options;
     }
 
-    super.reset(this.ctx, this.data, this.options, this.keyProp, vertical, collapsed, active, hover);
+    super.reset(this.ctx, this.data_, this.options, this.keyProp, vertical, collapsed, active, hover);
 
     for (const [, , child] of this.children_) {
       child.updateColor(options);
@@ -1283,6 +1286,30 @@ Z`,
     if (super.hover === value) return;
     super.hover = value;
     this.fullUpdate();
+  }
+
+  /**
+   * The original data object used to create this node.
+   *
+   * Use for reference only, do not modify.
+   */
+  get data() {
+    return super.data;
+  }
+  get collapsed(): boolean {
+    return super.collapsed;
+  }
+  get active(): boolean {
+    return super.active;
+  }
+  get hasActive(): boolean {
+    return super.hasActive;
+  }
+  get hover(): boolean {
+    return super.hover;
+  }
+  get vertical(): boolean {
+    return super.vertical;
   }
 }
 
@@ -1419,6 +1446,16 @@ export class Tree<T extends Data<T, Key>, Key extends string | number | symbol =
     this.root_.fullUpdate(data, keyProp, options, ctx);
   }
 
+  setActiveNode(node: TreeNode<T, Key> | undefined) {
+    const hasActive = node !== undefined;
+    for (const node_ of this.manager.nodes.values()) {
+      const derefNode = node_[0]?.deref();
+      if (derefNode) derefNode.setActive(derefNode === node, hasActive);
+    }
+
+    this.activeKey_ = node?.key;
+    this.eventTarget.dispatchEvent(event<"active", T, Key>("active", { node: node ? [node] : [], key: node?.key, uuid: node ? [node.uuid] : [] }));
+  }
   setActiveKey(key: string | number | undefined) {
     if (this.activeKey_ === key) return;
     const prevActiveNodes = this.manager.findNodesByKey(this.activeKey_);
