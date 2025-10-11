@@ -18,8 +18,9 @@
 <script setup lang="ts" generic="T extends Data<T, Key>, Key extends string | number | symbol = 'path'">
 import { computed, useTemplateRef } from "vue";
 import TreeNode from "./TreeNode.vue";
-import { createContext, Data, ExternalState, mergeOptions, Options, PartialOptions, TreeEvent } from "./types";
+import { createContext, Data, mergeOptions, Options, PartialOptions, TreeEvent } from "./types";
 import type { ComponentExposed } from "vue-component-type-helpers";
+import type { ExternalState } from "./state";
 
 // Props.
 const props = defineProps<{
@@ -33,8 +34,9 @@ const options = computed<Options>(() => mergeOptions(props.options));
 const canvas = new OffscreenCanvas(100, 100);
 const ctx = createContext(canvas);
 
-// Expose
 const root = useTemplateRef<ComponentExposed<typeof TreeNode>>("_root");
+
+// Expose
 defineExpose({ root, svg: computed(() => root.value?.svg ?? null) });
 
 // Emits.

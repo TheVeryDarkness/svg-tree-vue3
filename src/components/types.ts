@@ -1,5 +1,31 @@
-import type { Ref } from "vue";
-
+export interface ColorOptions {
+  /**
+   * Stroke color of node borders and links.
+   */
+  borderColor?: string;
+  /**
+   * Fill color of nodes.
+   */
+  backgroundColor?: string;
+  /**
+   * Fill color of node shadows.
+   */
+  shadowColor?: string;
+  /**
+   * Fill color of texts.
+   *
+   * May be overriden by {@link Data}.
+   */
+  textColor?: string;
+  /**
+   * Fill color of texts when hovering.
+   */
+  textHoverColor?: string;
+  /**
+   * Fill color of texts when active.
+   */
+  textActiveColor?: string;
+}
 export interface TextOptions {
   /**
    * Font weight of texts.
@@ -35,7 +61,7 @@ export interface LayoutOptions {
   radius: number;
 }
 export interface FontOptions {
-  fontFamily: string;
+  fontFamily?: string;
   fontSize: number;
 }
 export interface ShapeOptions {
@@ -60,11 +86,11 @@ export interface ShapeOptions {
 //   dblclick: number;
 // }
 export interface Options {
+  color: ColorOptions;
   text: TextOptions;
   layout: LayoutOptions;
   font: FontOptions;
   shape: ShapeOptions;
-  // control: ControlOptions;
 }
 
 type DeepPartial<T> = {
@@ -72,8 +98,42 @@ type DeepPartial<T> = {
 };
 
 export type PartialOptions = DeepPartial<Options> | undefined;
+export type PartialColorOptions = DeepPartial<ColorOptions> | undefined;
+export type PartialShapeOptions = DeepPartial<ShapeOptions> | undefined;
 
-export const defaultLayoutOptions: LayoutOptions = {
+export const defaultLightColorOptions: Readonly<ColorOptions> = {
+  borderColor: "gray",
+  backgroundColor: "white",
+  shadowColor: "darkgray",
+  textColor: "black",
+  textHoverColor: "darkcyan",
+  textActiveColor: "darkcyan",
+};
+export const defaultDarkColorOptions: Readonly<ColorOptions> = {
+  borderColor: "lightgray",
+  backgroundColor: "darkgray",
+  shadowColor: "black",
+  textColor: "white",
+  textHoverColor: "cyan",
+  textActiveColor: "cyan",
+};
+export const schemeMatcher = window.matchMedia("(prefers-color-scheme: dark)");
+schemeMatcher.addEventListener("change", (e) => {
+  const colorKeys = ["borderColor", "backgroundColor", "shadowColor", "textColor", "textHoverColor", "textActiveColor"] as const;
+  if (e.matches) {
+    defaultOptions.color = defaultDarkColorOptions;
+    for (const key of colorKeys) {
+      defaultColorOptions[key as keyof ColorOptions] = defaultDarkColorOptions[key as keyof ColorOptions];
+    }
+  } else {
+    defaultOptions.color = defaultLightColorOptions;
+    for (const key of colorKeys) {
+      defaultColorOptions[key as keyof ColorOptions] = defaultLightColorOptions[key as keyof ColorOptions];
+    }
+  }
+});
+export const defaultColorOptions: ColorOptions = schemeMatcher.matches ? defaultDarkColorOptions : defaultLightColorOptions;
+export const defaultLayoutOptions: Readonly<LayoutOptions> = {
   indentX: 8,
   indentY: 16,
   marginX: 20,
@@ -82,16 +142,16 @@ export const defaultLayoutOptions: LayoutOptions = {
   paddingY: 8,
   radius: 4,
 };
-export const defaultTextOptions: TextOptions = {
+export const defaultTextOptions: Readonly<TextOptions> = {
   textWeight: 400,
   textHoverWeight: 700,
   textActiveWeight: 1000,
 };
-export const defaultFontOptions: FontOptions = {
-  fontFamily: "JetBrains Mono",
+export const defaultFontOptions: Readonly<FontOptions> = {
+  fontFamily: undefined,
   fontSize: 14,
 };
-export const defaultShapeOptions: ShapeOptions = {
+export const defaultShapeOptions: Readonly<ShapeOptions> = {
   arrow: {
     width: 8,
     length: 8,
@@ -109,16 +169,36 @@ export const defaultShapeOptions: ShapeOptions = {
     length: 8,
   },
 };
-// export const defaultControlOptions: ControlOptions = {
-//   dblclick: 300,
-// };
 export const defaultOptions: Options = {
+  color: defaultColorOptions,
   text: defaultTextOptions,
   layout: defaultLayoutOptions,
   font: defaultFontOptions,
   shape: defaultShapeOptions,
-  // control: defaultControlOptions,
 };
+
+/**
+ * Merges the default options with the provided options.
+ * @param options Partial options to merge with the default options.
+ * @returns The merged options.
+ */
+export function mergeColorOptions(options: PartialColorOptions | undefined): ColorOptions {
+  return { ...defaultColorOptions, ...options };
+}
+
+/**
+ * Merges the default options with the provided options.
+ * @param options Partial options to merge with the default options.
+ * @returns The merged options.
+ */
+export function mergeShapeOptions(options: PartialShapeOptions | undefined): ShapeOptions {
+  return {
+    arrow: { ...defaultShapeOptions.arrow, ...options?.arrow },
+    circle: { ...defaultShapeOptions.circle, ...options?.circle },
+    diamond: { ...defaultShapeOptions.diamond, ...options?.diamond },
+    triangle: { ...defaultShapeOptions.triangle, ...options?.triangle },
+  };
+}
 
 /**
  * Merges the default options with the provided options.
@@ -127,17 +207,23 @@ export const defaultOptions: Options = {
  */
 export function mergeOptions(options: PartialOptions | undefined): Options {
   return {
+    color: mergeColorOptions(options?.color),
     text: { ...defaultTextOptions, ...options?.text },
     layout: { ...defaultLayoutOptions, ...options?.layout },
     font: { ...defaultFontOptions, ...options?.font },
-    shape: {
-      arrow: { ...defaultShapeOptions.arrow, ...options?.shape?.arrow },
-      circle: { ...defaultShapeOptions.circle, ...options?.shape?.circle },
-      diamond: { ...defaultShapeOptions.diamond, ...options?.shape?.diamond },
-      triangle: { ...defaultShapeOptions.triangle, ...options?.shape?.triangle },
-    },
-    // control: { ...defaultControlOptions, ...options?.control },
+    shape: mergeShapeOptions(options?.shape),
   };
+}
+export function needsWatchScheme(options: PartialOptions | undefined): boolean {
+  return (
+    options?.color === undefined ||
+    options.color.textColor === undefined ||
+    options.color.backgroundColor === undefined ||
+    options.color.borderColor === undefined ||
+    options.color.shadowColor === undefined ||
+    options.color.textHoverColor === undefined ||
+    options.color.textActiveColor === undefined
+  );
 }
 
 export function createContext(canvas: OffscreenCanvas) {
@@ -155,6 +241,9 @@ export type Data<Child extends Data<Child, Key>, Key extends string | number | s
   backgroundColor?: string;
   children: Child[] | ((_: Data<Child, Key>) => Child[]);
   dashArray?: string | number;
+  /**
+   * @description The shape of the start point of the link from this node to its children.
+   */
   outSelfShape?: Shape;
   /**
    * @description The fill color of the outSelfShape. If not provided, it will be 'none'.
@@ -166,8 +255,14 @@ export type Data<Child extends Data<Child, Key>, Key extends string | number | s
    * You can also use 'currentColor' to use the current stroke color.
    */
   outColor?: string;
+  /**
+   * @description The shape of the end points of links from this node to its children.
+   */
   inChildrenShape?: (Shape | undefined)[];
   inChildrenFill?: (string | undefined)[];
+  /**
+   * @description Whether the node has an automatically generated extensible marker (after its children if any).
+   */
   extensible?: boolean;
 } & {
   [key in Key]?: string | number | undefined;
@@ -178,9 +273,30 @@ export interface Rectangle {
   width: number;
   height: number;
 }
+export interface Size {
+  width: number;
+  height: number;
+}
+export interface Position {
+  x: number;
+  y: number;
+}
+export interface Relative {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  link: string;
+  in?: string;
+}
 export interface TreeNodeSize {
   bounding: { width: number; height: number };
   name: Rectangle;
+}
+export interface TextSize {
+  width: number;
+  height: number;
+  baselineOffsetY: number;
 }
 
 export interface TreeEvent<T, E> {
@@ -191,9 +307,4 @@ export interface TreeEvent<T, E> {
   setVertical(vertical?: boolean): void;
   getCollapsed(): boolean;
   getVertical(): boolean;
-}
-
-export interface ExternalState {
-  active: Ref<number | string | undefined>;
-  hover: Ref<number | string | undefined>;
 }
