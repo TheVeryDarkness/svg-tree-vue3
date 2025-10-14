@@ -65,7 +65,7 @@
     "prepublishOnly": "vue-tsc -b && vite build"
   },
   "dependencies": {
-    "tree2svg": "^1.0.1",
+    "tree2svg": "^1.0.3",
     "vue": "^3.5.17"
   },
   "devDependencies": {

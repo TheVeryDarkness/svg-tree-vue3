@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       tree2svg:
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.0.3
+        version: 1.0.3
       vue:
         specifier: ^3.5.17
         version: 3.5.17(typescript@5.6.3)
@@ -706,8 +706,8 @@ packages:
     resolution: {integrity: sha512-tX5e7OM1HnYr2+a2C/4V0htOcSQcoSTH9KgJnVvNm5zm/cyEWKJ7j7YutsH9CxMdtOkkLFy2AHrMci9IM8IPZQ==}
     engines: {node: '>=12.0.0'}
 
-  tree2svg@1.0.0:
-    resolution: {integrity: sha512-qZLkcbH/7/Nqgur7ojpB/p9FLivNWdQhZkIVSuTyiEfQMGbw30e5u0xe1Had3bWyk27aAsE0cFCbOTRgX6sn0w==}
+  tree2svg@1.0.3:
+    resolution: {integrity: sha512-81XQaQtKbGj0Ma+p62e6+EzWzYGiELOCJMWN/zPNLAojkh6hrhvQaYrf0CNCBD5cc0nXHMhNDsaSq+6wYJLanw==}
 
   typescript@5.6.3:
     resolution: {integrity: sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw==}
@@ -1413,7 +1413,7 @@ snapshots:
       fdir: 6.4.6(picomatch@4.0.2)
       picomatch: 4.0.2
 
-  tree2svg@1.0.0: {}
+  tree2svg@1.0.3: {}
 
   typescript@5.6.3: {}
 

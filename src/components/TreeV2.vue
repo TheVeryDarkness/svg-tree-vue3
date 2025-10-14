@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends Data<Key> & Children<T>, Key extends string | number | symbol = 'path'">
-import { computed, onMounted, onUnmounted, onUpdated, useTemplateRef, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, onUpdated, useTemplateRef, watch } from "vue";
 import { EventKind, Tree, TreeNode } from "tree2svg/svg";
 import { Children, createContext, Data, mergeOptions, Options, PartialOptions } from "tree2svg/types";
 
@@ -60,7 +60,7 @@ onMounted(() => {
     tree.addEventListener("mouseleave", (e) => emit("mouseleave", e));
   }
 });
-onUnmounted(() => {
+onBeforeUnmount(() => {
   if (root.value) tree?.unmountFrom(root.value);
   tree = null;
 });

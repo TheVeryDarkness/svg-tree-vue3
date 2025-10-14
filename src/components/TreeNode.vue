@@ -12,7 +12,7 @@
     xmlns:xlink="http://www.w3.org/1999/xlink"
   >
     <!-- Shadow part -->
-    <rect class="shadow" :x="rect.x + 4" :y="rect.y + 4" :rx="radius" :width="rect.width" :height="rect.height" v-if="collapsed" />
+    <rect class="shadow" :x="rect.x + 4" :y="rect.y + 4" :rx="radius" :width="rect.width" :height="rect.height" :style="shadowStyle" v-if="collapsed" />
 
     <!-- Self part -->
     <rect
@@ -48,12 +48,18 @@
     <!-- <rect :width="width" :height="height" stroke="red" fill="none" /> -->
 
     <!-- Out part -->
-    <path v-if="!collapsed" :fill="props.node.outSelfFill ?? 'none'" class="link" stroke-linejoin="round" :style="outStyle" :d="out?.[0]" />
+    <path v-if="!collapsed" :fill="props.node.outSelfFill ?? 'none'" class="link" stroke-linejoin="round" :style="linkStyle" :d="out?.[0]" />
+    <text class="text note" v-if="noteText[0]" :x="noteText[0].x" :y="noteText[0].y" :style="noteStyle" alignment-baseline="hanging" text-anchor="end">
+      {{ noteText[0].text }}
+    </text>
+    <text class="text note" v-if="noteText[1]" :x="noteText[1].x" :y="noteText[1].y" :style="noteStyle" alignment-baseline="hanging" text-anchor="start">
+      {{ noteText[1].text }}
+    </text>
 
     <!-- Children part -->
     <tree-node
       v-for="(value, index) of node.children"
-      v-if="!collapsed"
+      v-if="!collapsed && node.children instanceof Array"
       ref="children"
       :node="value"
       :key="index"
@@ -69,12 +75,40 @@
       @active="emit('active', $event)"
       @contextmenu="emit('contextmenu', $event)"
     ></tree-node>
+    <text
+      class="text note"
+      v-for="(rel, index) of relative"
+      :key="index"
+      v-if="!collapsed"
+      v-show="rel?.note[0]"
+      :x="rel.note[0]?.x"
+      :y="rel.note[0]?.y"
+      :style="noteStyle"
+      :alignment-baseline="rel.note[0]?.yDirection ? 'hanging' : 'baseline'"
+      :text-anchor="rel.note[0]?.xDirection ? 'start' : 'end'"
+    >
+      {{ rel?.note[0]?.text }}
+    </text>
+    <text
+      class="text note"
+      v-for="(rel, index) of relative"
+      :key="index"
+      v-if="!collapsed"
+      v-show="rel?.note[1]"
+      :x="rel.note[1]?.x"
+      :y="rel.note[1]?.y"
+      :style="noteStyle"
+      :alignment-baseline="rel.note[1]?.yDirection ? 'hanging' : 'baseline'"
+      :text-anchor="rel.note[1]?.xDirection ? 'start' : 'end'"
+    >
+      {{ rel?.note[1]?.text }}
+    </text>
     <path
       v-for="(_, index) of node.children"
       v-if="!collapsed"
       :key="index"
       fill="none"
-      :style="outStyle"
+      :style="linkStyle"
       class="link"
       :d="relative[index]?.link"
       :stroke-dasharray="node.dashArray"
@@ -84,14 +118,14 @@
       v-if="!collapsed"
       :key="index"
       :fill="props.node.inChildrenFill?.[index] ?? 'none'"
-      :style="outStyle"
+      :style="linkStyle"
       class="link"
       stroke-linejoin="round"
       :d="relative[index]?.in"
     />
 
     <!-- Extend part -->
-    <path v-if="!collapsed && node.extensible" fill="none" class="link extend" :style="outStyle" :d="extend.link" />
+    <path v-if="!collapsed && node.extensible" fill="none" class="link extend" :style="linkStyle" :d="extend.link" />
     <rect
       v-if="!collapsed && node.extensible"
       :x="extendRect.x"
@@ -194,9 +228,13 @@ const fontWeight = computed(function (): number {
 
 const ctxFont = computed(() => `${fontWeight.value} ${fontSize}px ${fontFamily}`);
 
+const textColor = computed(
+  () =>
+    props.node.textColor ?? (active.value ? props.options.color.textActiveColor : hover.value ? props.options.color.textHoverColor : props.options.color.textColor) ?? undefined,
+);
 const textStyle = computed(function (): StyleValue {
   return {
-    fill: props.node.color ?? undefined,
+    fill: textColor.value,
     userSelect: "none",
     fontWeight: fontWeight.value,
     fontFamily,
@@ -204,16 +242,34 @@ const textStyle = computed(function (): StyleValue {
   };
 });
 
-const outStyle = computed(function (): StyleValue {
+const noteStyle = computed(function (): StyleValue {
   return {
-    color: props.node.outColor ?? props.node.color ?? undefined,
+    fill: textColor.value,
+    userSelect: "none",
+    fontWeight: textWeight,
+    fontFamily: props.options.font.noteFamily,
+    fontSize: props.options.font.noteSize,
+  };
+});
+
+const shadowStyle = computed(function (): StyleValue {
+  return {
+    fill: props.options.color.shadowColor,
+  };
+});
+
+const linkStyle = computed(function (): StyleValue {
+  return {
+    stroke: props.node.linkColor ?? (active.value ? props.options.color.linkActiveColor : hover.value ? props.options.color.linkHoverColor : props.options.color.linkColor),
+    strokeWidth: active.value ? props.options.stroke.strokeActiveWidth : hover.value ? props.options.stroke.strokeHoverWidth : props.options.stroke.strokeWidth,
   };
 });
 
 const rectStyle = computed(function (): StyleValue {
   return {
-    color: props.node.color ?? undefined,
-    fill: props.node.backgroundColor ?? undefined,
+    stroke: props.node.borderColor ?? (active.value ? props.options.color.borderActiveColor : hover.value ? props.options.color.borderHoverColor : props.options.color.borderColor),
+    strokeWidth: active.value ? props.options.stroke.strokeActiveWidth : hover.value ? props.options.stroke.strokeHoverWidth : props.options.stroke.strokeWidth,
+    fill: props.node.backgroundColor ?? props.options.color.backgroundColor ?? undefined,
     boxSizing: "border-box",
   };
 });
@@ -382,13 +438,35 @@ Z
     }
   }
 });
+const outShapeSize = computed(() => {
+  const shape = props.node.outSelfShape;
+  return shape ? props.options.shape[shape] : { width: 0, length: 0 };
+});
 
+type NoteText = {
+  text: string;
+  x: number;
+  y: number;
+  /**
+   * true: right, false: left
+   * - true -> text-anchor: start
+   * - false -> text-anchor: end
+   */
+  xDirection: boolean;
+  /**
+   * true: down, false: up
+   * - true -> alignment-baseline: hanging
+   * - false -> alignment-baseline: baseline
+   */
+  yDirection: boolean;
+};
 type Relative = {
   left: number;
   top: number;
   right: number;
   bottom: number;
   link: string;
+  note: [NoteText | undefined, NoteText | undefined];
   in?: string;
 };
 const relatives = computed(function (): [Relative[], Relative] {
@@ -398,7 +476,7 @@ const relatives = computed(function (): [Relative[], Relative] {
       left: marginX + rectWidth.value / 2 + indentX,
       top: marginY + rectHeight.value,
     };
-    function next(value: TreeNodeSize, shape?: Shape): Relative {
+    function next(value: TreeNodeSize, shape?: Shape, inChildrenText?: [string | undefined, string | undefined]): Relative {
       const left = cur.left;
       const top = cur.top;
       const right = left + value.bounding.width;
@@ -461,9 +539,30 @@ Z`,
       // `M ${x1} ${y1} L ${x2} ${y2} l ${dx3} 0`
       const link = `M ${x1} ${y1} L ${x2} ${y2 - radius} s 0 ${radius} ${radius} ${radius} l ${dx3 - radius - (inShape?.[1] ?? 0)} 0`;
       cur.top = bottom - marginY;
-      return { left, top, right, bottom, link, in: inShape?.[0] };
+      const inChildShapeSize = shape ? props.options.shape[shape] : { width: 0, length: 0 };
+      const note: [NoteText | undefined, NoteText | undefined] = [
+        inChildrenText?.[0]
+          ? {
+              text: inChildrenText[0],
+              x: left + value.name.x - props.options.layout.notePaddingLink - inChildShapeSize.length,
+              y: top + value.name.y + value.name.height / 2 - props.options.layout.notePaddingLink,
+              xDirection: false,
+              yDirection: false,
+            }
+          : undefined,
+        inChildrenText?.[1]
+          ? {
+              text: inChildrenText[1],
+              x: left + value.name.x - props.options.layout.notePaddingLink - inChildShapeSize.length,
+              y: top + value.name.y + value.name.height / 2 + props.options.layout.notePaddingLink,
+              xDirection: false,
+              yDirection: true,
+            }
+          : undefined,
+      ];
+      return { left, top, right, bottom, link, in: inShape?.[0], note };
     }
-    const results = sizes.value.map((value, i) => next(value, props.node.inChildrenShape?.[i]));
+    const results = sizes.value.map((value, i) => next(value, props.node.inChildrenShape?.[i], props.node.inChildrenText?.[i]));
     const e = next(extendNodeSize.value);
     return [results, e];
   } else {
@@ -471,7 +570,7 @@ Z`,
       left: Math.max(0, width.value - childrenWidth.value) / 2,
       top: marginY + rectHeight.value + indentY,
     };
-    function next(value: TreeNodeSize, shape?: Shape): Relative {
+    function next(value: TreeNodeSize, shape?: Shape, inChildrenText?: [string | undefined, string | undefined]): Relative {
       const left = cur.left;
       const top = cur.top;
       const right = left + value.bounding.width;
@@ -534,9 +633,30 @@ Z`,
       // `M ${x1} ${y1} l 0 ${indentY / 2} L ${x3} ${y3} s ${-radius} 0 ${-radius} ${radius} l 0 ${dy4 - radius}`
       const link = `M ${x1} ${y1} l 0 ${dy2} L ${x3} ${y3} l 0 ${dy4 - (inShape?.[1] ?? 0)}`;
       cur.left = right - marginX;
-      return { left, top, right, bottom, link, in: inShape?.[0] };
+      const inChildShapeSize = shape ? props.options.shape[shape] : { width: 0, length: 0 };
+      const note: [NoteText | undefined, NoteText | undefined] = [
+        inChildrenText?.[0]
+          ? {
+              text: inChildrenText[0],
+              x: left + value.name.x + value.name.width / 2 - props.options.layout.notePaddingLink - inChildShapeSize.width / 2,
+              y: top + value.name.y - props.options.layout.notePaddingRect,
+              xDirection: false,
+              yDirection: false,
+            }
+          : undefined,
+        inChildrenText?.[1]
+          ? {
+              text: inChildrenText[1],
+              x: left + value.name.x + value.name.width / 2 + props.options.layout.notePaddingLink + inChildShapeSize.width / 2,
+              y: top + value.name.y - props.options.layout.notePaddingRect,
+              xDirection: true,
+              yDirection: false,
+            }
+          : undefined,
+      ];
+      return { left, top, right, bottom, link, in: inShape?.[0], note };
     }
-    const results = sizes.value.map((value, i) => next(value, props.node.inChildrenShape?.[i]));
+    const results = sizes.value.map((value, i) => next(value, props.node.inChildrenShape?.[i], props.node.inChildrenText?.[i]));
     const e = next(extendNodeSize.value);
     return [results, e];
   }
@@ -598,6 +718,29 @@ const text = computed(function () {
       x: rect.value.x + paddingX,
       y: marginY + textSize.value.baselineOffsetY + paddingY,
     };
+});
+
+const noteText = computed(function (): [NoteText | undefined, NoteText | undefined] {
+  return [
+    props.node.outSelfText?.[0]
+      ? {
+          x: rect.value.x + rect.value.width / 2 - props.options.layout.notePaddingLink - outShapeSize.value.width / 2,
+          y: rect.value.y + rect.value.height + props.options.layout.notePaddingRect,
+          xDirection: false,
+          yDirection: true,
+          text: props.node.outSelfText?.[0],
+        }
+      : undefined,
+    props.node.outSelfText?.[1]
+      ? {
+          x: rect.value.x + rect.value.width / 2 + props.options.layout.notePaddingLink + outShapeSize.value.width / 2,
+          y: rect.value.y + rect.value.height + props.options.layout.notePaddingRect,
+          xDirection: true,
+          yDirection: true,
+          text: props.node.outSelfText?.[1],
+        }
+      : undefined,
+  ];
 });
 
 const size = computed(function (): TreeNodeSize {

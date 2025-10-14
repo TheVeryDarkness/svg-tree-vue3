@@ -2,7 +2,7 @@
 import { ref, useTemplateRef } from "vue";
 import Tree from "./components/Tree.vue";
 import { Data, Shape, TreeEvent } from "tree2svg/types";
-import "./auto.css";
+// import "./auto.css";
 import TreeV2 from "./components/TreeV2.vue";
 import ForestV2 from "./components/ForestV2.vue";
 import type { ComponentExposed } from "vue-component-type-helpers";
@@ -12,13 +12,17 @@ import Forest from "./components/Forest.vue";
 type T = {
   name: string;
   id?: number | string;
-  color?: string;
+  textColor?: string;
+  borderColor?: string;
+  linkColor?: string;
   outSelfShape?: Shape;
   outSelfFill?: string;
+  outSelfText?: [string, string];
   outColor?: string;
   dashArray?: string | number;
   children: T[] | ((_: T) => T[]);
   inChildrenShape?: (Shape | undefined)[];
+  inChildrenText?: [string | undefined, string | undefined][];
   extensible?: boolean;
 };
 function lazy(_: T): T[] {
@@ -47,87 +51,97 @@ const datas: T[] = [
       {
         name: "445",
         id: 445,
-        color: "red",
+        textColor: "red",
         outSelfShape: "circle",
         outSelfFill: "red",
+        outSelfText: ["A", "B"],
         dashArray: 4,
         children: [
-          { name: "123132", color: "cyan", children: [] },
-          { name: "xdfscds", color: "cyan", children: [] },
+          { name: "123132", textColor: "cyan", children: [] },
+          { name: "xdfscds", textColor: "cyan", children: [] },
         ],
         inChildrenShape: ["arrow", "diamond"],
+        inChildrenText: [["a", "b"]],
       },
       {
         name: "445",
         id: "445",
-        color: "green",
+        textColor: "green",
         outSelfShape: "triangle",
         dashArray: "2",
-        children: [{ name: "9999999", color: "cyan", children: [] }],
+        children: [{ name: "9999999", textColor: "cyan", children: [] }],
         inChildrenShape: ["circle"],
       },
-      { name: "7890", color: "red", children: [], extensible: true },
-      { name: "'", color: "green", children: [], extensible: true },
-      { name: "?", color: "green", children: () => [{ name: new Date().toString(), color: "blue", children: [] }], extensible: true },
-      { name: "~~~~", color: "green", outSelfShape: "arrow", children: [{ name: "????", color: "blue", children: [] }], extensible: true },
-      { name: "~~~~~~~~~~~~~~~~~~~~~~~~~", color: "green", children: [{ name: "????????", color: "blue", children: [] }], extensible: true },
+      { name: "7890", textColor: "red", children: [], extensible: true },
+      { name: "'", textColor: "green", children: [], extensible: true },
+      { name: "?", textColor: "green", children: () => [{ name: new Date().toString(), textColor: "blue", children: [] }], extensible: true },
+      { name: "~~~~", textColor: "green", outSelfShape: "arrow", children: [{ name: "????", textColor: "blue", children: [] }], extensible: true },
+      { name: "~~~~~~~~~~~~~~~~~~~~~~~~~", textColor: "green", children: [{ name: "????????", textColor: "blue", children: [] }], extensible: true },
       {
         name: "~~~~~~~~~~~~~~~~~~~~~~~~~",
-        color: "green",
+        textColor: "green",
         children: [
-          { name: "????????", color: "blue", children: [] },
-          { name: "?", color: "blue", children: [] },
+          { name: "????????", textColor: "blue", children: [] },
+          { name: "?", textColor: "blue", children: [] },
         ],
+        inChildrenText: [["aa", "bb"]],
         extensible: false,
       },
       {
         name: "abcdefgdwewok",
         id: "kkkk",
-        color: "red",
-        children: [{ name: "xdncsc", color: "green", children: [] }],
+        textColor: "red",
+        children: [{ name: "xdncsc", textColor: "green", children: [] }],
         inChildrenShape: ["triangle"],
       },
       {
         name: "abcdefghijklmnopqrstuvwxyz",
-        color: "red",
+        textColor: "red",
         extensible: true,
-        children: [{ name: "abcdefghijklmnopqrstuvwxyz", color: "green", children: [] }],
+        children: [{ name: "abcdefghijklmnopqrstuvwxyz", textColor: "green", children: [] }],
       },
       {
         name: "abcdefghijklmnopqrstuvwxyz",
-        color: "red",
+        textColor: "red",
         children: [
-          { name: "a", color: "green", children: [] },
-          { name: "abcdefghijklmnopqrstuvwxyz", color: "green", children: [] },
+          { name: "a", textColor: "green", children: [] },
+          { name: "abcdefghijklmnopqrstuvwxyz", textColor: "green", children: [] },
         ],
+        inChildrenText: [["AB", "BA"]],
       },
       {
         name: "328948923",
-        color: "red",
+        textColor: "red",
         extensible: true,
         children: [],
       },
       {
         name: "abcdefgdwewok",
-        color: "red",
+        textColor: "red",
         extensible: true,
         children: [
-          { name: "——", color: "green", children: [] },
-          { name: "x", color: "green", children: [] },
-          { name: "_", color: "green", children: [] },
-          { name: "y", color: "green", children: [] },
+          { name: "——", textColor: "green", children: [] },
+          { name: "x", textColor: "green", children: [] },
+          { name: "_", textColor: "green", children: [] },
+          { name: "y", textColor: "green", children: [] },
         ],
         inChildrenShape: ["arrow", "circle", "diamond", "triangle"],
+        inChildrenText: [
+          [":#", "#:"],
+          [":#", "#:"],
+          [":#", "#:"],
+          [":#", "#:"],
+        ],
       },
       {
         name: "abcdefgdwewoknjnjonomiodjewidjwoedeowno",
-        color: "red",
+        textColor: "red",
         extensible: true,
         children: [
-          { name: "——", color: "green", children: [] },
-          { name: "x", color: "green", children: [] },
-          { name: "_", color: "green", children: [] },
-          { name: "y", color: "green", children: [] },
+          { name: "——", textColor: "green", children: [] },
+          { name: "x", textColor: "green", children: [] },
+          { name: "_", textColor: "green", children: [] },
+          { name: "y", textColor: "green", children: [] },
         ],
       },
     ],
@@ -186,7 +200,11 @@ let tree = useTemplateRef<ComponentExposed<typeof Tree>>("_tree");
 let forest = useTemplateRef<ComponentExposed<typeof Forest>>("_forest");
 let tree_v2 = useTemplateRef<ComponentExposed<typeof TreeV2>>("_tree_v2");
 let forest_v2 = useTemplateRef<ComponentExposed<typeof ForestV2>>("_forest_v2");
-let state = {
+const state = {
+  active: ref<string | number | undefined>(undefined),
+  hover: ref<string | number | undefined>(undefined),
+};
+const state2 = {
   active: ref<string | number | undefined>(undefined),
   hover: ref<string | number | undefined>(undefined),
 };
@@ -232,6 +250,19 @@ function contextmenu2(e: CustomEvent<EventKind<"contextmenu", T, "id">>) {
   e.detail.originalEvent.preventDefault();
   e.detail.node?.setCollapsed();
 }
+function mouseenter2(e: CustomEvent<EventKind<"mouseenter", T, "id">>) {
+  console.log("tree_v2 mouseenter", e);
+  state2.hover.value = e.detail.node.key;
+}
+function mouseleave2(e: CustomEvent<EventKind<"mouseleave", T, "id">>) {
+  console.log("tree_v2 mouseleave", e);
+  state2.hover.value = undefined;
+}
+function active2(e: CustomEvent<EventKind<"active", T, "id">>) {
+  console.log("tree_v2 active", e);
+  state2.active.value = e.detail.key;
+  e.detail.node[0]?.scrollIntoView();
+}
 </script>
 
 <template>
@@ -260,11 +291,18 @@ function contextmenu2(e: CustomEvent<EventKind<"contextmenu", T, "id">>) {
     </select>
   </p>
   <p>
-    <label for="active-node">Active: </label>
+    <label for="active-node">Active (Version 1): </label>
     <input type="text" id="active-node" title="Active Node" v-model="state.active.value" />
     &ensp;
-    <label for="hover-node">Hover: </label>
+    <label for="hover-node">Hover (Version 1): </label>
     <input type="text" id="hover-node" title="Hover Node" v-model="state.hover.value" />
+  </p>
+  <p>
+    <label for="active-node">Active (Version 2): </label>
+    <input type="text" id="active-node" title="Active Node" v-model="state2.active.value" />
+    &ensp;
+    <label for="hover-node">Hover (Version 2): </label>
+    <input type="text" id="hover-node" title="Hover Node" v-model="state2.hover.value" />
   </p>
   <p class="container" v-if="version1">
     <Tree
@@ -282,8 +320,30 @@ function contextmenu2(e: CustomEvent<EventKind<"contextmenu", T, "id">>) {
   </p>
   <p id="tree-v2" class="container" v-if="version2">
     Tree (v2)<br />
-    <TreeV2 v-if="treeData !== '*'" ref="_tree_v2" :data="datas[Number(treeData)]" :label-key="'id'" :options="undefined" @click="click2" @contextmenu="contextmenu2" />
-    <ForestV2 v-else ref="_forest_v2" :data="datas" :label-key="'id'" :options="undefined" @click="click2" @contextmenu="contextmenu2" />
+    <TreeV2
+      v-if="treeData !== '*'"
+      ref="_tree_v2"
+      :data="datas[Number(treeData)]"
+      :label-key="'id'"
+      :options="undefined"
+      @click="click2"
+      @contextmenu="contextmenu2"
+      @mouseenter="mouseenter2"
+      @mouseleave="mouseleave2"
+      @active="active2"
+    />
+    <ForestV2
+      v-else
+      ref="_forest_v2"
+      :data="datas"
+      :label-key="'id'"
+      :options="undefined"
+      @click="click2"
+      @contextmenu="contextmenu2"
+      @mouseenter="mouseenter2"
+      @mouseleave="mouseleave2"
+      @active="active2"
+    />
   </p>
   <p class="container">
     <textarea v-if="treeData !== '*'" id="tree-data" title="Tree Data">{{ JSON.stringify(datas[Number(treeData)], null, 2) }}</textarea>
@@ -305,12 +365,12 @@ textarea {
   height: 20em;
 }
 
-svg.active > rect.node,
+/* svg.active > rect.node,
 svg.active > .link {
   color: red !important;
   stroke: currentColor !important;
   stroke-width: 2px !important;
-}
+} */
 
 @media (prefers-color-scheme: light) {
   html {

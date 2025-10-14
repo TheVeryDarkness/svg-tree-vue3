@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends Data<Key> & Children<T>, Key extends string | number | symbol = 'path'">
-import { computed, onMounted, onUnmounted, onUpdated, useTemplateRef, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, onUpdated, useTemplateRef, watch } from "vue";
 import { EventKind, Forest, TreeNode } from "tree2svg/svg";
 import { Children, createContext, Data, mergeOptions, Options, PartialOptions } from "tree2svg/types";
 
@@ -61,7 +61,7 @@ onMounted(() => {
     forest.addEventListener("mouseleave", (e) => emit("mouseleave", e));
   }
 });
-onUnmounted(() => {
+onBeforeUnmount(() => {
   if (root.value) forest?.unmountFrom(root.value);
   forest = null;
 });
@@ -74,6 +74,7 @@ onUpdated(() => {
 watch(
   () => props.data,
   (newData) => {
+    // console.log("Data changed", newData);
     if (forest) {
       forest.update(newData);
     }
@@ -82,6 +83,7 @@ watch(
 watch(
   () => props.options,
   (newData) => {
+    // console.log("Data changed", newData);
     if (forest) {
       forest.update(undefined, undefined, newData);
     }
