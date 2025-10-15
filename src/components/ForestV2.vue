@@ -72,22 +72,12 @@ onUpdated(() => {
 });
 
 watch(
-  () => props.data,
-  (newData) => {
-    // console.log("Data changed", newData);
+  () => [props.data, props.options] as const,
+  ([newData, newOptions]) => {
+    // console.log("Data or options changed", newData);
     if (forest) {
-      forest.update(newData);
+      forest.update(newData, undefined, newOptions);
     }
   },
-);
-watch(
-  () => props.options,
-  (newData) => {
-    // console.log("Data changed", newData);
-    if (forest) {
-      forest.update(undefined, undefined, newData);
-    }
-  },
-  { deep: true },
 );
 </script>

@@ -58,6 +58,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
+    "watch": "vite build --watch",
     "dev-demo": "vite dev -c vite.demo.config.ts",
     "preview-demo": "vite preview -c vite.demo.config.ts",
     "build-demo": "vite build -c vite.demo.config.ts",
@@ -65,7 +66,7 @@
     "prepublishOnly": "vue-tsc -b && vite build"
   },
   "dependencies": {
-    "tree2svg": "^1.0.3",
+    "tree2svg": "^1.0.6",
     "vue": "^3.5.17"
   },
   "devDependencies": {

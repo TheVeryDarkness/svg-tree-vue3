@@ -198,8 +198,8 @@ let version1 = ref(true);
 let version2 = ref(true);
 let tree = useTemplateRef<ComponentExposed<typeof Tree>>("_tree");
 let forest = useTemplateRef<ComponentExposed<typeof Forest>>("_forest");
-let tree_v2 = useTemplateRef<ComponentExposed<typeof TreeV2>>("_tree_v2");
-let forest_v2 = useTemplateRef<ComponentExposed<typeof ForestV2>>("_forest_v2");
+let tree_v2 = useTemplateRef<ComponentExposed<typeof TreeV2<T, "id">>>("_tree_v2");
+let forest_v2 = useTemplateRef<ComponentExposed<typeof ForestV2<T, "id">>>("_forest_v2");
 const state = {
   active: ref<string | number | undefined>(undefined),
   hover: ref<string | number | undefined>(undefined),
@@ -240,9 +240,14 @@ function click2(e: CustomEvent<EventKind<"click", T, "id">>) {
     e.detail.node?.setVertical();
   } else {
     console.log(e.detail);
-    tree_v2?.value?.setActiveKey(e.detail.node?.key);
-    forest_v2?.value?.setActiveKey(e.detail.node?.key);
-    // state.active.value = e.detail.node.key;
+    if (e.detail.node) {
+      tree_v2?.value?.setActiveNode(e.detail.node);
+      forest_v2?.value?.setActiveNode(e.detail.node);
+      // state.active.value = e.detail.node.key;
+    } else {
+      tree_v2?.value?.setActiveNode(undefined);
+      forest_v2?.value?.setActiveNode(undefined);
+    }
   }
 }
 function contextmenu2(e: CustomEvent<EventKind<"contextmenu", T, "id">>) {
@@ -251,11 +256,11 @@ function contextmenu2(e: CustomEvent<EventKind<"contextmenu", T, "id">>) {
   e.detail.node?.setCollapsed();
 }
 function mouseenter2(e: CustomEvent<EventKind<"mouseenter", T, "id">>) {
-  console.log("tree_v2 mouseenter", e);
+  // console.log("tree_v2 mouseenter", e);
   state2.hover.value = e.detail.node.key;
 }
-function mouseleave2(e: CustomEvent<EventKind<"mouseleave", T, "id">>) {
-  console.log("tree_v2 mouseleave", e);
+function mouseleave2(_: CustomEvent<EventKind<"mouseleave", T, "id">>) {
+  // console.log("tree_v2 mouseleave", e);
   state2.hover.value = undefined;
 }
 function active2(e: CustomEvent<EventKind<"active", T, "id">>) {
@@ -305,17 +310,7 @@ function active2(e: CustomEvent<EventKind<"active", T, "id">>) {
     <input type="text" id="hover-node" title="Hover Node" v-model="state2.hover.value" />
   </p>
   <p class="container" v-if="version1">
-    <Tree
-      v-if="treeData !== '*'"
-      ref="_tree"
-      :data="datas[Number(treeData)]"
-      :label-key="'id'"
-      :state="state"
-      :options="undefined"
-      @click="click"
-      @dblclick="console.log('dblclick', $event)"
-      @contextmenu="contextmenu"
-    />
+    <Tree v-if="treeData !== '*'" ref="_tree" :data="datas[Number(treeData)]" :label-key="'id'" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
     <Forest v-else ref="_forest" :data="datas" :label-key="'id'" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
   </p>
   <p id="tree-v2" class="container" v-if="version2">
