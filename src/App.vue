@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, useTemplateRef } from "vue";
+import { onBeforeUnmount, onMounted, ref, useTemplateRef } from "vue";
 import Tree from "./components/Tree.vue";
 import { Data, Shape, TreeEvent } from "tree2svg/types";
 // import "./auto.css";
 import TreeV2 from "./components/TreeV2.vue";
 import ForestV2 from "./components/ForestV2.vue";
 import type { ComponentExposed } from "vue-component-type-helpers";
-import { EventKind } from "tree2svg/svg";
+import { EventKind, TreeNode } from "tree2svg/svg";
 import Forest from "./components/Forest.vue";
 // import ListNode from "./components/ListNode.vue";
 type T = {
@@ -236,6 +236,7 @@ function saveSvg() {
 function click2(e: CustomEvent<EventKind<"click", T, "id">>) {
   console.log("tree_v2 click", e);
   e.detail.originalEvent.stopPropagation();
+  e.detail.originalEvent.preventDefault();
   if (e.detail.originalEvent.shiftKey) {
     e.detail.node?.setVertical();
   } else {
@@ -267,7 +268,94 @@ function active2(e: CustomEvent<EventKind<"active", T, "id">>) {
   console.log("tree_v2 active", e);
   state2.active.value = e.detail.key;
   e.detail.node[0]?.scrollIntoView();
+  e.detail.node[0]?.ref.focus();
 }
+
+function keydown(e: KeyboardEvent) {
+  console.log("global keydown", e);
+  console.log(tree_v2.value?.root()?.activeNodes, forest_v2.value?.root()?.activeNodes);
+  function updateTreeActive(
+    current: TreeNode<T, "id"> | undefined,
+    f: (_: TreeNode<T, "id"> | undefined) => TreeNode<T, "id"> | undefined,
+    setter: (n: TreeNode<T, "id">) => void,
+  ) {
+    const node = f(current);
+    if (node) setter(node);
+  }
+  switch (e.key) {
+    case "ArrowUp":
+      e.preventDefault();
+      updateTreeActive(
+        tree_v2.value?.root()?.activeNode,
+        (n) => n?.parent,
+        (n) => tree_v2.value?.root()?.setActiveNode(n),
+      );
+      updateTreeActive(
+        forest_v2.value?.root()?.activeNode,
+        (n) => n?.parent,
+        (n) => forest_v2.value?.root()?.setActiveNode(n),
+      );
+      break;
+    case "ArrowDown":
+      e.preventDefault();
+      updateTreeActive(
+        tree_v2.value?.root()?.activeNode,
+        (n) => n?.children[0],
+        (n) => tree_v2.value?.root()?.setActiveNode(n),
+      );
+      updateTreeActive(
+        forest_v2.value?.root()?.activeNode,
+        (n) => n?.children[0],
+        (n) => forest_v2.value?.root()?.setActiveNode(n),
+      );
+      break;
+    case "ArrowLeft":
+      e.preventDefault();
+      updateTreeActive(
+        tree_v2.value?.root()?.activeNode,
+        (n) => n?.prevSibling,
+        (n) => tree_v2.value?.root()?.setActiveNode(n),
+      );
+      updateTreeActive(
+        forest_v2.value?.root()?.activeNode,
+        (n) => n?.prevSibling,
+        (n) => forest_v2.value?.root()?.setActiveNode(n),
+      );
+      break;
+    case "ArrowRight":
+      e.preventDefault();
+      updateTreeActive(
+        tree_v2.value?.root()?.activeNode,
+        (n) => n?.nextSibling,
+        (n) => tree_v2.value?.root()?.setActiveNode(n),
+      );
+      updateTreeActive(
+        forest_v2.value?.root()?.activeNode,
+        (n) => n?.nextSibling,
+        (n) => forest_v2.value?.root()?.setActiveNode(n),
+      );
+      break;
+    case "Enter":
+      e.preventDefault();
+      tree_v2.value?.root()?.activeNode?.setCollapsed();
+      forest_v2.value?.root()?.activeNode?.setCollapsed();
+      break;
+    case " ":
+      e.preventDefault();
+      tree_v2.value?.root()?.activeNode?.setVertical();
+      forest_v2.value?.root()?.activeNode?.setVertical();
+      break;
+    default:
+      break;
+  }
+}
+
+onMounted(() => {
+  window.addEventListener("keydown", keydown);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", keydown);
+});
 </script>
 
 <template>
