@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends Data<Key> & Children<T>, Key extends string | number | symbol = 'path'">
-import { computed, onBeforeUnmount, onMounted, onUpdated, useTemplateRef, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, useTemplateRef, watch } from "vue";
 import { EventKind, Forest, TreeNode } from "tree2svg/svg";
 import { Children, createContext, Data, mergeOptions, Options, PartialOptions } from "tree2svg/types";
 
@@ -64,11 +64,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (root.value) forest?.unmountFrom(root.value);
   forest = null;
-});
-onUpdated(() => {
-  if (forest) {
-    forest.update();
-  }
 });
 
 watch(
