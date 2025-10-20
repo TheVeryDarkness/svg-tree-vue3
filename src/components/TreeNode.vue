@@ -259,8 +259,10 @@ const shadowStyle = computed(function (): StyleValue {
 });
 
 const linkStyle = computed(function (): StyleValue {
+  const color = props.node.linkColor ?? (active.value ? props.options.color.linkActiveColor : hover.value ? props.options.color.linkHoverColor : props.options.color.linkColor);
   return {
-    stroke: props.node.linkColor ?? (active.value ? props.options.color.linkActiveColor : hover.value ? props.options.color.linkHoverColor : props.options.color.linkColor),
+    color,
+    stroke: color,
     strokeWidth: active.value ? props.options.stroke.strokeActiveWidth : hover.value ? props.options.stroke.strokeHoverWidth : props.options.stroke.strokeWidth,
   };
 });
