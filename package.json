@@ -7,7 +7,7 @@
     "svg",
     "tree"
   ],
-  "version": "0.5.8",
+  "version": "0.5.9",
   "type": "module",
   "types": "./dist/Tree.d.ts",
   "module": "./dist/Tree.js",
