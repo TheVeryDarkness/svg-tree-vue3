@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, useTemplateRef } from "vue";
+import { onBeforeUnmount, onMounted, Ref, ref, useTemplateRef } from "vue";
 import Tree from "./components/Tree.vue";
 import { Data, Shape, TreeEvent } from "tree2svg/types";
 // import "./auto.css";
@@ -23,177 +23,301 @@ type T = {
   children: T[] | ((_: T) => T[]);
   inChildrenShape?: (Shape | undefined)[];
   inChildrenText?: [string | undefined, string | undefined][];
+  inChildrenFill?: (string | undefined)[];
   extensible?: boolean;
 };
-function lazy(_: T): T[] {
+function generateLazy(_: T): T[] {
   return [
     {
       name: new Date().toString(),
       outSelfShape: "diamond",
       dashArray: "4 2",
-      children: lazy,
+      children: generateLazy,
     },
     {
       name: new Date().toString(),
       outSelfShape: "circle",
       dashArray: "2 4",
-      children: lazy,
+      children: generateLazy,
     },
   ];
 }
-const datas: T[] = [
-  {
-    name: "123123123123",
-    id: 123123123123,
-    outSelfShape: "diamond",
-    dashArray: "4 2",
-    children: [
-      {
-        name: "445",
-        id: 445,
-        textColor: "red",
-        outSelfShape: "circle",
-        outSelfFill: "red",
-        outSelfText: ["A", "B"],
-        dashArray: 4,
-        children: [
-          { name: "123132", textColor: "cyan", children: [] },
-          { name: "xdfscds", textColor: "cyan", children: [] },
-        ],
-        inChildrenShape: ["arrow", "diamond"],
-        inChildrenText: [["a", "b"]],
-      },
-      {
-        name: "445",
-        id: "445",
-        textColor: "green",
-        outSelfShape: "triangle",
-        dashArray: "2",
-        children: [{ name: "9999999", textColor: "cyan", children: [] }],
-        inChildrenShape: ["circle"],
-      },
-      { name: "7890", textColor: "red", children: [], extensible: true },
-      { name: "'", textColor: "green", children: [], extensible: true },
-      { name: "?", textColor: "green", children: () => [{ name: new Date().toString(), textColor: "blue", children: [] }], extensible: true },
-      { name: "~~~~", textColor: "green", outSelfShape: "arrow", children: [{ name: "????", textColor: "blue", children: [] }], extensible: true },
-      { name: "~~~~~~~~~~~~~~~~~~~~~~~~~", textColor: "green", children: [{ name: "????????", textColor: "blue", children: [] }], extensible: true },
-      {
-        name: "~~~~~~~~~~~~~~~~~~~~~~~~~",
-        textColor: "green",
-        children: [
-          { name: "????????", textColor: "blue", children: [] },
-          { name: "?", textColor: "blue", children: [] },
-        ],
-        inChildrenText: [["aa", "bb"]],
-        extensible: false,
-      },
-      {
-        name: "abcdefgdwewok",
-        id: "kkkk",
-        textColor: "red",
-        children: [{ name: "xdncsc", textColor: "green", children: [] }],
-        inChildrenShape: ["triangle"],
-      },
-      {
-        name: "abcdefghijklmnopqrstuvwxyz",
-        textColor: "red",
-        extensible: true,
-        children: [{ name: "abcdefghijklmnopqrstuvwxyz", textColor: "green", children: [] }],
-      },
-      {
-        name: "abcdefghijklmnopqrstuvwxyz",
-        textColor: "red",
-        children: [
-          { name: "a", textColor: "green", children: [] },
-          { name: "abcdefghijklmnopqrstuvwxyz", textColor: "green", children: [] },
-        ],
-        inChildrenText: [["AB", "BA"]],
-      },
-      {
-        name: "328948923",
-        textColor: "red",
-        extensible: true,
-        children: [],
-      },
-      {
-        name: "abcdefgdwewok",
-        textColor: "red",
-        extensible: true,
-        children: [
-          { name: "——", textColor: "green", children: [] },
-          { name: "x", textColor: "green", children: [] },
-          { name: "_", textColor: "green", children: [] },
-          { name: "y", textColor: "green", children: [] },
-        ],
-        inChildrenShape: ["arrow", "circle", "diamond", "triangle"],
-        inChildrenText: [
-          [":#", "#:"],
-          [":#", "#:"],
-          [":#", "#:"],
-          [":#", "#:"],
-        ],
-      },
-      {
-        name: "abcdefgdwewoknjnjonomiodjewidjwoedeowno",
-        textColor: "red",
-        extensible: true,
-        children: [
-          { name: "——", textColor: "green", children: [] },
-          { name: "x", textColor: "green", children: [] },
-          { name: "_", textColor: "green", children: [] },
-          { name: "y", textColor: "green", children: [] },
-        ],
-      },
-    ],
-  },
-  {
-    name: "shapes",
-    id: 1,
-    outSelfShape: "diamond",
-    dashArray: "4 2",
-    children: [
-      {
-        name: "0",
-        children: [
-          { name: "a", extensible: true, children: [], outColor: "red", outSelfShape: "arrow", outSelfFill: "currentColor" },
-          { name: "b", extensible: true, children: [], outColor: "green", outSelfShape: "circle", outSelfFill: "currentColor" },
-          { name: "c", extensible: true, children: [], outColor: "cyan", outSelfShape: "diamond", outSelfFill: "currentColor" },
-          { name: "d", extensible: true, children: [], outColor: "blue", outSelfShape: "triangle", outSelfFill: "currentColor" },
-          { name: "e", extensible: true, children: [], outColor: undefined, outSelfShape: undefined, outSelfFill: "currentColor" },
-        ],
-      },
-      {
-        name: "1",
-        children: [
-          { name: "a", extensible: true, children: [], outColor: "red", outSelfShape: "arrow", outSelfFill: "blue" },
-          { name: "b", extensible: true, children: [], outColor: "green", outSelfShape: "circle", outSelfFill: "blue" },
-          { name: "c", extensible: true, children: [], outColor: "cyan", outSelfShape: "diamond", outSelfFill: "blue" },
-          { name: "d", extensible: true, children: [], outColor: "blue", outSelfShape: "triangle", outSelfFill: "blue" },
-          { name: "e", extensible: true, children: [], outColor: undefined, outSelfShape: undefined, outSelfFill: "currentColor" },
-        ],
-      },
-    ],
-  },
-  {
-    name: "lazy",
-    id: 1,
-    outSelfShape: "diamond",
-    dashArray: "4 2",
-    children() {
-      return [
-        {
-          name: new Date().toString(),
-          id: 1,
-          outSelfShape: "diamond",
-          dashArray: "4 2",
-          children: lazy,
-        },
-      ];
+function generateDeep(depth: number, current: T): T {
+  if (depth <= 0) {
+    return current;
+  }
+  return generateDeep(depth - 1, {
+    name: `depth-${depth}`,
+    children: [current],
+  });
+}
+const deep: T = generateDeep(40, { name: "leaf", children: [] });
+function generateBinary(depth: number): T {
+  if (depth <= 0) {
+    return { name: `leaf`, children: [] };
+  }
+  return {
+    name: `depth-${depth}`,
+    children: [generateBinary(depth - 1), generateBinary(depth - 1)],
+  };
+}
+const binaryTree: T = generateBinary(12);
+const arbitrary: T = {
+  name: "123123123123",
+  id: 123123123123,
+  outSelfShape: "diamond",
+  dashArray: "4 2",
+  children: [
+    {
+      name: "445",
+      id: 445,
+      textColor: "red",
+      outSelfShape: "circle",
+      outSelfFill: "red",
+      outSelfText: ["A", "B"],
+      dashArray: 4,
+      children: [
+        { name: "123132", textColor: "cyan", children: [] },
+        { name: "xdfscds", textColor: "cyan", children: [] },
+      ],
+      inChildrenShape: ["arrow", "diamond"],
+      inChildrenText: [["a", "b"]],
     },
+    {
+      name: "445",
+      id: "445",
+      textColor: "green",
+      outSelfShape: "triangle",
+      dashArray: "2",
+      children: [{ name: "9999999", textColor: "cyan", children: [] }],
+      inChildrenShape: ["circle"],
+    },
+    { name: "7890", textColor: "red", children: [], extensible: true },
+    { name: "'", textColor: "green", children: [], extensible: true },
+    { name: "?", textColor: "green", children: () => [{ name: new Date().toString(), textColor: "blue", children: [] }], extensible: true },
+    { name: "~~~~", textColor: "green", outSelfShape: "arrow", children: [{ name: "????", textColor: "blue", children: [] }], extensible: true },
+    { name: "~~~~~~~~~~~~~~~~~~~~~~~~~", textColor: "green", children: [{ name: "????????", textColor: "blue", children: [] }], extensible: true },
+    {
+      name: "~~~~~~~~~~~~~~~~~~~~~~~~~",
+      textColor: "green",
+      children: [
+        { name: "????????", textColor: "blue", children: [] },
+        { name: "?", textColor: "blue", children: [] },
+      ],
+      inChildrenText: [["aa", "bb"]],
+      extensible: false,
+    },
+    {
+      name: "abcdefgdwewok",
+      id: "kkkk",
+      textColor: "red",
+      children: [{ name: "xdncsc", textColor: "green", children: [] }],
+      inChildrenShape: ["triangle"],
+    },
+    {
+      name: "abcdefghijklmnopqrstuvwxyz",
+      textColor: "red",
+      extensible: true,
+      children: [{ name: "abcdefghijklmnopqrstuvwxyz", textColor: "green", children: [] }],
+    },
+    {
+      name: "abcdefghijklmnopqrstuvwxyz",
+      textColor: "red",
+      children: [
+        { name: "a", textColor: "green", children: [] },
+        { name: "abcdefghijklmnopqrstuvwxyz", textColor: "green", children: [] },
+      ],
+      inChildrenText: [["AB", "BA"]],
+    },
+    {
+      name: "328948923",
+      textColor: "red",
+      extensible: true,
+      children: [],
+    },
+    {
+      name: "abcdefgdwewok",
+      textColor: "red",
+      extensible: true,
+      children: [
+        { name: "——", textColor: "green", children: [] },
+        { name: "x", textColor: "green", children: [] },
+        { name: "_", textColor: "green", children: [] },
+        { name: "y", textColor: "green", children: [] },
+      ],
+      inChildrenShape: ["arrow", "circle", "diamond", "triangle"],
+      inChildrenText: [
+        [":#", "#:"],
+        [":#", "#:"],
+        [":#", "#:"],
+        [":#", "#:"],
+      ],
+    },
+    {
+      name: "abcdefgdwewoknjnjonomiodjewidjwoedeowno",
+      textColor: "red",
+      extensible: true,
+      children: [
+        { name: "——", textColor: "green", children: [] },
+        { name: "x", textColor: "green", children: [] },
+        { name: "_", textColor: "green", children: [] },
+        { name: "y", textColor: "green", children: [] },
+      ],
+    },
+  ],
+};
+const shapes: T = {
+  name: "shapes",
+  id: 1,
+  outSelfShape: "diamond",
+  dashArray: "4 2",
+  children: [
+    {
+      name: "0",
+      children: [
+        { name: "a", extensible: true, children: [], outColor: "red", outSelfShape: "arrow", outSelfFill: "currentColor" },
+        { name: "b", extensible: true, children: [], outColor: "green", outSelfShape: "circle", outSelfFill: "currentColor" },
+        { name: "c", extensible: true, children: [], outColor: "cyan", outSelfShape: "diamond", outSelfFill: "currentColor" },
+        { name: "d", extensible: true, children: [], outColor: "blue", outSelfShape: "triangle", outSelfFill: "currentColor" },
+        { name: "e", extensible: true, children: [], outColor: undefined, outSelfShape: undefined, outSelfFill: "currentColor" },
+      ],
+      inChildrenShape: ["arrow", "circle", "diamond", "triangle", undefined],
+      inChildrenFill: ["currentColor", "currentColor", "currentColor", "currentColor", "currentColor"],
+    },
+    {
+      name: "1",
+      children: [
+        { name: "a", extensible: true, children: [], outColor: "red", outSelfShape: "arrow", outSelfFill: "blue" },
+        { name: "b", extensible: true, children: [], outColor: "green", outSelfShape: "circle", outSelfFill: "blue" },
+        { name: "c", extensible: true, children: [], outColor: "cyan", outSelfShape: "diamond", outSelfFill: "blue" },
+        { name: "d", extensible: true, children: [], outColor: "blue", outSelfShape: "triangle", outSelfFill: "blue" },
+        { name: "e", extensible: true, children: [], outColor: undefined, outSelfShape: undefined, outSelfFill: "blue" },
+      ],
+      inChildrenShape: ["arrow", "circle", "diamond", "triangle", undefined],
+      inChildrenFill: ["blue", "blue", "blue", "blue", "blue"],
+    },
+  ],
+};
+const lazy: T = {
+  name: "lazy",
+  id: 1,
+  outSelfShape: "diamond",
+  dashArray: "4 2",
+  children() {
+    return [
+      {
+        name: new Date().toString(),
+        id: 1,
+        outSelfShape: "diamond",
+        dashArray: "4 2",
+        children: generateLazy,
+      },
+    ];
   },
-];
+};
+const uml: T = {
+  name: "UML Class Diagram",
+  children: [
+    {
+      name: "AggregatedClass",
+      id: "A",
+      outSelfShape: "diamond",
+      children: [
+        {
+          name: "ComponentClass 1",
+          id: "B1",
+          children: [],
+        },
+        {
+          name: "ComponentClass 2",
+          id: "B2",
+          children: [],
+        },
+      ],
+    },
+    {
+      name: "InheritedClass",
+      id: "A",
+      outSelfShape: "triangle",
+      children: [
+        {
+          name: "DerivedClass 1",
+          id: "B1",
+          children: [],
+        },
+        {
+          name: "DerivedClass 2",
+          id: "B2",
+          children: [],
+        },
+      ],
+    },
+    {
+      name: "DependentClass",
+      id: "A",
+      children: [
+        {
+          name: "DependenciesClass 1",
+          id: "B1",
+          children: [],
+        },
+        {
+          name: "DependenciesClass 2",
+          id: "B2",
+          children: [],
+        },
+      ],
+      inChildrenShape: ["arrow"],
+      dashArray: "4 2",
+    },
+    {
+      name: "CompositeClass",
+      id: "A",
+      outSelfShape: "diamond",
+      outSelfFill: "currentColor",
+      children: [
+        {
+          name: "ComponentClass 1",
+          id: "B1",
+          children: [],
+        },
+        {
+          name: "ComponentClass 2",
+          id: "B2",
+          children: [],
+        },
+      ],
+    },
+    {
+      name: "LinkedClass",
+      id: "A",
+      children: [
+        {
+          name: "LinkedClass 1",
+          id: "B1",
+          children: [],
+        },
+        {
+          name: "LinkedClass 2",
+          id: "B2",
+          children: [],
+        },
+      ],
+    },
+  ],
+};
+type DataMapKey = "arbitrary" | "shapes" | "lazy" | "deep" | "binaryTree" | "uml";
+const dataMap: Record<DataMapKey, T> = {
+  arbitrary,
+  shapes,
+  lazy,
+  deep,
+  binaryTree,
+  uml,
+} as const;
+const datas: T[] = Object.values(dataMap);
 // Ensure data conforms to Data interface with 'id' as key
-const treeData = ref("0");
+const treeData: Ref<"*" | keyof typeof dataMap> = ref("uml");
 let version1 = ref(true);
 let version2 = ref(true);
 let tree = useTemplateRef<ComponentExposed<typeof Tree>>("_tree");
@@ -211,6 +335,7 @@ const state2 = {
 
 function click<T extends Data<"id">>($event: TreeEvent<T, MouseEvent>) {
   $event.event.stopPropagation();
+  $event.event.preventDefault();
   if ($event.event.shiftKey) {
     $event.setVertical();
   } else {
@@ -377,9 +502,7 @@ onBeforeUnmount(() => {
   <p>
     <label for="tree-data">Tree Data: </label>
     <select id="tree-data" title="Tree Data" v-model="treeData">
-      <option value="0">Arbitrary</option>
-      <option value="1">Shapes</option>
-      <option value="2">Lazy Evaluation</option>
+      <option v-for="(name, idx) in Object.keys(dataMap)" :key="idx" :value="name">{{ name }}</option>
       <option value="*">All</option>
     </select>
   </p>
@@ -398,7 +521,7 @@ onBeforeUnmount(() => {
     <input type="text" id="hover-node" title="Hover Node" v-model="state2.hover.value" />
   </p>
   <p class="container" v-if="version1">
-    <Tree v-if="treeData !== '*'" ref="_tree" :data="datas[Number(treeData)]" :label-key="'id'" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
+    <Tree v-if="treeData !== '*'" ref="_tree" :data="dataMap[treeData]" :label-key="'id'" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
     <Forest v-else ref="_forest" :data="datas" :label-key="'id'" :state="state" :options="undefined" @click="click" @contextmenu="contextmenu" />
   </p>
   <p id="tree-v2" class="container" v-if="version2">
@@ -406,7 +529,7 @@ onBeforeUnmount(() => {
     <TreeV2
       v-if="treeData !== '*'"
       ref="_tree_v2"
-      :data="datas[Number(treeData)]"
+      :data="dataMap[treeData]"
       :label-key="'id'"
       :options="undefined"
       @click="click2"
