@@ -67,11 +67,20 @@ onBeforeUnmount(() => {
 });
 
 watch(
-  () => [props.data, props.options] as const,
-  ([newData, newOptions]) => {
-    // console.log("Data or options changed", newData);
+  () => props.data,
+  (newData) => {
+    // console.log("Data changed", newData);
     if (forest) {
-      forest.update(newData, undefined, newOptions);
+      forest.update(newData, undefined);
+    }
+  },
+);
+watch(
+  () => props.options,
+  (newOptions) => {
+    // console.log("Options changed", newOptions);
+    if (forest) {
+      forest.update(undefined, undefined, newOptions);
     }
   },
 );
