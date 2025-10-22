@@ -267,7 +267,7 @@ const uml: T = {
           children: [],
         },
       ],
-      inChildrenShape: ["arrow"],
+      inChildrenShape: ["arrow", "arrow"],
       dashArray: "4 2",
     },
     {
