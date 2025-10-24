@@ -7,7 +7,7 @@
     "svg",
     "tree"
   ],
-  "version": "0.5.9",
+  "version": "0.5.10",
   "type": "module",
   "types": "./dist/Tree.d.ts",
   "module": "./dist/Tree.js",
@@ -16,35 +16,15 @@
     "./dist/**"
   ],
   "exports": {
-    "./TreeNode.vue": {
-      "types": "./dist/TreeNode.vue.d.ts",
-      "import": "./dist/TreeNode.js",
-      "require": "./dist/TreeNode.cjs"
+    "./*.vue": {
+      "types": "./dist/*.vue.d.ts",
+      "import": "./dist/*.js",
+      "require": "./dist/*.cjs"
     },
     ".": {
       "types": "./dist/Tree.vue.d.ts",
       "import": "./dist/Tree.js",
       "require": "./dist/Tree.cjs"
-    },
-    "./Tree.vue": {
-      "types": "./dist/Tree.vue.d.ts",
-      "import": "./dist/Tree.js",
-      "require": "./dist/Tree.cjs"
-    },
-    "./Forest.vue": {
-      "types": "./dist/Forest.vue.d.ts",
-      "import": "./dist/Forest.js",
-      "require": "./dist/Forest.cjs"
-    },
-    "./TreeV2.vue": {
-      "types": "./dist/TreeV2.vue.d.ts",
-      "import": "./dist/TreeV2.js",
-      "require": "./dist/TreeV2.cjs"
-    },
-    "./ForestV2.vue": {
-      "types": "./dist/ForestV2.vue.d.ts",
-      "import": "./dist/ForestV2.js",
-      "require": "./dist/ForestV2.cjs"
     },
     "./state": {
       "types": "./dist/state.d.ts",
@@ -66,7 +46,7 @@
     "prepublishOnly": "vue-tsc -b && vite build"
   },
   "dependencies": {
-    "tree2svg": "^1.0.9",
+    "tree2svg": "^1.0.10",
     "vue": "^3.5.17"
   },
   "devDependencies": {
